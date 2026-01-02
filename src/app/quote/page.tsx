@@ -182,11 +182,18 @@ export default function QuotePage() {
     const savedCoefficients = localStorage.getItem("priceCoefficients");
     if (savedCoefficients) {
       const parsed = JSON.parse(savedCoefficients);
-      // 兼容旧数据，如果没有goldFactor10K则添加默认值
-      if (!parsed.goldFactor10K) {
-        parsed.goldFactor10K = 0.417;
-      }
-      return parsed;
+      // 兼容旧数据，确保所有字段都存在
+      return {
+        goldFactor10K: parsed.goldFactor10K ?? 0.417,
+        goldFactor14K: parsed.goldFactor14K ?? 0.586,
+        goldFactor18K: parsed.goldFactor18K ?? 0.755,
+        laborFactorRetail: parsed.laborFactorRetail ?? 5,
+        laborFactorWholesale: parsed.laborFactorWholesale ?? 3,
+        materialLoss: parsed.materialLoss ?? 1.15,
+        materialCost: parsed.materialCost ?? 1.1,
+        profitMargin: parsed.profitMargin ?? 1.25,
+        exchangeRate: parsed.exchangeRate ?? 5,
+      };
     }
     return {
       goldFactor10K: 0.417,
@@ -334,8 +341,20 @@ export default function QuotePage() {
     if (savedCoefficients) {
       try {
         const coeff = JSON.parse(savedCoefficients);
-        console.log("设置系数:", coeff);
-        setCoefficients(coeff);
+        // 兼容旧数据，确保所有字段都存在
+        const completeCoeff = {
+          goldFactor10K: coeff.goldFactor10K ?? 0.417,
+          goldFactor14K: coeff.goldFactor14K ?? 0.586,
+          goldFactor18K: coeff.goldFactor18K ?? 0.755,
+          laborFactorRetail: coeff.laborFactorRetail ?? 5,
+          laborFactorWholesale: coeff.laborFactorWholesale ?? 3,
+          materialLoss: coeff.materialLoss ?? 1.15,
+          materialCost: coeff.materialCost ?? 1.1,
+          profitMargin: coeff.profitMargin ?? 1.25,
+          exchangeRate: coeff.exchangeRate ?? 5,
+        };
+        console.log("设置系数:", completeCoeff);
+        setCoefficients(completeCoeff);
       } catch (e) {
         console.error("解析系数失败:", e);
       }
@@ -445,8 +464,20 @@ export default function QuotePage() {
     if (savedCoefficients && savedCoefficients !== "null") {
       try {
         const coeff = JSON.parse(savedCoefficients);
-        console.log("✅ 加载系数:", coeff);
-        setCoefficients(coeff);
+        // 兼容旧数据，确保所有字段都存在
+        const completeCoeff = {
+          goldFactor10K: coeff.goldFactor10K ?? 0.417,
+          goldFactor14K: coeff.goldFactor14K ?? 0.586,
+          goldFactor18K: coeff.goldFactor18K ?? 0.755,
+          laborFactorRetail: coeff.laborFactorRetail ?? 5,
+          laborFactorWholesale: coeff.laborFactorWholesale ?? 3,
+          materialLoss: coeff.materialLoss ?? 1.15,
+          materialCost: coeff.materialCost ?? 1.1,
+          profitMargin: coeff.profitMargin ?? 1.25,
+          exchangeRate: coeff.exchangeRate ?? 5,
+        };
+        console.log("✅ 加载系数:", completeCoeff);
+        setCoefficients(completeCoeff);
       } catch (e) {
         console.error("❌ 解析系数失败:", e);
       }
