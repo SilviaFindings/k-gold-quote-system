@@ -962,89 +962,58 @@ export default function QuotePage() {
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
 
-          {/* 数据诊断信息 */}
-          {products.length > 0 && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm text-blue-900">
-                <p className="font-semibold mb-2">📊 数据诊断信息：</p>
-                <p>总产品数: <strong>{products.length}</strong></p>
+          {/* 显示没有分类的产品修复工具 */}
+          {products.length > 0 && (() => {
+            const emptyCategoryCount = products.filter(p => !p.category || p.category === "").length;
+            if (emptyCategoryCount > 0) {
+              return (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800 font-semibold mb-2">⚠️ 发现 {emptyCategoryCount} 个产品没有分类！</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="text-xs text-red-700">批量设置为:</label>
+                    <select
+                      value={currentCategory}
+                      onChange={(e) => setCurrentCategory(e.target.value as ProductCategory)}
+                      className="px-2 py-1 text-xs border border-red-300 rounded"
+                      suppressHydrationWarning
+                    >
+                      {PRODUCT_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        if (!confirm(`确定将这 ${emptyCategoryCount} 个没有分类的产品批量设置为 "${currentCategory}" 吗？`)) return;
 
-                {/* 显示没有分类的产品数量 */}
-                {(() => {
-                  const emptyCategoryCount = products.filter(p => !p.category || p.category === "").length;
-                  if (emptyCategoryCount > 0) {
-                    return (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="font-semibold text-red-800 mb-2">⚠️ 发现 {emptyCategoryCount} 个产品没有分类！</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <label className="text-xs text-red-700">批量设置为:</label>
-                          <select
-                            value={currentCategory}
-                            onChange={(e) => setCurrentCategory(e.target.value as ProductCategory)}
-                            className="px-2 py-1 text-xs border border-red-300 rounded"
-                            suppressHydrationWarning
-                          >
-                            {PRODUCT_CATEGORIES.map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => {
-                              if (!confirm(`确定将这 ${emptyCategoryCount} 个没有分类的产品批量设置为 "${currentCategory}" 吗？`)) return;
+                        const updatedProducts = products.map(p => {
+                          if (!p.category || p.category === "") {
+                            return { ...p, category: currentCategory };
+                          }
+                          return p;
+                        });
 
-                              const updatedProducts = products.map(p => {
-                                if (!p.category || p.category === "") {
-                                  return { ...p, category: currentCategory };
-                                }
-                                return p;
-                              });
+                        const updatedHistory = priceHistory.map(h => {
+                          if (!h.category || h.category === "") {
+                            return { ...h, category: currentCategory };
+                          }
+                          return h;
+                        });
 
-                              const updatedHistory = priceHistory.map(h => {
-                                if (!h.category || h.category === "") {
-                                  return { ...h, category: currentCategory };
-                                }
-                                return h;
-                              });
-
-                              setProducts(updatedProducts);
-                              setPriceHistory(updatedHistory);
-                              alert(`✅ 成功将 ${emptyCategoryCount} 个产品和对应的历史记录设置为 "${currentCategory}" 分类！`);
-                            }}
-                            className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                            suppressHydrationWarning
-                          >
-                            批量修复分类
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                <p className="mt-2 font-semibold">所有产品的分类字段:</p>
-                <ul className="mt-1 ml-4 list-disc">
-                  {products.slice(0, 10).map((p, idx) => (
-                    <li key={idx} className="text-xs">
-                      货号: {p.productCode} | 分类: <strong>"{p.category}"</strong>
-                    </li>
-                  ))}
-                  {products.length > 10 && <li className="text-xs">... 还有 {products.length - 10} 个产品</li>}
-                </ul>
-                <p className="mt-2 font-semibold">分类匹配统计:</p>
-                <ul className="mt-1 ml-4 list-disc text-xs">
-                  {PRODUCT_CATEGORIES.map(cat => {
-                    const count = products.filter(p => p.category === cat).length;
-                    return (
-                      <li key={cat} className={count > 0 ? "text-green-700 font-semibold" : "text-red-600"}>
-                        "{cat}" 匹配: <strong>{count}</strong> 个
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
-          )}
+                        setProducts(updatedProducts);
+                        setPriceHistory(updatedHistory);
+                        alert(`✅ 成功将 ${emptyCategoryCount} 个产品和对应的历史记录设置为 "${currentCategory}" 分类！`);
+                      }}
+                      className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                      suppressHydrationWarning
+                    >
+                      批量修复分类
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <div className="flex flex-wrap gap-2">
             {PRODUCT_CATEGORIES.map((category) => {
