@@ -35,7 +35,7 @@ interface Product {
   specification: string;
   weight: number;
   laborCost: number;
-  karat: "14K" | "18K";
+  karat: "10K" | "14K" | "18K";
   goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
   goldPrice: number;
   wholesalePrice: number;
@@ -66,7 +66,7 @@ interface PriceHistory {
   specification: string;
   weight: number;
   laborCost: number;
-  karat: "14K" | "18K";
+  karat: "10K" | "14K" | "18K";
   goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
   goldPrice: number;
   wholesalePrice: number;
@@ -137,7 +137,7 @@ export default function QuotePage() {
   // 导入Excel相关状态
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
-  const [defaultKarat, setDefaultKarat] = useState<"14K" | "18K">("18K");
+  const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K">("18K");
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
@@ -156,6 +156,7 @@ export default function QuotePage() {
 
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
+    goldFactor10K: number;
     goldFactor14K: number;
     goldFactor18K: number;
     laborFactorRetail: number;
@@ -167,6 +168,7 @@ export default function QuotePage() {
   }>(() => {
     if (typeof window === 'undefined') {
       return {
+        goldFactor10K: 0.417,
         goldFactor14K: 0.586,
         goldFactor18K: 0.755,
         laborFactorRetail: 5,
@@ -179,9 +181,15 @@ export default function QuotePage() {
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
     if (savedCoefficients) {
-      return JSON.parse(savedCoefficients);
+      const parsed = JSON.parse(savedCoefficients);
+      // 兼容旧数据，如果没有goldFactor10K则添加默认值
+      if (!parsed.goldFactor10K) {
+        parsed.goldFactor10K = 0.417;
+      }
+      return parsed;
     }
     return {
+      goldFactor10K: 0.417,
       goldFactor14K: 0.586,
       goldFactor18K: 0.755,
       laborFactorRetail: 5,
@@ -522,7 +530,7 @@ export default function QuotePage() {
     marketGoldPrice: number,
     weight: number,
     laborCost: number,
-    karat: "14K" | "18K",
+    karat: "10K" | "14K" | "18K",
     isRetail: boolean,
     accessoryCost: number = 0,
     stoneCost: number = 0,
@@ -530,7 +538,15 @@ export default function QuotePage() {
     moldCost: number = 0,
     commission: number = 0
   ): number => {
-    const goldFactor = karat === "14K" ? coefficients.goldFactor14K : coefficients.goldFactor18K;
+    let goldFactor: number;
+    if (karat === "10K") {
+      goldFactor = coefficients.goldFactor10K;
+    } else if (karat === "14K") {
+      goldFactor = coefficients.goldFactor14K;
+    } else {
+      goldFactor = coefficients.goldFactor18K;
+    }
+
     const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
 
     // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料浮动系数 / 汇率
@@ -1750,6 +1766,20 @@ export default function QuotePage() {
             {/* 金含量系数 */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-900">
+                10K金含量系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.goldFactor10K}
+                onChange={(e) => setCoefficients({...coefficients, goldFactor10K: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.001"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 0.417</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
                 14K金含量系数
               </label>
               <input
@@ -1916,12 +1946,13 @@ export default function QuotePage() {
                   <span className="text-gray-900">默认成色：</span>
                   <select
                     value={defaultKarat}
-                    onChange={(e) => setDefaultKarat(e.target.value as "14K" | "18K")}
+                    onChange={(e) => setDefaultKarat(e.target.value as "10K" | "14K" | "18K")}
                     className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-gray-900"
                     suppressHydrationWarning
                   >
-                    <option value="18K">18K</option>
+                    <option value="10K">10K</option>
                     <option value="14K">14K</option>
+                    <option value="18K">18K</option>
                   </select>
                 </div>
               </div>
@@ -2164,12 +2195,13 @@ export default function QuotePage() {
                   onChange={(e) =>
                     setCurrentProduct({
                       ...currentProduct,
-                      karat: e.target.value as "14K" | "18K",
+                      karat: e.target.value as "10K" | "14K" | "18K",
                     })
                   }
                   className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                   suppressHydrationWarning
                 >
+                  <option value="10K">10K金</option>
                   <option value="14K">14K金</option>
                   <option value="18K">18K金</option>
                 </select>
