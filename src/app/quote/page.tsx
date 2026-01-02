@@ -242,7 +242,7 @@ export default function QuotePage() {
                 type="number"
                 value={goldPrice}
                 onChange={(e) => setGoldPrice(Number(e.target.value))}
-                className="w-48 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-48 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
               />
             </div>
@@ -278,7 +278,7 @@ export default function QuotePage() {
                         productCode: e.target.value,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -294,7 +294,7 @@ export default function QuotePage() {
                         productName: e.target.value,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -312,7 +312,7 @@ export default function QuotePage() {
                       specification: e.target.value,
                     })
                   }
-                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 />
               </div>
 
@@ -330,7 +330,7 @@ export default function QuotePage() {
                         weight: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     step="0.01"
                   />
                 </div>
@@ -347,7 +347,7 @@ export default function QuotePage() {
                         laborCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     step="0.01"
                   />
                 </div>
@@ -365,7 +365,7 @@ export default function QuotePage() {
                       karat: e.target.value as "14K" | "18K",
                     })
                   }
-                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 >
                   <option value="14K">14K金</option>
                   <option value="18K">18K金</option>
