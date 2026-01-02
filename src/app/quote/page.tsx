@@ -36,10 +36,12 @@ interface PriceHistory {
 
 export default function QuotePage() {
   const [goldPrice, setGoldPrice] = useState<number>(() => {
+    if (typeof window === 'undefined') return 500;
     const savedGoldPrice = localStorage.getItem("goldPrice");
     return savedGoldPrice ? Number(savedGoldPrice) : 500;
   });
   const [goldPriceTimestamp, setGoldPriceTimestamp] = useState<string>(() => {
+    if (typeof window === 'undefined') return new Date().toLocaleString("zh-CN");
     const savedGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
     return savedGoldPriceTimestamp || new Date().toLocaleString("zh-CN");
   });
@@ -93,6 +95,7 @@ export default function QuotePage() {
 
   // 从 localStorage 加载数据
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const savedProducts = localStorage.getItem("goldProducts");
     const savedHistory = localStorage.getItem("goldPriceHistory");
     if (savedProducts) setProducts(JSON.parse(savedProducts));
@@ -101,12 +104,14 @@ export default function QuotePage() {
 
   // 保存数据到 localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (products.length > 0) {
       localStorage.setItem("goldProducts", JSON.stringify(products));
     }
   }, [products]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (priceHistory.length > 0) {
       localStorage.setItem("goldPriceHistory", JSON.stringify(priceHistory));
     }
@@ -114,6 +119,7 @@ export default function QuotePage() {
 
   // 保存金价到 localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     localStorage.setItem("goldPrice", goldPrice.toString());
     setGoldPriceTimestamp(new Date().toLocaleString("zh-CN"));
     localStorage.setItem("goldPriceTimestamp", new Date().toLocaleString("zh-CN"));
