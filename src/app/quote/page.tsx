@@ -400,13 +400,13 @@ export default function QuotePage() {
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="border border-gray-200 px-3 py-2 text-left">货号</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left">名称</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left">成色</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right">重量</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right">批发价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right">零售价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center">操作</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -464,14 +464,14 @@ export default function QuotePage() {
             <table className="w-full border-collapse border border-gray-200 text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border border-gray-200 px-3 py-2 text-left">时间</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left">货号</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left">名称</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left">成色</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right">重量</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right">市场金价（人民币/克）</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right">批发价</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right">零售价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">时间</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                 </tr>
               </thead>
               <tbody>
