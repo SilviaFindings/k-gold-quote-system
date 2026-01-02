@@ -1843,6 +1843,13 @@ export default function QuotePage() {
                 全选（当前分类）
               </button>
               <button
+                onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
+                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                suppressHydrationWarning
+              >
+                全选（所有分类）
+              </button>
+              <button
                 onClick={() => setSelectedProducts(new Set())}
                 className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
                 suppressHydrationWarning
