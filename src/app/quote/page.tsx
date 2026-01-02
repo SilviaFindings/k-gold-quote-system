@@ -794,34 +794,36 @@ export default function QuotePage() {
     let updatedCount = 0;
     const updatedProducts: Product[] = [...products];
 
-    batchUpdateRules.forEach((rule) => {
-      // 提取货号中的数字部分进行比较
-      const extractNumber = (code: string): number => {
-        const match = code.match(/(\d+)$/);
-        return match ? parseInt(match[1]) : 0;
-      };
+    // 提取货号中的数字部分进行比较
+    const extractNumber = (code: string): number => {
+      const match = code.match(/(\d+)$/);
+      return match ? parseInt(match[1]) : 0;
+    };
 
-      const startNum = extractNumber(rule.startCode);
-      const endNum = extractNumber(rule.endCode);
+    // 遍历每个产品，查找第一个匹配的规则
+    updatedProducts.forEach((product) => {
+      // 只更新当前分类的产品
+      if (product.category !== currentCategory) return;
 
-      // 获取货号的前缀（非数字部分）
-      const codePrefix = rule.startCode.replace(/\d+$/, "");
+      // 遍历规则，找到第一个匹配的
+      for (const rule of batchUpdateRules) {
+        if (!rule.startCode || !rule.endCode || !rule.supplierCode) continue;
 
-      // 更新符合条件的产品
-      updatedProducts.forEach((product) => {
-        // 只更新当前分类的产品
-        if (product.category !== currentCategory) return;
+        const startNum = extractNumber(rule.startCode);
+        const endNum = extractNumber(rule.endCode);
+        const codePrefix = rule.startCode.replace(/\d+$/, "");
 
         // 检查货号是否匹配前缀
-        if (!product.productCode.startsWith(codePrefix)) return;
+        if (!product.productCode.startsWith(codePrefix)) continue;
 
         // 提取数字并检查范围
         const productNum = extractNumber(product.productCode);
         if (productNum >= startNum && productNum <= endNum) {
           product.supplierCode = rule.supplierCode;
           updatedCount++;
+          break; // 找到匹配的规则后，跳出循环，不再检查其他规则
         }
-      });
+      }
     });
 
     // 更新产品列表
