@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 
 // 产品信息类型
 interface Product {
@@ -53,6 +54,11 @@ export default function QuotePage() {
     laborCost: 0,
     karat: "18K",
   });
+
+  // 导入Excel相关状态
+  const [importWeight, setImportWeight] = useState<boolean>(true);
+  const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
+  const [defaultKarat, setDefaultKarat] = useState<"14K" | "18K">("18K");
 
   // 格式化日期为年月日
   const formatDate = (timestamp: string): string => {
@@ -359,6 +365,131 @@ export default function QuotePage() {
     setPriceHistory(priceHistory.filter((h) => h.productId !== id));
   };
 
+  // 导入Excel文件
+  const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
+
+        if (jsonData.length < 2) {
+          alert("Excel文件为空或格式不正确！");
+          return;
+        }
+
+        const headers = jsonData[0] as string[];
+        const rows = jsonData.slice(1);
+
+        // 查找列索引
+        const productCodeIndex = headers.findIndex(h =>
+          h && h.includes("货号")
+        );
+        const productNameIndex = headers.findIndex(h =>
+          h && h.includes("名称")
+        );
+        const specificationIndex = headers.findIndex(h =>
+          h && h.includes("规格")
+        );
+        const weightIndex = headers.findIndex(h =>
+          h && h.includes("重量")
+        );
+        const laborCostIndex = headers.findIndex(h =>
+          h && h.includes("人工") || h && h.includes("工费")
+        );
+
+        if (productCodeIndex === -1 || productNameIndex === -1) {
+          alert("Excel文件必须包含货号和名称列！");
+          return;
+        }
+
+        const newProducts: Product[] = [];
+        const newHistory: PriceHistory[] = [];
+
+        rows.forEach((row: any) => {
+          const productCode = row[productCodeIndex];
+          const productName = row[productNameIndex];
+          const specification = specificationIndex !== -1 ? row[specificationIndex] : "";
+          const weight = importWeight && weightIndex !== -1 ? Number(row[weightIndex]) || 0 : 0;
+          const laborCost = importLaborCost && laborCostIndex !== -1 ? Number(row[laborCostIndex]) || 0 : 0;
+
+          if (!productCode || !productName) return;
+
+          const wholesalePrice = calculatePrice(
+            goldPrice,
+            weight,
+            laborCost,
+            defaultKarat,
+            false
+          );
+
+          const retailPrice = calculatePrice(
+            goldPrice,
+            weight,
+            laborCost,
+            defaultKarat,
+            true
+          );
+
+          const newProduct: Product = {
+            id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
+            productCode: String(productCode),
+            productName: String(productName),
+            specification: String(specification || ""),
+            weight,
+            laborCost,
+            karat: defaultKarat,
+            wholesalePrice,
+            retailPrice,
+            goldPrice,
+            timestamp: new Date().toLocaleString("zh-CN"),
+          };
+
+          newProducts.push(newProduct);
+
+          const historyRecord: PriceHistory = {
+            id: newProduct.id + "_hist",
+            productId: newProduct.id,
+            productCode: newProduct.productCode,
+            productName: newProduct.productName,
+            specification: newProduct.specification,
+            weight: newProduct.weight,
+            laborCost: newProduct.laborCost,
+            karat: newProduct.karat,
+            goldPrice,
+            wholesalePrice,
+            retailPrice,
+            timestamp: new Date().toLocaleString("zh-CN"),
+          };
+          newHistory.push(historyRecord);
+        });
+
+        // 删除已存在的重复货号
+        const newProductCodes = new Set(newProducts.map(p => p.productCode));
+        const filteredProducts = products.filter(p => !newProductCodes.has(p.productCode));
+
+        // 添加新产品
+        setProducts([...filteredProducts, ...newProducts]);
+        setPriceHistory([...priceHistory, ...newHistory]);
+
+        alert(`成功导入 ${newProducts.length} 个产品！`);
+
+        // 清空文件输入
+        e.target.value = "";
+      } catch (error) {
+        console.error("导入Excel失败:", error);
+        alert("导入Excel失败，请检查文件格式！");
+      }
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -411,9 +542,57 @@ export default function QuotePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 产品录入区域 */}
           <div className="rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-2 text-xl font-semibold text-gray-800">
-              产品信息录入
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-800">
+                产品信息录入
+              </h2>
+              <div className="flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-900">批量导入：</label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={importExcel}
+                  className="block w-48 text-sm text-gray-900 file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+            </div>
+
+            {/* 导入选项 */}
+            <div className="mb-4 rounded bg-gray-50 p-3">
+              <p className="mb-2 text-sm font-medium text-gray-900">导入选项：</p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={importWeight}
+                    onChange={(e) => setImportWeight(e.target.checked)}
+                    className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  导入重量
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={importLaborCost}
+                    onChange={(e) => setImportLaborCost(e.target.checked)}
+                    className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  导入人工成本
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-700">默认成色：</span>
+                  <select
+                    value={defaultKarat}
+                    onChange={(e) => setDefaultKarat(e.target.value as "14K" | "18K")}
+                    className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-gray-900"
+                  >
+                    <option value="18K">18K</option>
+                    <option value="14K">14K</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <p className="mb-4 text-sm text-gray-600">
               💡 <strong>快速更新模式</strong>：输入已存在的产品货号，自动填充信息并更新价格<br/>
               💡 <strong>新增产品模式</strong>：输入新货号，添加新产品
