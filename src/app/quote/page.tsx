@@ -691,6 +691,100 @@ export default function QuotePage() {
     reader.readAsArrayBuffer(file);
   };
 
+  // 数据诊断函数
+  const diagnoseData = () => {
+    console.log("========== 数据诊断开始 ==========");
+
+    const products = localStorage.getItem("goldProducts");
+    const history = localStorage.getItem("goldPriceHistory");
+    const goldPrice = localStorage.getItem("goldPrice");
+    const goldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
+    const coefficients = localStorage.getItem("priceCoefficients");
+
+    let message = "🔍 数据诊断报告\n";
+    message += "=".repeat(40) + "\n\n";
+
+    // 诊断产品数据
+    message += "【产品数据】\n";
+    if (products) {
+      try {
+        const parsed = JSON.parse(products);
+        message += `✅ 存在数据，共 ${parsed.length} 条记录\n`;
+
+        if (parsed.length > 0) {
+          const categories = [...new Set(parsed.map((p: any) => p.category))];
+          message += `📊 分类分布: ${categories.join(", ")}\n`;
+          message += `📝 样例数据:\n`;
+          message += `   货号: ${parsed[0].productCode}\n`;
+          message += `   名称: ${parsed[0].productName}\n`;
+          message += `   分类: ${parsed[0].category}\n`;
+          message += `   重量: ${parsed[0].weight}g\n`;
+          message += `   零售价: CAD$${parsed[0].retailPrice?.toFixed(2) || "N/A"}\n`;
+        }
+      } catch (e) {
+        message += `❌ 数据解析失败: ${(e as Error).message}\n`;
+      }
+    } else {
+      message += `⚠️ LocalStorage 中没有产品数据\n`;
+    }
+
+    message += "\n";
+
+    // 诊断历史记录
+    message += "【历史记录】\n";
+    if (history) {
+      try {
+        const parsed = JSON.parse(history);
+        message += `✅ 存在数据，共 ${parsed.length} 条记录\n`;
+      } catch (e) {
+        message += `❌ 数据解析失败: ${(e as Error).message}\n`;
+      }
+    } else {
+      message += `⚠️ LocalStorage 中没有历史记录\n`;
+    }
+
+    message += "\n";
+
+    // 诊断金价
+    message += "【金价设置】\n";
+    if (goldPrice) {
+      message += `✅ 金价: ¥${goldPrice}/克\n`;
+      message += `📅 更新时间: ${goldPriceTimestamp || "未知"}\n`;
+    } else {
+      message += `⚠️ LocalStorage 中没有金价数据\n`;
+    }
+
+    message += "\n";
+
+    // 诊断系数
+    message += "【价格系数】\n";
+    if (coefficients) {
+      try {
+        const coeff = JSON.parse(coefficients);
+        message += `✅ 系数已设置\n`;
+        message += `   14K金含量: ${coeff.goldFactor14K}\n`;
+        message += `   18K金含量: ${coeff.goldFactor18K}\n`;
+        message += `   零售价工费系数: ${coeff.laborFactorRetail}\n`;
+        message += `   批发价工费系数: ${coeff.laborFactorWholesale}\n`;
+      } catch (e) {
+        message += `❌ 系数解析失败: ${(e as Error).message}\n`;
+      }
+    } else {
+      message += `⚠️ LocalStorage 中没有系数数据\n`;
+    }
+
+    message += "\n";
+    message += "=".repeat(40) + "\n";
+    message += "💡 提示：\n";
+    message += "1. 如果没有数据，请先添加产品或从备份恢复\n";
+    message += "2. 诊断结果已同步到控制台 (F12)\n";
+    message += "3. 可以使用\"查看备份文件\"功能检查备份文件内容\n";
+
+    alert(message);
+
+    console.log("========== 数据诊断结束 ==========");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -756,33 +850,89 @@ export default function QuotePage() {
                 input.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (!file) return;
+
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     try {
                       const backup = JSON.parse(event.target?.result as string);
                       console.log("备份文件内容:", backup);
 
-                      if (confirm("确定要恢复数据吗？这将覆盖当前所有数据！")) {
+                      // 构建预览信息
+                      let preview = "📋 备份文件预览\n";
+                      preview += "=".repeat(40) + "\n\n";
+
+                      // 产品数据预览
+                      if (backup.products && backup.products !== "null") {
+                        try {
+                          const products = JSON.parse(backup.products);
+                          preview += `✅ 产品数据: ${products.length} 条\n`;
+                          if (products.length > 0) {
+                            const categories = [...new Set(products.map((p: any) => p.category))];
+                            preview += `   分类: ${categories.join(", ")}\n`;
+                            preview += `   最新产品: ${products[0].productCode} - ${products[0].productName}\n`;
+                          }
+                        } catch (e) {
+                          preview += `❌ 产品数据: 解析失败\n`;
+                        }
+                      } else {
+                        preview += `⚠️ 产品数据: 无\n`;
+                      }
+
+                      preview += "\n";
+
+                      // 历史记录预览
+                      if (backup.history && backup.history !== "null") {
+                        try {
+                          const history = JSON.parse(backup.history);
+                          preview += `✅ 历史记录: ${history.length} 条\n`;
+                        } catch (e) {
+                          preview += `❌ 历史记录: 解析失败\n`;
+                        }
+                      } else {
+                        preview += `⚠️ 历史记录: 无\n`;
+                      }
+
+                      preview += "\n";
+
+                      // 金价预览
+                      if (backup.goldPrice && backup.goldPrice !== "null") {
+                        preview += `✅ 金价: ¥${backup.goldPrice}/克\n`;
+                      } else {
+                        preview += `⚠️ 金价: 无\n`;
+                      }
+
+                      preview += "\n";
+
+                      // 系数预览
+                      if (backup.coefficients && backup.coefficients !== "null") {
+                        preview += `✅ 价格系数: 已设置\n`;
+                      } else {
+                        preview += `⚠️ 价格系数: 无\n`;
+                      }
+
+                      preview += "\n";
+                      preview += "⚠️ 警告：这将覆盖当前所有数据！\n";
+                      preview += "确定要恢复吗？";
+
+                      if (confirm(preview)) {
+                        console.log("开始恢复数据...");
+
                         // 恢复产品数据
                         if (backup.products && backup.products !== "null") {
                           localStorage.setItem("goldProducts", backup.products);
-                          console.log("产品数据已恢复，长度:", JSON.parse(backup.products).length);
-                        } else {
-                          console.log("备份文件中没有产品数据");
+                          console.log("✅ 产品数据已恢复");
                         }
 
                         // 恢复历史记录
                         if (backup.history && backup.history !== "null") {
                           localStorage.setItem("goldPriceHistory", backup.history);
-                          console.log("历史记录已恢复，长度:", JSON.parse(backup.history).length);
-                        } else {
-                          console.log("备份文件中没有历史记录");
+                          console.log("✅ 历史记录已恢复");
                         }
 
                         // 恢复金价
                         if (backup.goldPrice && backup.goldPrice !== "null") {
                           localStorage.setItem("goldPrice", backup.goldPrice);
-                          console.log("金价已恢复:", backup.goldPrice);
+                          console.log("✅ 金价已恢复");
                         }
 
                         // 恢复金价时间戳
@@ -793,27 +943,20 @@ export default function QuotePage() {
                         // 恢复系数
                         if (backup.coefficients && backup.coefficients !== "null") {
                           localStorage.setItem("priceCoefficients", backup.coefficients);
-                          console.log("系数已恢复");
+                          console.log("✅ 系数已恢复");
                         }
 
-                        // 验证恢复的数据
-                        setTimeout(() => {
-                          const verifyProducts = localStorage.getItem("goldProducts");
-                          const verifyHistory = localStorage.getItem("goldPriceHistory");
-                          console.log("验证 - 产品数据:", verifyProducts ? JSON.parse(verifyProducts).length : "0");
-                          console.log("验证 - 历史记录:", verifyHistory ? JSON.parse(verifyHistory).length : "0");
+                        console.log("数据恢复完成，准备刷新页面...");
 
-                          if (verifyProducts && JSON.parse(verifyProducts).length > 0) {
-                            alert("数据恢复成功！请刷新页面");
-                            location.reload();
-                          } else {
-                            alert("数据恢复失败！备份文件可能没有产品数据。");
-                          }
-                        }, 100);
+                        // 立即刷新页面
+                        setTimeout(() => {
+                          alert("✅ 数据恢复成功！页面即将刷新...");
+                          location.reload();
+                        }, 500);
                       }
                     } catch (err) {
                       console.error("恢复数据错误:", err);
-                      alert("备份文件格式错误！\n错误信息: " + (err as Error).message);
+                      alert("❌ 备份文件格式错误！\n\n错误信息: " + (err as Error).message);
                     }
                   };
                   reader.readAsText(file);
@@ -847,6 +990,109 @@ export default function QuotePage() {
               suppressHydrationWarning
             >
               查看数据统计
+            </button>
+            <button
+              onClick={diagnoseData}
+              className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+              suppressHydrationWarning
+            >
+              诊断数据
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("确定要查看备份文件内容吗？")) {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = ".json";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const backup = JSON.parse(event.target?.result as string);
+                        console.log("备份文件内容:", backup);
+
+                        let message = "备份文件内容：\n\n";
+
+                        // 产品数据
+                        if (backup.products && backup.products !== "null") {
+                          try {
+                            const products = JSON.parse(backup.products);
+                            message += `产品数量: ${products.length}\n`;
+                            if (products.length > 0) {
+                              message += `产品样例:\n`;
+                              message += `  - ${products[0].category} | ${products[0].productCode} | ${products[0].productName}\n`;
+                            }
+                          } catch (e) {
+                            message += `产品数据解析失败\n`;
+                          }
+                        } else {
+                          message += `产品数据: 无\n`;
+                        }
+
+                        // 历史记录
+                        if (backup.history && backup.history !== "null") {
+                          try {
+                            const history = JSON.parse(backup.history);
+                            message += `历史记录数量: ${history.length}\n`;
+                          } catch (e) {
+                            message += `历史记录解析失败\n`;
+                          }
+                        } else {
+                          message += `历史记录: 无\n`;
+                        }
+
+                        // 金价
+                        if (backup.goldPrice && backup.goldPrice !== "null") {
+                          message += `金价: ¥${backup.goldPrice}/克\n`;
+                        } else {
+                          message += `金价: 无\n`;
+                        }
+
+                        // 系数
+                        if (backup.coefficients && backup.coefficients !== "null") {
+                          try {
+                            const coeff = JSON.parse(backup.coefficients);
+                            message += `价格系数: 已设置\n`;
+                          } catch (e) {
+                            message += `价格系数解析失败\n`;
+                          }
+                        } else {
+                          message += `价格系数: 无\n`;
+                        }
+
+                        alert(message);
+                      } catch (err) {
+                        alert("备份文件格式错误！\n" + (err as Error).message);
+                      }
+                    };
+                    reader.readAsText(file);
+                  };
+                  input.click();
+                }
+              }}
+              className="rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700"
+              suppressHydrationWarning
+            >
+              查看备份文件
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("⚠️ 警告：这将清除所有数据！\n\n确定要清除所有 localStorage 数据吗？\n建议在清除前先备份数据。")) {
+                  localStorage.removeItem("goldProducts");
+                  localStorage.removeItem("goldPriceHistory");
+                  localStorage.removeItem("goldPrice");
+                  localStorage.removeItem("goldPriceTimestamp");
+                  localStorage.removeItem("priceCoefficients");
+                  alert("所有数据已清除，请刷新页面");
+                  location.reload();
+                }
+              }}
+              className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              suppressHydrationWarning
+            >
+              清除所有数据
             </button>
           </div>
           <div className="flex flex-wrap gap-4" suppressHydrationWarning>
