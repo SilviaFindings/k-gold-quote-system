@@ -329,7 +329,31 @@ export default function QuotePage() {
       message += `金价设置: ${savedGoldPrice && savedGoldPrice !== "null" ? "✅ 已加载" : "❌ 无数据"}\n`;
       message += `价格系数: ${savedCoefficients && savedCoefficients !== "null" ? "✅ 已加载" : "❌ 无数据"}\n\n`;
       message += `总计加载产品: ${loadedCount} 条\n\n`;
-      message += `💡 请查看控制台 (F12) 了解详细信息`;
+
+      // 统计各分类的产品数量
+      if (savedProducts && savedProducts !== "null") {
+        try {
+          const parsedProducts = JSON.parse(savedProducts);
+          const categoryCounts: Record<string, number> = {};
+          parsedProducts.forEach((p: Product) => {
+            categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+          });
+
+          if (Object.keys(categoryCounts).length > 0) {
+            message += `📂 各分类产品数量：\n`;
+            Object.entries(categoryCounts).forEach(([category, count]) => {
+              message += `  • ${category}: ${count} 个\n`;
+            });
+            message += `\n⚠️ 重要提示：\n`;
+            message += `产品列表只显示当前选中分类的数据。\n`;
+            message += `请点击顶部的分类按钮切换到有数据的分类！\n`;
+          }
+        } catch (e) {
+          message += `⚠️ 无法统计分类信息\n`;
+        }
+      }
+
+      message += `\n💡 详细信息请查看控制台 (F12)`;
 
       alert(message);
     }, 500);
@@ -890,24 +914,47 @@ export default function QuotePage() {
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
           <div className="flex flex-wrap gap-2">
-            {PRODUCT_CATEGORIES.map((category) => (
-              <button
-                key={category}
-                onClick={() => {
-                  setCurrentCategory(category);
-                  setCurrentProduct({ ...currentProduct, category });
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentCategory === category
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-                suppressHydrationWarning
-              >
-                {category}
-              </button>
-            ))}
+            {PRODUCT_CATEGORIES.map((category) => {
+              const count = products.filter(p => p.category === category).length;
+              const hasData = count > 0;
+              return (
+                <button
+                  key={category}
+                  onClick={() => {
+                    setCurrentCategory(category);
+                    setCurrentProduct({ ...currentProduct, category });
+                  }}
+                  className={`relative px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentCategory === category
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                  suppressHydrationWarning
+                >
+                  {category}
+                  {hasData && (
+                    <span
+                      className={`ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full ${
+                        currentCategory === category
+                          ? "bg-white text-blue-600"
+                          : "bg-blue-600 text-white"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
+          {products.filter(p => p.category === currentCategory).length === 0 && products.length > 0 && (
+            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ 当前分类（{currentCategory}）暂无数据。
+                共有 {products.length} 个产品，请点击上方有数字标记的分类查看。
+              </p>
+            </div>
+          )}
         </div>
 
         {/* 金价设置区域 */}
