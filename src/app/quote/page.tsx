@@ -624,7 +624,7 @@ export default function QuotePage() {
         {/* 分类导航区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" suppressHydrationWarning>
             {PRODUCT_CATEGORIES.map((category) => (
               <button
                 key={category}
@@ -647,7 +647,7 @@ export default function QuotePage() {
         {/* 金价设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">金价设置</h2>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4" suppressHydrationWarning>
             <div className="flex flex-col">
               <label className="mb-2 text-sm font-medium text-gray-900">
                 市场金价（人民币/克）
@@ -689,7 +689,7 @@ export default function QuotePage() {
         {/* 系数设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">价格系数设置</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
             {/* 金含量系数 */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-900">
@@ -862,7 +862,7 @@ export default function QuotePage() {
               💡 <strong>快速更新模式</strong>：输入已存在的产品货号，自动填充信息并更新价格<br/>
               💡 <strong>新增产品模式</strong>：输入新货号，添加新产品
             </p>
-            <div className="space-y-4">
+            <div className="space-y-4" suppressHydrationWarning>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-900">
                   当前分类
