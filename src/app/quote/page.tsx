@@ -1029,6 +1029,39 @@ export default function QuotePage() {
     setPriceHistory(priceHistory.filter((h) => h.productId !== id));
   };
 
+  // 批量删除选中的产品
+  const deleteSelectedProducts = () => {
+    if (selectedProducts.size === 0) {
+      alert("请先选择要删除的产品");
+      return;
+    }
+
+    const count = selectedProducts.size;
+    const categoryNames = Array.from(selectedProducts).map(id => {
+      const product = products.find(p => p.id === id);
+      return product?.category || "";
+    });
+
+    // 显示将要删除的产品数量和涉及哪些分类
+    const uniqueCategories = [...new Set(categoryNames)].filter(Boolean);
+    const categoryText = uniqueCategories.length > 0 ? uniqueCategories.join("、") : "多个分类";
+
+    if (!confirm(`确定要删除选中的 ${count} 个产品吗？\n\n涉及分类：${categoryText}\n\n删除后无法恢复！`)) {
+      return;
+    }
+
+    // 从产品列表中删除选中的产品
+    setProducts(products.filter((p) => !selectedProducts.has(p.id)));
+
+    // 从历史记录中删除相关产品的所有记录
+    setPriceHistory(priceHistory.filter((h) => !selectedProducts.has(h.productId)));
+
+    // 清空选择
+    setSelectedProducts(new Set());
+
+    alert(`✅ 成功删除 ${count} 个产品及其相关历史记录！`);
+  };
+
   // 导入Excel文件
   const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log("importExcel 函数被调用");
@@ -1838,6 +1871,13 @@ export default function QuotePage() {
                 suppressHydrationWarning
               >
                 批量更新供应商代码
+              </button>
+              <button
+                onClick={deleteSelectedProducts}
+                className="rounded bg-red-600 px-6 py-2 text-white hover:bg-red-700"
+                suppressHydrationWarning
+              >
+                批量删除选中产品
               </button>
               <button
                 onClick={() => setSelectedProducts(new Set(products.filter(p => p.category === currentCategory).map(p => p.id)))}
