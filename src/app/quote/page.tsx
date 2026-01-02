@@ -89,6 +89,9 @@ export default function QuotePage() {
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
   const [defaultKarat, setDefaultKarat] = useState<"14K" | "18K">("18K");
 
+  // 导出Excel范围选择
+  const [exportScope, setExportScope] = useState<"current" | "all">("current");
+
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
     goldFactor14K: number;
@@ -580,9 +583,14 @@ export default function QuotePage() {
 
   // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
   const exportToExcel = () => {
-    // 按货号分组（从历史记录中获取，只包含当前分类）
+    // 根据选择的范围过滤历史记录
+    const filteredHistory = exportScope === "current"
+      ? priceHistory.filter(h => h.category === currentCategory)
+      : priceHistory;
+
+    // 按货号分组
     const productGroups: { [key: string]: PriceHistory[] } = {};
-    priceHistory.filter(h => h.category === currentCategory).forEach((history) => {
+    filteredHistory.forEach((history) => {
       if (!productGroups[history.productCode]) {
         productGroups[history.productCode] = [];
       }
@@ -631,7 +639,11 @@ export default function QuotePage() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv";
+    // 根据导出范围设置文件名
+    const fileName = exportScope === "current"
+      ? `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv"
+      : `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv";
+    link.download = fileName;
     link.click();
   };
 
@@ -1721,13 +1733,25 @@ export default function QuotePage() {
                 当前产品列表 - {currentCategory}
               </h2>
               {products.filter(p => p.category === currentCategory).length > 0 && (
-                <button
-                  onClick={() => exportToExcel()}
-                  className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-                  suppressHydrationWarning
-                >
-                  导出Excel
-                </button>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">导出范围:</label>
+                  <select
+                    value={exportScope}
+                    onChange={(e) => setExportScope(e.target.value as "current" | "all")}
+                    className="px-3 py-2 border border-gray-300 rounded text-sm"
+                    suppressHydrationWarning
+                  >
+                    <option value="current">当前分类</option>
+                    <option value="all">所有分类</option>
+                  </select>
+                  <button
+                    onClick={() => exportToExcel()}
+                    className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+                    suppressHydrationWarning
+                  >
+                    导出Excel
+                  </button>
+                </div>
               )}
             </div>
             <div className="overflow-x-auto">
