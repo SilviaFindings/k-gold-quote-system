@@ -2080,14 +2080,15 @@ export default function QuotePage() {
             </div>
 
             {/* 独立的横向滚动条 */}
-            <div className="mb-2 bg-gray-100 border border-gray-300 rounded">
+            <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-1">
+              <div className="text-xs text-gray-500 mb-1">↔️ 横向滚动条</div>
               <div
                 ref={scrollBarRef}
-                className="h-4"
-                style={{ overflowX: 'auto', overflowY: 'hidden', width: 'fit-content', minWidth: '100%' }}
+                className="h-8 bg-white border border-gray-300 rounded"
+                style={{ overflowX: 'auto', overflowY: 'hidden', width: '100%' }}
                 onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
               >
-                <div style={{ width: '2000px', height: '4px' }}></div>
+                <div style={{ width: '2000px', height: '32px' }}></div>
               </div>
             </div>
 
