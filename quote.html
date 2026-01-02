@@ -31,7 +31,7 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-4">金价设置</h2>
             <div class="flex flex-wrap gap-4">
                 <div class="flex flex-col">
-                    <label class="mb-2 text-sm font-medium text-gray-700">市场金价（加币/克）</label>
+                    <label class="mb-2 text-sm font-medium text-gray-700">市场金价（人民币/克）</label>
                     <input
                         type="number"
                         id="goldPrice"
@@ -95,7 +95,7 @@
                             />
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700">人工成本（加币）</label>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">人工成本（人民币）</label>
                             <input
                                 type="number"
                                 id="laborCost"
@@ -181,7 +181,7 @@
                             <th class="border border-gray-200 px-3 py-2 text-left">名称</th>
                             <th class="border border-gray-200 px-3 py-2 text-left">成色</th>
                             <th class="border border-gray-200 px-3 py-2 text-right">重量</th>
-                            <th class="border border-gray-200 px-3 py-2 text-right">市场金价</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">市场金价（人民币/克）</th>
                             <th class="border border-gray-200 px-3 py-2 text-right">批发价</th>
                             <th class="border border-gray-200 px-3 py-2 text-right">零售价</th>
                         </tr>
@@ -406,7 +406,7 @@
                     <td class="border border-gray-200 px-3 py-2">${history.karat}</td>
                     <td class="border border-gray-200 px-3 py-2 text-right">${history.weight}</td>
                     <td class="border border-gray-200 px-3 py-2 text-right">
-                        CAD$${history.goldPrice.toFixed(2)}
+                        ¥${history.goldPrice.toFixed(2)}
                     </td>
                     <td class="border border-gray-200 px-3 py-2 text-right text-green-600">
                         CAD$${history.wholesalePrice.toFixed(2)}

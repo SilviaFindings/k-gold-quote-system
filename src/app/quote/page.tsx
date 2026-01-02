@@ -236,7 +236,7 @@ export default function QuotePage() {
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col">
               <label className="mb-2 text-sm font-medium text-gray-700">
-                市场金价（加币/克）
+                市场金价（人民币/克）
               </label>
               <input
                 type="number"
@@ -336,7 +336,7 @@ export default function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
-                    人工成本（加币）
+                    人工成本（人民币）
                   </label>
                   <input
                     type="number"
@@ -469,7 +469,7 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-left">名称</th>
                   <th className="border border-gray-200 px-3 py-2 text-left">成色</th>
                   <th className="border border-gray-200 px-3 py-2 text-right">重量</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right">市场金价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right">市场金价（人民币/克）</th>
                   <th className="border border-gray-200 px-3 py-2 text-right">批发价</th>
                   <th className="border border-gray-200 px-3 py-2 text-right">零售价</th>
                 </tr>
@@ -485,7 +485,7 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2">{history.karat}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right">{history.weight}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right">
-                      CAD${history.goldPrice.toFixed(2)}
+                      ¥{history.goldPrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
                       CAD${history.wholesalePrice.toFixed(2)}
