@@ -241,6 +241,100 @@ export default function QuotePage() {
     console.log("========== 数据加载完成 ==========");
   }, []);
 
+  // 手动重新加载数据的函数
+  const reloadFromLocalStorage = () => {
+    console.log("========== 手动重新加载数据 ==========");
+
+    const savedProducts = localStorage.getItem("goldProducts");
+    const savedHistory = localStorage.getItem("goldPriceHistory");
+    const savedGoldPrice = localStorage.getItem("goldPrice");
+    const savedCoefficients = localStorage.getItem("priceCoefficients");
+
+    console.log("LocalStorage 中的产品数据:", savedProducts ? `${savedProducts.length} 字符` : "null");
+    console.log("LocalStorage 中的历史记录:", savedHistory ? `${savedHistory.length} 字符` : "null");
+
+    let loadedCount = 0;
+
+    // 加载产品数据
+    if (savedProducts && savedProducts !== "null") {
+      try {
+        const parsedProducts = JSON.parse(savedProducts);
+        console.log("✅ 解析产品数据成功:", parsedProducts.length, "条");
+
+        // 数据迁移
+        const migratedProducts = parsedProducts.map((p: Product) => ({
+          ...p,
+          category: (p.category as any) === "水滴扣" ? "扣子" : p.category
+        }));
+
+        console.log("设置 products state...");
+        setProducts(migratedProducts);
+        loadedCount += parsedProducts.length;
+      } catch (e) {
+        console.error("❌ 解析产品数据失败:", e);
+      }
+    } else {
+      console.log("⚠️ LocalStorage 中没有有效的产品数据");
+    }
+
+    // 加载历史记录
+    if (savedHistory && savedHistory !== "null") {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        console.log("✅ 解析历史记录成功:", parsedHistory.length, "条");
+
+        const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
+          ...h,
+          category: (h.category as any) === "水滴扣" ? "扣子" : h.category
+        }));
+
+        console.log("设置 priceHistory state...");
+        setPriceHistory(migratedHistory);
+      } catch (e) {
+        console.error("❌ 解析历史记录失败:", e);
+      }
+    } else {
+      console.log("⚠️ LocalStorage 中没有有效的历史记录");
+    }
+
+    // 加载金价
+    if (savedGoldPrice && savedGoldPrice !== "null") {
+      try {
+        const goldPriceNum = Number(savedGoldPrice);
+        console.log("✅ 加载金价:", goldPriceNum);
+        setGoldPrice(goldPriceNum);
+      } catch (e) {
+        console.error("❌ 解析金价失败:", e);
+      }
+    }
+
+    // 加载系数
+    if (savedCoefficients && savedCoefficients !== "null") {
+      try {
+        const coeff = JSON.parse(savedCoefficients);
+        console.log("✅ 加载系数:", coeff);
+        setCoefficients(coeff);
+      } catch (e) {
+        console.error("❌ 解析系数失败:", e);
+      }
+    }
+
+    console.log("========== 手动重新加载完成 ==========");
+
+    // 显示结果
+    setTimeout(() => {
+      let message = `📊 数据重新加载结果\n\n`;
+      message += `产品数据: ${savedProducts && savedProducts !== "null" ? "✅ 已加载" : "❌ 无数据"}\n`;
+      message += `历史记录: ${savedHistory && savedHistory !== "null" ? "✅ 已加载" : "❌ 无数据"}\n`;
+      message += `金价设置: ${savedGoldPrice && savedGoldPrice !== "null" ? "✅ 已加载" : "❌ 无数据"}\n`;
+      message += `价格系数: ${savedCoefficients && savedCoefficients !== "null" ? "✅ 已加载" : "❌ 无数据"}\n\n`;
+      message += `总计加载产品: ${loadedCount} 条\n\n`;
+      message += `💡 请查看控制台 (F12) 了解详细信息`;
+
+      alert(message);
+    }, 500);
+  };
+
   // 保存数据到 localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -946,12 +1040,13 @@ export default function QuotePage() {
                           console.log("✅ 系数已恢复");
                         }
 
-                        console.log("数据恢复完成，准备刷新页面...");
+                        console.log("数据恢复完成，准备重新加载数据...");
 
-                        // 立即刷新页面
+                        // 重新加载数据（不刷新页面）
                         setTimeout(() => {
-                          alert("✅ 数据恢复成功！页面即将刷新...");
-                          location.reload();
+                          console.log("开始重新加载数据...");
+                          reloadFromLocalStorage();
+                          alert("✅ 数据恢复成功！\n\n数据已重新加载到页面。");
                         }, 500);
                       }
                     } catch (err) {
@@ -1093,6 +1188,13 @@ export default function QuotePage() {
               suppressHydrationWarning
             >
               清除所有数据
+            </button>
+            <button
+              onClick={reloadFromLocalStorage}
+              className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+              suppressHydrationWarning
+            >
+              重新加载数据
             </button>
           </div>
           <div className="flex flex-wrap gap-4" suppressHydrationWarning>
