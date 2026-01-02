@@ -40,14 +40,12 @@ export default function Home() {
 
         {/* 底部按钮区 */}
         <div className="flex w-full flex-col gap-4 text-base font-medium sm:w-auto sm:flex-row">
-          {/* 按钮 1：前往首页 */}
+          {/* 按钮 1：前往报价单 */}
           <a
-            className="flex h-12 w-full min-w-[160px] items-center justify-center gap-2 rounded-full bg-black px-8 text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 md:w-auto"
-            href="https://code.coze.cn/"
-            target="_blank"
-            rel="noopener noreferrer"
+            className="flex h-12 w-full min-w-[160px] items-center justify-center gap-2 rounded-full bg-blue-600 px-8 text-white transition-colors hover:bg-blue-700 md:w-auto"
+            href="/quote"
           >
-            前往首页
+            打开报价单
           </a>
 
           {/* 按钮 2：查看文档 */}
