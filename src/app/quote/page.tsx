@@ -35,8 +35,8 @@ interface Product {
   specification: string;
   weight: number;
   laborCost: number;
-  karat: "10K" | "14K" | "18K";
-  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  karat: "10K" | "14K" | "18K" | "925银";
+  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色（银产品不使用）
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -66,8 +66,8 @@ interface PriceHistory {
   specification: string;
   weight: number;
   laborCost: number;
-  karat: "10K" | "14K" | "18K";
-  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  karat: "10K" | "14K" | "18K" | "925银";
+  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色（银产品不使用）
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -137,7 +137,7 @@ export default function QuotePage() {
   // 导入Excel相关状态
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
-  const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K">("18K");
+  const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K" | "925银">("18K");
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
@@ -159,6 +159,7 @@ export default function QuotePage() {
     goldFactor10K: number;
     goldFactor14K: number;
     goldFactor18K: number;
+    silverFactor: number;
     laborFactorRetail: number;
     laborFactorWholesale: number;
     materialLoss: number;
@@ -171,6 +172,7 @@ export default function QuotePage() {
         goldFactor10K: 0.417,
         goldFactor14K: 0.586,
         goldFactor18K: 0.755,
+        silverFactor: 0.925,
         laborFactorRetail: 5,
         laborFactorWholesale: 3,
         materialLoss: 1.15,
@@ -187,6 +189,7 @@ export default function QuotePage() {
         goldFactor10K: parsed.goldFactor10K ?? 0.417,
         goldFactor14K: parsed.goldFactor14K ?? 0.586,
         goldFactor18K: parsed.goldFactor18K ?? 0.755,
+        silverFactor: parsed.silverFactor ?? 0.925,
         laborFactorRetail: parsed.laborFactorRetail ?? 5,
         laborFactorWholesale: parsed.laborFactorWholesale ?? 3,
         materialLoss: parsed.materialLoss ?? 1.15,
@@ -199,6 +202,7 @@ export default function QuotePage() {
       goldFactor10K: 0.417,
       goldFactor14K: 0.586,
       goldFactor18K: 0.755,
+      silverFactor: 0.925,
       laborFactorRetail: 5,
       laborFactorWholesale: 3,
       materialLoss: 1.15,
@@ -213,6 +217,66 @@ export default function QuotePage() {
     return new Date(timestamp).toLocaleDateString("zh-CN");
   };
 
+  // 从货号智能识别材质类型
+  const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K" | "925银", goldColor: "黄金" | "白金" | "玫瑰金" } => {
+    const code = productCode.toUpperCase();
+
+    // 1. 优先检查 /10k, /14k, /18k 格式（不区分大小写）
+    const slashKaratMatch = code.match(/\/(10K|14K|18K)(?=\/|$|[^A-Z])/i);
+    if (slashKaratMatch) {
+      const karatValue = slashKaratMatch[1].toUpperCase() as "10K" | "14K" | "18K";
+      return { karat: karatValue, goldColor: "黄金" };
+    }
+
+    // 2. 检查以 10K, 14K, 18K 结尾
+    const endKaratMatch = code.match(/(10K|14K|18K)$/i);
+    if (endKaratMatch) {
+      const karatValue = endKaratMatch[1].toUpperCase() as "10K" | "14K" | "18K";
+      return { karat: karatValue, goldColor: "黄金" };
+    }
+
+    // 3. 检查 K14, K18, K10 前缀
+    const kPrefixMatch = code.match(/^(K14|K18|K10)/i);
+    if (kPrefixMatch) {
+      const karatMap: Record<string, "14K" | "18K" | "10K"> = {
+        "K14": "14K",
+        "K18": "18K",
+        "K10": "10K"
+      };
+      const karatValue = karatMap[kPrefixMatch[1].toUpperCase()];
+      if (karatValue) {
+        return { karat: karatValue, goldColor: "黄金" };
+      }
+    }
+
+    // 4. 检查 /K14, /K18, /K10 格式
+    const slashKPrefixMatch = code.match(/\/(K14|K18|K10)(?=\/|$|[^A-Z])/i);
+    if (slashKPrefixMatch) {
+      const karatMap: Record<string, "14K" | "18K" | "10K"> = {
+        "K14": "14K",
+        "K18": "18K",
+        "K10": "10K"
+      };
+      const karatValue = karatMap[slashKPrefixMatch[1].toUpperCase()];
+      if (karatValue) {
+        return { karat: karatValue, goldColor: "黄金" };
+      }
+    }
+
+    // 5. 检查银产品标识
+    // AG (Argentum = 银) 或 SV (Silver) 前缀
+    if (code.match(/^(AG|SV)/i) || code.includes("-AG") || code.includes("-SV")) {
+      return { karat: "925银", goldColor: "黄金" };
+    }
+    // 925 标识
+    if (code.includes("925") || code.match(/\/925/i)) {
+      return { karat: "925银", goldColor: "黄金" };
+    }
+
+    // 默认返回 18K
+    return { karat: "18K", goldColor: "黄金" };
+  };
+
   // 根据货号查找产品（获取当前分类的最新记录）
   const findLatestProductByCode = (code: string): Product | undefined => {
     const codeProducts = products.filter((p) => p.productCode === code && p.category === currentCategory);
@@ -221,9 +285,12 @@ export default function QuotePage() {
     return codeProducts[codeProducts.length - 1];
   };
 
-  // 当货号改变时，自动填充已存在产品的信息
+  // 当货号改变时，自动填充已存在产品的信息，并智能识别材质
   useEffect(() => {
     if (currentProduct.productCode) {
+      // 智能识别材质
+      const detected = detectMaterialFromCode(currentProduct.productCode);
+
       const existingProduct = findLatestProductByCode(currentProduct.productCode);
       if (existingProduct) {
         // 自动填充已存在产品的信息
@@ -233,7 +300,13 @@ export default function QuotePage() {
           specification: existingProduct.specification,
           weight: existingProduct.weight,
           laborCost: existingProduct.laborCost,
-          karat: existingProduct.karat,
+          karat: detected.karat,  // 使用智能识别的材质
+        });
+      } else {
+        // 没有找到现有产品，仅应用智能识别的材质
+        setCurrentProduct({
+          ...currentProduct,
+          karat: detected.karat,
         });
       }
     }
@@ -346,6 +419,7 @@ export default function QuotePage() {
           goldFactor10K: coeff.goldFactor10K ?? 0.417,
           goldFactor14K: coeff.goldFactor14K ?? 0.586,
           goldFactor18K: coeff.goldFactor18K ?? 0.755,
+          silverFactor: coeff.silverFactor ?? 0.925,
           laborFactorRetail: coeff.laborFactorRetail ?? 5,
           laborFactorWholesale: coeff.laborFactorWholesale ?? 3,
           materialLoss: coeff.materialLoss ?? 1.15,
@@ -469,6 +543,7 @@ export default function QuotePage() {
           goldFactor10K: coeff.goldFactor10K ?? 0.417,
           goldFactor14K: coeff.goldFactor14K ?? 0.586,
           goldFactor18K: coeff.goldFactor18K ?? 0.755,
+          silverFactor: coeff.silverFactor ?? 0.925,
           laborFactorRetail: coeff.laborFactorRetail ?? 5,
           laborFactorWholesale: coeff.laborFactorWholesale ?? 3,
           materialLoss: coeff.materialLoss ?? 1.15,
@@ -561,7 +636,7 @@ export default function QuotePage() {
     marketGoldPrice: number,
     weight: number,
     laborCost: number,
-    karat: "10K" | "14K" | "18K",
+    karat: "10K" | "14K" | "18K" | "925银",
     isRetail: boolean,
     accessoryCost: number = 0,
     stoneCost: number = 0,
@@ -574,8 +649,11 @@ export default function QuotePage() {
       goldFactor = coefficients.goldFactor10K;
     } else if (karat === "14K") {
       goldFactor = coefficients.goldFactor14K;
-    } else {
+    } else if (karat === "18K") {
       goldFactor = coefficients.goldFactor18K;
+    } else {
+      // 925银
+      goldFactor = coefficients.silverFactor;
     }
 
     const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
@@ -1093,11 +1171,15 @@ export default function QuotePage() {
 
           if (!productCode || !productName) return;
 
+          // 从货号智能识别材质类型
+          const detectedMaterial = detectMaterialFromCode(String(productCode));
+          const detectedKarat = detectedMaterial.karat;
+
           const wholesalePrice = calculatePrice(
             goldPrice,
             weight,
             laborCost,
-            defaultKarat,
+            detectedKarat,
             false,
             accessoryCost,
             stoneCost,
@@ -1110,7 +1192,7 @@ export default function QuotePage() {
             goldPrice,
             weight,
             laborCost,
-            defaultKarat,
+            detectedKarat,
             true,
             accessoryCost,
             stoneCost,
@@ -1127,8 +1209,8 @@ export default function QuotePage() {
             specification: String(specification || ""),
             weight,
             laborCost,
-            karat: defaultKarat,
-            goldColor: "黄金",
+            karat: detectedKarat,
+            goldColor: detectedMaterial.goldColor,
             wholesalePrice,
             retailPrice,
             goldPrice,
@@ -1837,6 +1919,20 @@ export default function QuotePage() {
               />
               <div className="mt-1 text-xs text-gray-500">默认: 0.755</div>
             </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                925银含量系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.silverFactor}
+                onChange={(e) => setCoefficients({...coefficients, silverFactor: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.001"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 0.925</div>
+            </div>
 
             {/* 工费系数 */}
             <div>
@@ -1974,16 +2070,17 @@ export default function QuotePage() {
                   导入人工成本
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-900">默认成色：</span>
+                  <span className="text-gray-900">默认材质：</span>
                   <select
                     value={defaultKarat}
-                    onChange={(e) => setDefaultKarat(e.target.value as "10K" | "14K" | "18K")}
+                    onChange={(e) => setDefaultKarat(e.target.value as "10K" | "14K" | "18K" | "925银")}
                     className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-gray-900"
                     suppressHydrationWarning
                   >
-                    <option value="10K">10K</option>
-                    <option value="14K">14K</option>
-                    <option value="18K">18K</option>
+                    <option value="10K">10K金</option>
+                    <option value="14K">14K金</option>
+                    <option value="18K">18K金</option>
+                    <option value="925银">925银</option>
                   </select>
                 </div>
               </div>
@@ -2219,14 +2316,14 @@ export default function QuotePage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-900">
-                  金成色
+                  材质类型
                 </label>
                 <select
                   value={currentProduct.karat}
                   onChange={(e) =>
                     setCurrentProduct({
                       ...currentProduct,
-                      karat: e.target.value as "10K" | "14K" | "18K",
+                      karat: e.target.value as "10K" | "14K" | "18K" | "925银",
                     })
                   }
                   className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
@@ -2235,7 +2332,11 @@ export default function QuotePage() {
                   <option value="10K">10K金</option>
                   <option value="14K">14K金</option>
                   <option value="18K">18K金</option>
+                  <option value="925银">925银</option>
                 </select>
+                <div className="mt-1 text-xs text-gray-500">
+                  💡 货号中包含 /10K、/14K、/18K、/K10、/K14、/K18、AG-、SV-、925 等标识会自动识别
+                </div>
               </div>
 
               <div>
