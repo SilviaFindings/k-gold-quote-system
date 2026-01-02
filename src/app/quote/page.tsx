@@ -145,13 +145,13 @@ export default function QuotePage() {
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
-    startCode: string;
-    endCode: string;
+    productCodes: string;
     supplierCode: string;
   }[]>([
-    { startCode: "KEW001", endCode: "KEW021", supplierCode: "J5" },
-    { startCode: "KEW022", endCode: "KEW030", supplierCode: "K2" },
-    { startCode: "KEW031", endCode: "KEW032", supplierCode: "K15" },
+    { productCodes: "KEW001,KEW002,KEW003,KEW004,KEW005,KEW006,KEW007,KEW008,KEW009,KEW010,KEW011,KEW012,KEW013,KEW014,KEW015,KEW016,KEW017,KEW018,KEW019,KEW020,KEW021", supplierCode: "J5" },
+    { productCodes: "KEW022,KEW023,KEW024,KEW025,KEW026,KEW027,KEW028,KEW029,KEW030", supplierCode: "K2" },
+    { productCodes: "KEW031/14k,KEW032/18k,KEW033/10k", supplierCode: "K15" },
+    { productCodes: "K14KEW027/K14", supplierCode: "K14" },
   ]);
 
   // 价格系数配置
@@ -798,12 +798,6 @@ export default function QuotePage() {
     console.log("当前分类:", currentCategory);
     console.log("更新规则:", batchUpdateRules);
 
-    // 提取货号中的数字部分进行比较
-    const extractNumber = (code: string): number => {
-      const match = code.match(/(\d+)$/);
-      return match ? parseInt(match[1]) : 0;
-    };
-
     // 遍历每个产品，查找第一个匹配的规则
     updatedProducts.forEach((product) => {
       // 只更新当前分类的产品
@@ -811,18 +805,13 @@ export default function QuotePage() {
 
       // 遍历规则，找到第一个匹配的
       for (const rule of batchUpdateRules) {
-        if (!rule.startCode || !rule.endCode || !rule.supplierCode) continue;
+        if (!rule.productCodes || !rule.supplierCode) continue;
 
-        const startNum = extractNumber(rule.startCode);
-        const endNum = extractNumber(rule.endCode);
-        const codePrefix = rule.startCode.replace(/\d+$/, "");
+        // 解析货号列表（逗号分隔）
+        const codes = rule.productCodes.split(',').map(c => c.trim());
 
-        // 检查货号是否匹配前缀
-        if (!product.productCode.startsWith(codePrefix)) continue;
-
-        // 提取数字并检查范围
-        const productNum = extractNumber(product.productCode);
-        if (productNum >= startNum && productNum <= endNum) {
+        // 检查产品货号是否在列表中
+        if (codes.includes(product.productCode)) {
           const oldCode = product.supplierCode;
           product.supplierCode = rule.supplierCode;
           console.log(`✓ ${product.productCode}: ${oldCode} → ${rule.supplierCode}`);
@@ -2514,43 +2503,28 @@ export default function QuotePage() {
 
             <div className="space-y-3 mb-4">
               <div className="grid grid-cols-12 gap-3 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
-                <div className="col-span-4">起始货号</div>
-                <div className="col-span-4">结束货号</div>
+                <div className="col-span-8">货号列表（用逗号分隔）</div>
                 <div className="col-span-3">供应商代码</div>
                 <div className="col-span-1">操作</div>
               </div>
 
               {batchUpdateRules.map((rule, index) => (
                 <div key={index} className="grid grid-cols-12 gap-3 items-center">
-                  <div>
-                    <input
-                      type="text"
-                      value={rule.startCode}
+                  <div className="col-span-8">
+                    <textarea
+                      value={rule.productCodes}
                       onChange={(e) => {
                         const newRules = [...batchUpdateRules];
-                        newRules[index].startCode = e.target.value;
+                        newRules[index].productCodes = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full min-w-[100px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
-                      placeholder="KEW001"
+                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900 resize-none"
+                      placeholder="KEW001,KEW002,KEW003"
+                      rows={2}
                       suppressHydrationWarning
                     />
                   </div>
-                  <div>
-                    <input
-                      type="text"
-                      value={rule.endCode}
-                      onChange={(e) => {
-                        const newRules = [...batchUpdateRules];
-                        newRules[index].endCode = e.target.value;
-                        setBatchUpdateRules(newRules);
-                      }}
-                      className="w-full min-w-[100px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
-                      placeholder="KEW021"
-                      suppressHydrationWarning
-                    />
-                  </div>
-                  <div>
+                  <div className="col-span-3">
                     <input
                       type="text"
                       value={rule.supplierCode}
@@ -2564,7 +2538,7 @@ export default function QuotePage() {
                       suppressHydrationWarning
                     />
                   </div>
-                  <div>
+                  <div className="col-span-1">
                     <button
                       onClick={() => {
                         const newRules = batchUpdateRules.filter((_, i) => i !== index);
@@ -2580,7 +2554,7 @@ export default function QuotePage() {
               ))}
 
               <button
-                onClick={() => setBatchUpdateRules([...batchUpdateRules, { startCode: "", endCode: "", supplierCode: "" }])}
+                onClick={() => setBatchUpdateRules([...batchUpdateRules, { productCodes: "", supplierCode: "" }])}
                 className="w-full rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 text-sm"
                 suppressHydrationWarning
               >
