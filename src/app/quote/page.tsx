@@ -1840,66 +1840,128 @@ export default function QuotePage() {
               重新加载数据
             </button>
           </div>
-          <div className="flex flex-wrap gap-4" suppressHydrationWarning>
-            <div className="flex flex-col">
-              <label className="mb-2 text-sm font-medium text-gray-900">
-                市场金价（人民币/克）
-              </label>
-              <input
-                type="number"
-                value={goldPrice}
-                onChange={(e) => setGoldPrice(Number(e.target.value))}
-                className="w-48 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
-                step="0.01"
-                suppressHydrationWarning
-              />
-              <div className="mt-1 text-xs text-gray-500">
-                更新时间: {formatDate(goldPriceTimestamp)}
+
+          {/* 操作区域 - 分为三个功能区 */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6" suppressHydrationWarning>
+            {/* 1. 金价设置区域 */}
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white">
+                  💰
+                </div>
+                <h3 className="text-lg font-semibold text-amber-900">金价设置</h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-amber-900">
+                    市场金价（人民币/克）
+                  </label>
+                  <input
+                    type="number"
+                    value={goldPrice}
+                    onChange={(e) => setGoldPrice(Number(e.target.value))}
+                    className="w-full rounded-lg border-2 border-amber-300 px-4 py-2.5 focus:border-amber-500 focus:outline-none text-gray-900 font-medium"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                  <div className="mt-2 text-xs text-amber-700 flex items-center gap-1">
+                    <span>📅</span>
+                    <span>更新时间: {formatDate(goldPriceTimestamp)}</span>
+                  </div>
+                </div>
+                <div className="text-xs text-amber-600 bg-amber-100 rounded px-3 py-2">
+                  💡 修改金价后，点击下方"更新价格"按钮应用到选中产品
+                </div>
               </div>
             </div>
-            <div className="flex items-end gap-2">
-              <button
-                onClick={updatePrices}
-                className="rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
-                suppressHydrationWarning
-              >
-                更新选中产品价格
-              </button>
-              <button
-                onClick={() => setShowBatchUpdateModal(true)}
-                className="rounded bg-purple-600 px-6 py-2 text-white hover:bg-purple-700"
-                suppressHydrationWarning
-              >
-                批量更新供应商代码
-              </button>
-              <button
-                onClick={deleteSelectedProducts}
-                className="rounded bg-red-600 px-6 py-2 text-white hover:bg-red-700"
-                suppressHydrationWarning
-              >
-                批量删除选中产品
-              </button>
-              <button
-                onClick={() => setSelectedProducts(new Set(products.filter(p => p.category === currentCategory).map(p => p.id)))}
-                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
-                suppressHydrationWarning
-              >
-                全选（当前分类）
-              </button>
-              <button
-                onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
-                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
-                suppressHydrationWarning
-              >
-                全选（所有分类）
-              </button>
-              <button
-                onClick={() => setSelectedProducts(new Set())}
-                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
-                suppressHydrationWarning
-              >
-                取消全选
-              </button>
+
+            {/* 2. 批量操作区域 */}
+            <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+                  ⚡
+                </div>
+                <h3 className="text-lg font-semibold text-blue-900">批量操作</h3>
+              </div>
+              <div className="space-y-3">
+                <button
+                  onClick={updatePrices}
+                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-white font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                  suppressHydrationWarning
+                >
+                  🔄 更新选中产品价格
+                </button>
+                <button
+                  onClick={() => setShowBatchUpdateModal(true)}
+                  className="w-full rounded-lg bg-purple-600 px-4 py-2.5 text-white font-medium hover:bg-purple-700 transition-colors shadow-sm"
+                  suppressHydrationWarning
+                >
+                  🏷️ 批量更新供应商代码
+                </button>
+                <button
+                  onClick={deleteSelectedProducts}
+                  className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-white font-medium hover:bg-red-700 transition-colors shadow-sm"
+                  suppressHydrationWarning
+                >
+                  🗑️ 批量删除选中产品
+                </button>
+              </div>
+            </div>
+
+            {/* 3. 选择与数据管理区域 */}
+            <div className="rounded-lg bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200 p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center text-white">
+                  ✅
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">选择与管理</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSelectedProducts(new Set(products.filter(p => p.category === currentCategory).map(p => p.id)))}
+                    className="rounded-lg bg-gray-600 px-3 py-2 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
+                    suppressHydrationWarning
+                  >
+                    全选（当前）
+                  </button>
+                  <button
+                    onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
+                    className="rounded-lg bg-gray-600 px-3 py-2 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
+                    suppressHydrationWarning
+                  >
+                    全选（所有）
+                  </button>
+                </div>
+                <button
+                  onClick={() => setSelectedProducts(new Set())}
+                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                  suppressHydrationWarning
+                >
+                  ❌ 取消全选
+                </button>
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                    <span>已选产品: <strong className="text-blue-600">{selectedProducts.size}</strong> 个</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={exportToExcel}
+                      className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+                      suppressHydrationWarning
+                    >
+                      📤 导出
+                    </button>
+                    <button
+                      onClick={reloadFromLocalStorage}
+                      className="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                      suppressHydrationWarning
+                    >
+                      🔄 刷新数据
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
