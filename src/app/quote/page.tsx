@@ -3,9 +3,33 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 
+// 产品分类列表
+export const PRODUCT_CATEGORIES = [
+  "耳环/耳逼",
+  "水滴扣",
+  "开口圈/闭口圈",
+  "圆珠",
+  "车花珠",
+  "定位珠/短管",
+  "包扣",
+  "字印片/吊牌",
+  "延长链",
+  "珠针",
+  "空心管",
+  "珠托",
+  "吊坠夹",
+  "镶嵌配件",
+  "珍珠配件",
+  "金线",
+  "金链",
+] as const;
+
+export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
+
 // 产品信息类型
 interface Product {
   id: string;
+  category: ProductCategory;
   productCode: string;
   productName: string;
   specification: string;
@@ -22,6 +46,7 @@ interface Product {
 interface PriceHistory {
   id: string;
   productId: string;
+  category: ProductCategory;
   productCode: string;
   productName: string;
   specification: string;
@@ -48,7 +73,9 @@ export default function QuotePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [currentCategory, setCurrentCategory] = useState<ProductCategory>("耳环/耳逼");
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
+    category: "耳环/耳逼",
     productCode: "",
     productName: "",
     specification: "",
@@ -106,9 +133,9 @@ export default function QuotePage() {
     return new Date(timestamp).toLocaleDateString("zh-CN");
   };
 
-  // 根据货号查找产品（获取最新的记录）
+  // 根据货号查找产品（获取当前分类的最新记录）
   const findLatestProductByCode = (code: string): Product | undefined => {
-    const codeProducts = products.filter((p) => p.productCode === code);
+    const codeProducts = products.filter((p) => p.productCode === code && p.category === currentCategory);
     if (codeProducts.length === 0) return undefined;
     // 返回最新的记录
     return codeProducts[codeProducts.length - 1];
@@ -219,6 +246,7 @@ export default function QuotePage() {
 
     const newProduct: Product = {
       id: Date.now().toString(),
+      category: currentCategory,
       productCode: currentProduct.productCode!,
       productName: currentProduct.productName!,
       specification: currentProduct.specification || "",
@@ -243,6 +271,7 @@ export default function QuotePage() {
     const historyRecord: PriceHistory = {
       id: Date.now().toString() + "_hist",
       productId: newProduct.id,
+      category: currentCategory,
       productCode: newProduct.productCode,
       productName: newProduct.productName,
       specification: newProduct.specification,
@@ -258,6 +287,7 @@ export default function QuotePage() {
 
     // 重置当前产品表单
     setCurrentProduct({
+      category: currentCategory,
       productCode: "",
       productName: "",
       specification: "",
@@ -305,6 +335,7 @@ export default function QuotePage() {
       // 创建新的产品记录
       const newProduct: Product = {
         id: Date.now().toString() + "_" + productId,
+        category: product.category,
         productCode: product.productCode,
         productName: product.productName,
         specification: product.specification,
@@ -321,6 +352,7 @@ export default function QuotePage() {
       const historyRecord: PriceHistory = {
         id: newProduct.id + "_hist",
         productId: newProduct.id,
+        category: product.category,
         productCode: newProduct.productCode,
         productName: newProduct.productName,
         specification: newProduct.specification,
@@ -353,9 +385,9 @@ export default function QuotePage() {
 
   // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
   const exportToExcel = () => {
-    // 按货号分组（从历史记录中获取）
+    // 按货号分组（从历史记录中获取，只包含当前分类）
     const productGroups: { [key: string]: PriceHistory[] } = {};
-    priceHistory.forEach((history) => {
+    priceHistory.filter(h => h.category === currentCategory).forEach((history) => {
       if (!productGroups[history.productCode]) {
         productGroups[history.productCode] = [];
       }
@@ -372,6 +404,7 @@ export default function QuotePage() {
       // 基础信息
       const row: any = {
         货号: productCode,
+        分类: records[0].category,
         名称: records[0].productName,
         成色: records[0].karat,
         规格: records[0].specification || "",
@@ -403,7 +436,7 @@ export default function QuotePage() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "产品报价单_" + new Date().toLocaleDateString("zh-CN") + ".csv";
+    link.download = `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv";
     link.click();
   };
 
@@ -527,6 +560,7 @@ export default function QuotePage() {
 
           const newProduct: Product = {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
+            category: currentCategory,
             productCode: String(productCode),
             productName: String(productName),
             specification: String(specification || ""),
@@ -544,6 +578,7 @@ export default function QuotePage() {
           const historyRecord: PriceHistory = {
             id: newProduct.id + "_hist",
             productId: newProduct.id,
+            category: currentCategory,
             productCode: newProduct.productCode,
             productName: newProduct.productName,
             specification: newProduct.specification,
@@ -585,6 +620,29 @@ export default function QuotePage() {
         <h1 className="mb-8 text-3xl font-bold text-gray-900">
           K金产品报价计算表
         </h1>
+
+        {/* 分类导航区域 */}
+        <div className="mb-6 rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
+          <div className="flex flex-wrap gap-2">
+            {PRODUCT_CATEGORIES.map((category) => (
+              <button
+                key={category}
+                onClick={() => {
+                  setCurrentCategory(category);
+                  setCurrentProduct({ ...currentProduct, category });
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentCategory === category
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* 金价设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
@@ -805,6 +863,17 @@ export default function QuotePage() {
               💡 <strong>新增产品模式</strong>：输入新货号，添加新产品
             </p>
             <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-900">
+                  当前分类
+                </label>
+                <input
+                  type="text"
+                  value={currentCategory}
+                  readOnly
+                  className="w-full rounded border border-gray-300 px-4 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-900">
@@ -925,8 +994,10 @@ export default function QuotePage() {
           {/* 当前产品列表 */}
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">当前产品列表</h2>
-              {products.length > 0 && (
+              <h2 className="text-xl font-semibold text-gray-800">
+                当前产品列表 - {currentCategory}
+              </h2>
+              {products.filter(p => p.category === currentCategory).length > 0 && (
                 <button
                   onClick={() => exportToExcel()}
                   className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
@@ -951,7 +1022,7 @@ export default function QuotePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {products.filter(p => p.category === currentCategory).map((product) => (
                     <tr key={product.id}>
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <input
@@ -1012,10 +1083,10 @@ export default function QuotePage() {
                       </td>
                     </tr>
                   ))}
-                  {products.length === 0 && (
+                  {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
                       <td colSpan={9} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
-                        暂无产品数据
+                        暂无{currentCategory}产品数据
                       </td>
                     </tr>
                   )}
@@ -1028,7 +1099,9 @@ export default function QuotePage() {
         {/* 历史记录 */}
         <div className="mt-6 rounded-lg bg-white p-6 shadow">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">价格历史记录</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              价格历史记录 - {currentCategory}
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-200 text-sm">
@@ -1045,7 +1118,7 @@ export default function QuotePage() {
                 </tr>
               </thead>
               <tbody>
-                {priceHistory.map((history) => (
+                {priceHistory.filter(h => h.category === currentCategory).map((history) => (
                   <tr key={history.id}>
                     <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">
                       {formatDate(history.timestamp)}
@@ -1065,13 +1138,13 @@ export default function QuotePage() {
                     </td>
                   </tr>
                 ))}
-                {priceHistory.length === 0 && (
+                {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
                   <tr>
                     <td
                       colSpan={8}
                       className="border border-gray-200 px-3 py-4 text-center text-gray-500"
                     >
-                      暂无历史记录
+                      暂无{currentCategory}历史记录
                     </td>
                   </tr>
                 )}
