@@ -292,9 +292,13 @@ export default function QuotePage() {
     link.click();
   };
 
-  // 删除产品
+  // 删除产品（同时删除相关的历史记录）
   const deleteProduct = (id: string) => {
+    // 从产品列表中删除
     setProducts(products.filter((p) => p.id !== id));
+
+    // 从历史记录中删除该产品的所有记录
+    setPriceHistory(priceHistory.filter((h) => h.productId !== id));
   };
 
   return (
