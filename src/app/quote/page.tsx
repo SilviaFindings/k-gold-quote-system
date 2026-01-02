@@ -45,6 +45,13 @@ interface Product {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
+  // 成本时间戳
+  laborCostDate: string;        // 工费更新时间
+  accessoryCostDate: string;    // 配件成本更新时间
+  stoneCostDate: string;        // 石头成本更新时间
+  platingCostDate: string;      // 电镀成本更新时间
+  moldCostDate: string;         // 模具成本更新时间
+  commissionDate: string;       // 佣金更新时间
   timestamp: string;
 }
 
@@ -68,6 +75,13 @@ interface PriceHistory {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
+  // 成本时间戳
+  laborCostDate: string;        // 工费更新时间
+  accessoryCostDate: string;    // 配件成本更新时间
+  stoneCostDate: string;        // 石头成本更新时间
+  platingCostDate: string;      // 电镀成本更新时间
+  moldCostDate: string;         // 模具成本更新时间
+  commissionDate: string;       // 佣金更新时间
   timestamp: string;
 }
 
@@ -228,6 +242,13 @@ export default function QuotePage() {
           moldCost: p.moldCost || 0,
           commission: p.commission || 0,
           supplierCode: p.supplierCode || "",
+          // 添加成本时间戳（兼容旧数据）
+          laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
         }));
 
         console.log("设置 products state，数量:", migratedProducts.length);
@@ -255,6 +276,13 @@ export default function QuotePage() {
           moldCost: h.moldCost || 0,
           commission: h.commission || 0,
           supplierCode: h.supplierCode || "",
+          // 添加成本时间戳（兼容旧数据）
+          laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
         }));
 
         console.log("设置 priceHistory state，数量:", migratedHistory.length);
@@ -322,6 +350,13 @@ export default function QuotePage() {
           moldCost: p.moldCost || 0,
           commission: p.commission || 0,
           supplierCode: p.supplierCode || "",
+          // 添加成本时间戳（兼容旧数据）
+          laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
         }));
 
         console.log("设置 products state...");
@@ -350,6 +385,13 @@ export default function QuotePage() {
           moldCost: h.moldCost || 0,
           commission: h.commission || 0,
           supplierCode: h.supplierCode || "",
+          // 添加成本时间戳（兼容旧数据）
+          laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
         }));
 
         console.log("设置 priceHistory state...");
@@ -540,6 +582,13 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
+      // 成本时间戳
+      laborCostDate: new Date().toLocaleString("zh-CN"),
+      accessoryCostDate: new Date().toLocaleString("zh-CN"),
+      stoneCostDate: new Date().toLocaleString("zh-CN"),
+      platingCostDate: new Date().toLocaleString("zh-CN"),
+      moldCostDate: new Date().toLocaleString("zh-CN"),
+      commissionDate: new Date().toLocaleString("zh-CN"),
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
@@ -571,6 +620,13 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
+      // 成本时间戳
+      laborCostDate: new Date().toLocaleString("zh-CN"),
+      accessoryCostDate: new Date().toLocaleString("zh-CN"),
+      stoneCostDate: new Date().toLocaleString("zh-CN"),
+      platingCostDate: new Date().toLocaleString("zh-CN"),
+      moldCostDate: new Date().toLocaleString("zh-CN"),
+      commissionDate: new Date().toLocaleString("zh-CN"),
       timestamp: new Date().toLocaleString("zh-CN"),
     };
     setPriceHistory([...priceHistory, historyRecord]);
@@ -651,6 +707,13 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
+        // 成本时间戳（从旧记录继承或使用当前时间）
+        laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
+        accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
+        stoneCostDate: product.stoneCostDate || new Date().toLocaleString("zh-CN"),
+        platingCostDate: product.platingCostDate || new Date().toLocaleString("zh-CN"),
+        moldCostDate: product.moldCostDate || new Date().toLocaleString("zh-CN"),
+        commissionDate: product.commissionDate || new Date().toLocaleString("zh-CN"),
         timestamp: new Date().toLocaleString("zh-CN"),
       };
 
@@ -674,6 +737,13 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
+        // 成本时间戳（从旧记录继承）
+        laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
+        accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
+        stoneCostDate: product.stoneCostDate || new Date().toLocaleString("zh-CN"),
+        platingCostDate: product.platingCostDate || new Date().toLocaleString("zh-CN"),
+        moldCostDate: product.moldCostDate || new Date().toLocaleString("zh-CN"),
+        commissionDate: product.commissionDate || new Date().toLocaleString("zh-CN"),
         timestamp: new Date().toLocaleString("zh-CN"),
       };
       setPriceHistory((prev) => [...prev, historyRecord]);
@@ -941,6 +1011,13 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
+            // 成本时间戳
+            laborCostDate: new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: new Date().toLocaleString("zh-CN"),
+            stoneCostDate: new Date().toLocaleString("zh-CN"),
+            platingCostDate: new Date().toLocaleString("zh-CN"),
+            moldCostDate: new Date().toLocaleString("zh-CN"),
+            commissionDate: new Date().toLocaleString("zh-CN"),
             timestamp: new Date().toLocaleString("zh-CN"),
           };
 
@@ -965,6 +1042,13 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
+            // 成本时间戳
+            laborCostDate: new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: new Date().toLocaleString("zh-CN"),
+            stoneCostDate: new Date().toLocaleString("zh-CN"),
+            platingCostDate: new Date().toLocaleString("zh-CN"),
+            moldCostDate: new Date().toLocaleString("zh-CN"),
+            commissionDate: new Date().toLocaleString("zh-CN"),
             timestamp: new Date().toLocaleString("zh-CN"),
           };
           newHistory.push(historyRecord);
@@ -2107,11 +2191,17 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">规格</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">工费日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">配件</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">配件日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">石头</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">石头日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">电镀</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">电镀日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">模具日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">佣金日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
@@ -2165,11 +2255,17 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.laborCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.laborCostDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.accessoryCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.accessoryCostDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.stoneCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.stoneCostDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.platingCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.platingCostDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.moldCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.moldCostDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.commission}%</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.commissionDate)}</td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="text-gray-900">
@@ -2208,7 +2304,7 @@ export default function QuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={24} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
