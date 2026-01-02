@@ -437,7 +437,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-red-600">
+                        <div className="font-medium text-green-600">
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
@@ -445,7 +445,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-green-600">
+                        <div className="font-medium text-blue-600">
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
@@ -517,10 +517,10 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
                       ¥{history.goldPrice.toFixed(2)}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2 text-right text-red-600">
+                    <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
                       CAD${history.retailPrice.toFixed(2)}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
+                    <td className="border border-gray-200 px-3 py-2 text-right text-blue-600">
                       CAD${history.wholesalePrice.toFixed(2)}
                     </td>
                   </tr>
