@@ -368,15 +368,40 @@ export default function QuotePage() {
   // 导入Excel文件
   const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    console.log("选择的文件:", file);
+
+    if (!file) {
+      console.log("没有选择文件");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
+        console.log("文件读取完成");
         const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: "binary" });
+        console.log("数据类型:", typeof data);
+
+        // 尝试多种读取方式
+        let workbook;
+        try {
+          workbook = XLSX.read(data, { type: "array" });
+        } catch (err) {
+          console.error("array方式失败，尝试binary:", err);
+          try {
+            workbook = XLSX.read(data, { type: "binary" });
+          } catch (err2) {
+            console.error("binary方式也失败:", err2);
+            alert("无法读取Excel文件，请检查文件格式！");
+            return;
+          }
+        }
+
+        console.log("工作簿:", workbook);
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
+
+        console.log("解析的数据:", jsonData);
 
         if (jsonData.length < 2) {
           alert("Excel文件为空或格式不正确！");
@@ -384,6 +409,7 @@ export default function QuotePage() {
         }
 
         const headers = jsonData[0] as string[];
+        console.log("表头:", headers);
         const rows = jsonData.slice(1);
 
         // 查找列索引
@@ -402,6 +428,14 @@ export default function QuotePage() {
         const laborCostIndex = headers.findIndex(h =>
           h && h.includes("人工") || h && h.includes("工费")
         );
+
+        console.log("列索引:", {
+          productCodeIndex,
+          productNameIndex,
+          specificationIndex,
+          weightIndex,
+          laborCostIndex
+        });
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
           alert("Excel文件必须包含货号和名称列！");
@@ -487,7 +521,7 @@ export default function QuotePage() {
       }
     };
 
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (
