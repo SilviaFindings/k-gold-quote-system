@@ -624,7 +624,7 @@ export default function QuotePage() {
         {/* 分类导航区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
-          <div className="flex flex-wrap gap-2" suppressHydrationWarning>
+          <div className="flex flex-wrap gap-2">
             {PRODUCT_CATEGORIES.map((category) => (
               <button
                 key={category}
@@ -637,6 +637,7 @@ export default function QuotePage() {
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
+                suppressHydrationWarning
               >
                 {category}
               </button>
@@ -658,6 +659,7 @@ export default function QuotePage() {
                 onChange={(e) => setGoldPrice(Number(e.target.value))}
                 className="w-48 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">
                 更新时间: {formatDate(goldPriceTimestamp)}
@@ -667,18 +669,21 @@ export default function QuotePage() {
               <button
                 onClick={updatePrices}
                 className="rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+                suppressHydrationWarning
               >
                 更新选中产品价格
               </button>
               <button
                 onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
                 className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                suppressHydrationWarning
               >
                 全选
               </button>
               <button
                 onClick={() => setSelectedProducts(new Set())}
                 className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                suppressHydrationWarning
               >
                 取消全选
               </button>
@@ -701,6 +706,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, goldFactor14K: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.001"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 0.586</div>
             </div>
@@ -714,6 +720,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, goldFactor18K: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.001"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 0.755</div>
             </div>
@@ -729,6 +736,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, laborFactorRetail: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.1"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 5</div>
             </div>
@@ -742,6 +750,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, laborFactorWholesale: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.1"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 3</div>
             </div>
@@ -757,6 +766,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, materialLoss: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 1.15</div>
             </div>
@@ -770,6 +780,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, materialCost: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 1.1</div>
             </div>
@@ -785,6 +796,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, profitMargin: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 1.25</div>
             </div>
@@ -798,6 +810,7 @@ export default function QuotePage() {
                 onChange={(e) => setCoefficients({...coefficients, exchangeRate: Number(e.target.value)})}
                 className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
+                suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-gray-500">默认: 5</div>
             </div>
@@ -832,6 +845,7 @@ export default function QuotePage() {
                     checked={importWeight}
                     onChange={(e) => setImportWeight(e.target.checked)}
                     className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    suppressHydrationWarning
                   />
                   导入重量
                 </label>
@@ -841,6 +855,7 @@ export default function QuotePage() {
                     checked={importLaborCost}
                     onChange={(e) => setImportLaborCost(e.target.checked)}
                     className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    suppressHydrationWarning
                   />
                   导入人工成本
                 </label>
@@ -850,6 +865,7 @@ export default function QuotePage() {
                     value={defaultKarat}
                     onChange={(e) => setDefaultKarat(e.target.value as "14K" | "18K")}
                     className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
                   >
                     <option value="18K">18K</option>
                     <option value="14K">14K</option>
@@ -872,6 +888,7 @@ export default function QuotePage() {
                   value={currentCategory}
                   readOnly
                   className="w-full rounded border border-gray-300 px-4 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"
+                  suppressHydrationWarning
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -889,6 +906,7 @@ export default function QuotePage() {
                       })
                     }
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
                   />
                 </div>
                 <div>
@@ -905,6 +923,7 @@ export default function QuotePage() {
                       })
                     }
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -923,6 +942,7 @@ export default function QuotePage() {
                     })
                   }
                   className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  suppressHydrationWarning
                 />
               </div>
 
@@ -942,6 +962,7 @@ export default function QuotePage() {
                     }
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     step="0.01"
+                    suppressHydrationWarning
                   />
                 </div>
                 <div>
@@ -959,6 +980,7 @@ export default function QuotePage() {
                     }
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     step="0.01"
+                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -976,6 +998,7 @@ export default function QuotePage() {
                     })
                   }
                   className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  suppressHydrationWarning
                 >
                   <option value="14K">14K金</option>
                   <option value="18K">18K金</option>
@@ -985,6 +1008,7 @@ export default function QuotePage() {
               <button
                 onClick={addProduct}
                 className="w-full rounded bg-green-600 px-6 py-3 text-white hover:bg-green-700"
+                suppressHydrationWarning
               >
                 添加产品
               </button>
@@ -1001,6 +1025,7 @@ export default function QuotePage() {
                 <button
                   onClick={() => exportToExcel()}
                   className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+                  suppressHydrationWarning
                 >
                   导出Excel
                 </button>
@@ -1038,6 +1063,7 @@ export default function QuotePage() {
                             setSelectedProducts(newSelected);
                           }}
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          suppressHydrationWarning
                         />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
@@ -1077,6 +1103,7 @@ export default function QuotePage() {
                         <button
                           onClick={() => deleteProduct(product.id)}
                           className="text-red-500 hover:text-red-700"
+                          suppressHydrationWarning
                         >
                           删除
                         </button>
