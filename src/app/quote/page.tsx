@@ -236,7 +236,7 @@ export default function QuotePage() {
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col">
               <label className="mb-2 text-sm font-medium text-gray-700">
-                市场金价（元/克）
+                市场金价（加币/克）
               </label>
               <input
                 type="number"
@@ -336,7 +336,7 @@ export default function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
-                    人工成本（元）
+                    人工成本（加币）
                   </label>
                   <input
                     type="number"
@@ -417,10 +417,10 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2">{product.karat}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right font-medium text-green-600">
-                        ¥{product.wholesalePrice.toFixed(2)}
+                        CAD${product.wholesalePrice.toFixed(2)}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right font-medium text-red-600">
-                        ¥{product.retailPrice.toFixed(2)}
+                        CAD${product.retailPrice.toFixed(2)}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <button
@@ -485,13 +485,13 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2">{history.karat}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right">{history.weight}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right">
-                      ¥{history.goldPrice.toFixed(2)}
+                      CAD${history.goldPrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
-                      ¥{history.wholesalePrice.toFixed(2)}
+                      CAD${history.wholesalePrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-red-600">
-                      ¥{history.retailPrice.toFixed(2)}
+                      CAD${history.retailPrice.toFixed(2)}
                     </td>
                   </tr>
                 ))}
