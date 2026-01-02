@@ -220,11 +220,53 @@ export default function QuotePage() {
     alert("已为所有产品添加新价格记录！");
   };
 
-  // 导出 Excel（CSV 格式）
-  const exportToExcel = (data: any[], filename: string) => {
-    const headers = Object.keys(data[0]).join(",");
-    const rows = data.map((item) => Object.values(item).join(","));
-    const csv = [headers, ...rows].join("\n");
+  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行
+  const exportToExcel = (data: Product[], filename: string) => {
+    // 按货号分组
+    const productGroups: { [key: string]: Product[] } = {};
+    data.forEach((product) => {
+      if (!productGroups[product.productCode]) {
+        productGroups[product.productCode] = [];
+      }
+      productGroups[product.productCode].push(product);
+    });
+
+    // 为每个货号构建一行数据（按时间正序）
+    const rows: any[] = [];
+    Object.keys(productGroups).forEach((productCode) => {
+      const records = productGroups[productCode].sort((a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+
+      // 基础信息
+      const row: any = {
+        货号: productCode,
+        名称: records[0].productName,
+        成色: records[0].karat,
+        规格: records[0].specification || "",
+      };
+
+      // 动态添加每次修改的数据
+      records.forEach((record, index) => {
+        const suffix = index + 1;
+        row[`第${suffix}次时间`] = formatDate(record.timestamp);
+        row[`第${suffix}次重量`] = record.weight;
+        row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
+        row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
+      });
+
+      rows.push(row);
+    });
+
+    // 生成表头和行
+    const allColumns = new Set<string>();
+    rows.forEach((row) => Object.keys(row).forEach((key) => allColumns.add(key)));
+
+    const headers = Array.from(allColumns).join(",");
+    const dataRows = rows.map((row) =>
+      Array.from(allColumns).map((col) => row[col] || "").join(",")
+    );
+    const csv = [headers, ...dataRows].join("\n");
 
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -477,18 +519,8 @@ export default function QuotePage() {
 
         {/* 历史记录 */}
         <div className="mt-6 rounded-lg bg-white p-6 shadow">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h2 className="text-xl font-semibold text-gray-800">价格历史记录</h2>
-            {priceHistory.length > 0 && (
-              <button
-                onClick={() =>
-                  exportToExcel(priceHistory, `价格历史记录_${new Date().toLocaleDateString("zh-CN")}.csv`)
-                }
-                className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-              >
-                导出历史
-              </button>
-            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-200 text-sm">
