@@ -34,7 +34,10 @@ interface PriceHistory {
 }
 
 export default function QuotePage() {
-  const [goldPrice, setGoldPrice] = useState<number>(500); // 市场金价（元/克）
+  const [goldPrice, setGoldPrice] = useState<number>(() => {
+    const savedGoldPrice = localStorage.getItem("goldPrice");
+    return savedGoldPrice ? Number(savedGoldPrice) : 500;
+  });
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -98,6 +101,11 @@ export default function QuotePage() {
       localStorage.setItem("goldPriceHistory", JSON.stringify(priceHistory));
     }
   }, [priceHistory]);
+
+  // 保存金价到 localStorage
+  useEffect(() => {
+    localStorage.setItem("goldPrice", goldPrice.toString());
+  }, [goldPrice]);
 
   // 计算价格函数
   const calculatePrice = (
