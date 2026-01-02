@@ -30,6 +30,15 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
 
+// 收货部门列表
+export const RECEIVING_DEPARTMENTS = [
+  { code: "Van", name: "Van (Vancouver)" },
+  { code: "US201", name: "US201 (US office)" },
+  { code: "US202", name: "US202 (Show team)" },
+] as const;
+
+export type ReceivingDepartment = typeof RECEIVING_DEPARTMENTS[number]["code"];
+
 // 产品信息类型
 interface Product {
   id: string;
@@ -50,6 +59,7 @@ interface Product {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
+  receivingDepartment: ReceivingDepartment | "";  // 收货部门
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -81,6 +91,7 @@ interface PriceHistory {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
+  receivingDepartment: ReceivingDepartment | "";  // 收货部门
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -136,6 +147,7 @@ export default function QuotePage() {
     moldCost: 0,
     commission: 0,
     supplierCode: "",
+    receivingDepartment: "",
   });
 
   // 导入Excel相关状态
@@ -712,6 +724,7 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
+      receivingDepartment: currentProduct.receivingDepartment || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -751,6 +764,7 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
+      receivingDepartment: currentProduct.receivingDepartment || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -840,6 +854,7 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
+        receivingDepartment: product.receivingDepartment || "",
         // 成本时间戳（从旧记录继承或使用当前时间）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -871,6 +886,7 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
+        receivingDepartment: product.receivingDepartment || "",
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -994,6 +1010,13 @@ export default function QuotePage() {
         row[`第${suffix}次佣金时间`] = formatDate(record.commissionDate || record.timestamp);
         row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
         row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
+        // 添加收货部门
+        if (record.receivingDepartment) {
+          const dept = RECEIVING_DEPARTMENTS.find(d => d.code === record.receivingDepartment);
+          row[`第${suffix}次收货部门`] = dept ? dept.name : record.receivingDepartment;
+        } else {
+          row[`第${suffix}次收货部门`] = "";
+        }
       });
 
       rows.push(row);
@@ -1149,6 +1172,9 @@ export default function QuotePage() {
         const supplierCodeIndex = headers.findIndex(h =>
           h && h.includes("供应商")
         );
+        const receivingDepartmentIndex = headers.findIndex(h =>
+          h && h.includes("收货部门")
+        );
 
         console.log("列索引:", {
           productCodeIndex,
@@ -1161,7 +1187,8 @@ export default function QuotePage() {
           platingCostIndex,
           moldCostIndex,
           commissionIndex,
-          supplierCodeIndex
+          supplierCodeIndex,
+          receivingDepartmentIndex
         });
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
@@ -1186,6 +1213,28 @@ export default function QuotePage() {
           const moldCost = moldCostIndex !== -1 ? Number(row[moldCostIndex]) || 0 : 0;
           const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
           const supplierCode = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) || "" : "";
+          const receivingDepartment = receivingDepartmentIndex !== -1 ? String(row[receivingDepartmentIndex]) || "" : "";
+
+          // 尝试将收货部门映射到有效的代码
+          let validReceivingDepartment: ReceivingDepartment | "" = "";
+          if (receivingDepartment) {
+            const deptValue = String(receivingDepartment).trim();
+            // 先尝试直接匹配代码
+            const foundByCode = RECEIVING_DEPARTMENTS.find(d => d.code === deptValue);
+            if (foundByCode) {
+              validReceivingDepartment = foundByCode.code;
+            } else {
+              // 尝试匹配名称
+              const foundByName = RECEIVING_DEPARTMENTS.find(d =>
+                d.name.toLowerCase() === deptValue.toLowerCase() ||
+                d.name.includes(deptValue) ||
+                deptValue.includes(d.name)
+              );
+              if (foundByName) {
+                validReceivingDepartment = foundByName.code;
+              }
+            }
+          }
 
           if (!productCode || !productName) return;
 
@@ -1238,6 +1287,7 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
+            receivingDepartment: validReceivingDepartment,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -1270,6 +1320,7 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
+            receivingDepartment: validReceivingDepartment,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2391,6 +2442,29 @@ export default function QuotePage() {
                     suppressHydrationWarning
                   />
                 </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    收货部门
+                  </label>
+                  <select
+                    value={currentProduct.receivingDepartment || ""}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        receivingDepartment: e.target.value as ReceivingDepartment | "",
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
+                  >
+                    <option value="">请选择收货部门</option>
+                    {RECEIVING_DEPARTMENTS.map((dept) => (
+                      <option key={dept.code} value={dept.code}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -2549,6 +2623,7 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">收货部门</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
@@ -2626,6 +2701,14 @@ export default function QuotePage() {
                         <div className="text-xs text-gray-500">{formatDate(product.commissionDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
+                        {product.receivingDepartment ? (
+                          (() => {
+                            const dept = RECEIVING_DEPARTMENTS.find(d => d.code === product.receivingDepartment);
+                            return dept ? dept.name : product.receivingDepartment;
+                          })()
+                        ) : "-"}
+                      </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="text-gray-900">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
@@ -2663,7 +2746,7 @@ export default function QuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
@@ -2694,6 +2777,7 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">收货部门</th>
                 </tr>
               </thead>
               <tbody>
@@ -2716,12 +2800,20 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-right text-blue-600">
                       CAD${history.wholesalePrice.toFixed(2)}
                     </td>
+                    <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
+                      {history.receivingDepartment ? (
+                        (() => {
+                          const dept = RECEIVING_DEPARTMENTS.find(d => d.code === history.receivingDepartment);
+                          return dept ? dept.name : history.receivingDepartment;
+                        })()
+                      ) : "-"}
+                    </td>
                   </tr>
                 ))}
                 {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={10}
                       className="border border-gray-200 px-3 py-4 text-center text-gray-500"
                     >
                       暂无{currentCategory}历史记录
