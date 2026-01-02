@@ -596,6 +596,9 @@ export default function QuotePage() {
                         <div className="text-gray-900">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
                         </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatDate(product.timestamp)}
+                        </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="font-medium text-green-600">
