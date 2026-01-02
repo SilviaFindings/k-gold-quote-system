@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 
 // 产品分类列表
@@ -77,6 +77,17 @@ export default function QuotePage() {
     const savedGoldPrice = localStorage.getItem("goldPrice");
     return savedGoldPrice ? Number(savedGoldPrice) : 500;
   });
+
+  // 滚动同步ref
+  const scrollBarRef = React.useRef<HTMLDivElement>(null);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // 同步滚动
+  const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
+    if (target) {
+      target.scrollLeft = source.scrollLeft;
+    }
+  };
   const [goldPriceTimestamp, setGoldPriceTimestamp] = useState<string>(() => {
     if (typeof window === 'undefined') return new Date().toLocaleString("zh-CN");
     const savedGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
@@ -89,7 +100,7 @@ export default function QuotePage() {
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchType, setSearchType] = useState<"name" | "specification" | "all">("all");
+  const [searchType, setSearchType] = useState<"name" | "specification" | "supplierCode" | "all">("all");
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     category: "耳环/耳逼",
     productCode: "",
@@ -461,17 +472,17 @@ export default function QuotePage() {
     const goldFactor = karat === "14K" ? coefficients.goldFactor14K : coefficients.goldFactor18K;
     const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
 
-    // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料成本 / 汇率
+    // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料浮动系数 / 汇率
     const materialPrice =
       marketGoldPrice * goldFactor * weight * coefficients.materialLoss * coefficients.materialCost / coefficients.exchangeRate;
 
     // 工费 = 人工成本 x 系数 / 汇率
     const laborPrice = laborCost * laborFactor / coefficients.exchangeRate;
 
-    // 其他成本 = 配件 + 石头 + 电镀 + 模具 / 汇率
-    const otherCosts = (accessoryCost + stoneCost + platingCost + moldCost) / coefficients.exchangeRate;
+    // 其它成本 = (配件 + 石头 + 电镀) x 工费系数 / 汇率
+    const otherCosts = (accessoryCost + stoneCost + platingCost) * laborFactor / coefficients.exchangeRate;
 
-    // 总价 = (材料价 + 工费 + 其他成本) x (1 + 佣金率)
+    // 总价 = (材料价 + 工费 + 其它成本) x (1 + 佣金率/100) x 国际运输和关税系数
     const basePrice = materialPrice + laborPrice + otherCosts;
     const totalPrice = basePrice * (1 + commission / 100) * coefficients.profitMargin;
 
@@ -2051,6 +2062,7 @@ export default function QuotePage() {
                   <option value="all">全部</option>
                   <option value="name">产品名称</option>
                   <option value="specification">规格</option>
+                  <option value="supplierCode">供应商代码</option>
                 </select>
               </div>
               {searchQuery && (
@@ -2066,7 +2078,24 @@ export default function QuotePage() {
                 </button>
               )}
             </div>
-            <div className="overflow-x-auto">
+
+            {/* 独立的横向滚动条 */}
+            <div className="mb-2 bg-gray-100 border border-gray-300 rounded">
+              <div
+                ref={scrollBarRef}
+                className="h-4"
+                style={{ overflowX: 'auto', overflowY: 'hidden', width: 'fit-content', minWidth: '100%' }}
+                onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
+              >
+                <div style={{ width: '2000px', height: '4px' }}></div>
+              </div>
+            </div>
+
+            <div
+              ref={tableContainerRef}
+              className="overflow-x-auto"
+              onScroll={(e) => syncScroll(e.currentTarget, scrollBarRef.current!)}
+            >
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
                   <tr>
@@ -2099,11 +2128,14 @@ export default function QuotePage() {
                         return p.productName.toLowerCase().includes(query);
                       } else if (searchType === "specification") {
                         return p.specification.toLowerCase().includes(query);
+                      } else if (searchType === "supplierCode") {
+                        return p.supplierCode.toLowerCase().includes(query);
                       } else {
                         return (
                           p.productName.toLowerCase().includes(query) ||
                           p.specification.toLowerCase().includes(query) ||
-                          p.productCode.toLowerCase().includes(query)
+                          p.productCode.toLowerCase().includes(query) ||
+                          p.supplierCode.toLowerCase().includes(query)
                         );
                       }
                     })
@@ -2175,7 +2207,7 @@ export default function QuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={9} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
