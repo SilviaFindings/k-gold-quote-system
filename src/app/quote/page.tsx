@@ -29,7 +29,7 @@ export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
 // 产品信息类型
 interface Product {
   id: string;
-  category: ProductCategory;
+  category: ProductCategory | "";  // 允许空字符串（兼容旧数据）
   productCode: string;
   productName: string;
   specification: string;
@@ -39,6 +39,12 @@ interface Product {
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
+  accessoryCost: number;        // 配件成本
+  stoneCost: number;            // 石头成本
+  platingCost: number;          // 电镀成本
+  moldCost: number;             // 模具成本
+  commission: number;            // 佣金
+  supplierCode: string;         // 供应商代码
   timestamp: string;
 }
 
@@ -46,7 +52,7 @@ interface Product {
 interface PriceHistory {
   id: string;
   productId: string;
-  category: ProductCategory;
+  category: ProductCategory | "";  // 允许空字符串（兼容旧数据）
   productCode: string;
   productName: string;
   specification: string;
@@ -56,6 +62,12 @@ interface PriceHistory {
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
+  accessoryCost: number;        // 配件成本
+  stoneCost: number;            // 石头成本
+  platingCost: number;          // 电镀成本
+  moldCost: number;             // 模具成本
+  commission: number;            // 佣金
+  supplierCode: string;         // 供应商代码
   timestamp: string;
 }
 
@@ -74,6 +86,10 @@ export default function QuotePage() {
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [currentCategory, setCurrentCategory] = useState<ProductCategory>("耳环/耳逼");
+
+  // 搜索相关状态
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchType, setSearchType] = useState<"name" | "specification" | "all">("all");
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     category: "耳环/耳逼",
     productCode: "",
@@ -82,6 +98,12 @@ export default function QuotePage() {
     weight: 0,
     laborCost: 0,
     karat: "18K",
+    accessoryCost: 0,
+    stoneCost: 0,
+    platingCost: 0,
+    moldCost: 0,
+    commission: 0,
+    supplierCode: "",
   });
 
   // 导入Excel相关状态
@@ -184,10 +206,17 @@ export default function QuotePage() {
         console.log("解析后的产品数量:", parsedProducts.length);
         console.log("产品列表样例:", parsedProducts.slice(0, 2));
 
-        // 数据迁移：将"水滴扣"改为"扣子"
+        // 数据迁移：将"水滴扣"改为"扣子"，并添加新字段的默认值（兼容旧数据）
         const migratedProducts = parsedProducts.map((p: Product) => ({
           ...p,
-          category: (p.category as any) === "水滴扣" ? "扣子" : p.category
+          category: (p.category as any) === "水滴扣" ? "扣子" : p.category,
+          // 确保新字段有默认值（兼容旧数据）
+          accessoryCost: p.accessoryCost || 0,
+          stoneCost: p.stoneCost || 0,
+          platingCost: p.platingCost || 0,
+          moldCost: p.moldCost || 0,
+          commission: p.commission || 0,
+          supplierCode: p.supplierCode || "",
         }));
 
         console.log("设置 products state，数量:", migratedProducts.length);
@@ -204,10 +233,17 @@ export default function QuotePage() {
         const parsedHistory = JSON.parse(savedHistory);
         console.log("解析后的历史记录数量:", parsedHistory.length);
 
-        // 数据迁移：将"水滴扣"改为"扣子"
+        // 数据迁移：将"水滴扣"改为"扣子"，并添加新字段的默认值（兼容旧数据）
         const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
           ...h,
-          category: (h.category as any) === "水滴扣" ? "扣子" : h.category
+          category: (h.category as any) === "水滴扣" ? "扣子" : h.category,
+          // 确保新字段有默认值（兼容旧数据）
+          accessoryCost: h.accessoryCost || 0,
+          stoneCost: h.stoneCost || 0,
+          platingCost: h.platingCost || 0,
+          moldCost: h.moldCost || 0,
+          commission: h.commission || 0,
+          supplierCode: h.supplierCode || "",
         }));
 
         console.log("设置 priceHistory state，数量:", migratedHistory.length);
@@ -267,7 +303,14 @@ export default function QuotePage() {
         // 数据迁移
         const migratedProducts = parsedProducts.map((p: Product) => ({
           ...p,
-          category: (p.category as any) === "水滴扣" ? "扣子" : p.category
+          category: (p.category as any) === "水滴扣" ? "扣子" : p.category,
+          // 确保新字段有默认值（兼容旧数据）
+          accessoryCost: p.accessoryCost || 0,
+          stoneCost: p.stoneCost || 0,
+          platingCost: p.platingCost || 0,
+          moldCost: p.moldCost || 0,
+          commission: p.commission || 0,
+          supplierCode: p.supplierCode || "",
         }));
 
         console.log("设置 products state...");
@@ -288,7 +331,14 @@ export default function QuotePage() {
 
         const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
           ...h,
-          category: (h.category as any) === "水滴扣" ? "扣子" : h.category
+          category: (h.category as any) === "水滴扣" ? "扣子" : h.category,
+          // 确保新字段有默认值（兼容旧数据）
+          accessoryCost: h.accessoryCost || 0,
+          stoneCost: h.stoneCost || 0,
+          platingCost: h.platingCost || 0,
+          moldCost: h.moldCost || 0,
+          commission: h.commission || 0,
+          supplierCode: h.supplierCode || "",
         }));
 
         console.log("设置 priceHistory state...");
@@ -401,7 +451,12 @@ export default function QuotePage() {
     weight: number,
     laborCost: number,
     karat: "14K" | "18K",
-    isRetail: boolean
+    isRetail: boolean,
+    accessoryCost: number = 0,
+    stoneCost: number = 0,
+    platingCost: number = 0,
+    moldCost: number = 0,
+    commission: number = 0
   ): number => {
     const goldFactor = karat === "14K" ? coefficients.goldFactor14K : coefficients.goldFactor18K;
     const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
@@ -413,8 +468,12 @@ export default function QuotePage() {
     // 工费 = 人工成本 x 系数 / 汇率
     const laborPrice = laborCost * laborFactor / coefficients.exchangeRate;
 
-    // 总价 = (材料价 + 工费) x 利润率
-    const totalPrice = (materialPrice + laborPrice) * coefficients.profitMargin;
+    // 其他成本 = 配件 + 石头 + 电镀 + 模具 / 汇率
+    const otherCosts = (accessoryCost + stoneCost + platingCost + moldCost) / coefficients.exchangeRate;
+
+    // 总价 = (材料价 + 工费 + 其他成本) x (1 + 佣金率)
+    const basePrice = materialPrice + laborPrice + otherCosts;
+    const totalPrice = basePrice * (1 + commission / 100) * coefficients.profitMargin;
 
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
@@ -431,7 +490,12 @@ export default function QuotePage() {
       currentProduct.weight || 0,
       currentProduct.laborCost || 0,
       currentProduct.karat || "18K",
-      false
+      false,
+      currentProduct.accessoryCost || 0,
+      currentProduct.stoneCost || 0,
+      currentProduct.platingCost || 0,
+      currentProduct.moldCost || 0,
+      currentProduct.commission || 0
     );
 
     const retailPrice = calculatePrice(
@@ -439,7 +503,12 @@ export default function QuotePage() {
       currentProduct.weight || 0,
       currentProduct.laborCost || 0,
       currentProduct.karat || "18K",
-      true
+      true,
+      currentProduct.accessoryCost || 0,
+      currentProduct.stoneCost || 0,
+      currentProduct.platingCost || 0,
+      currentProduct.moldCost || 0,
+      currentProduct.commission || 0
     );
 
     const newProduct: Product = {
@@ -454,6 +523,12 @@ export default function QuotePage() {
       wholesalePrice,
       retailPrice,
       goldPrice,
+      accessoryCost: currentProduct.accessoryCost || 0,
+      stoneCost: currentProduct.stoneCost || 0,
+      platingCost: currentProduct.platingCost || 0,
+      moldCost: currentProduct.moldCost || 0,
+      commission: currentProduct.commission || 0,
+      supplierCode: currentProduct.supplierCode || "",
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
@@ -479,6 +554,12 @@ export default function QuotePage() {
       goldPrice,
       wholesalePrice,
       retailPrice,
+      accessoryCost: currentProduct.accessoryCost || 0,
+      stoneCost: currentProduct.stoneCost || 0,
+      platingCost: currentProduct.platingCost || 0,
+      moldCost: currentProduct.moldCost || 0,
+      commission: currentProduct.commission || 0,
+      supplierCode: currentProduct.supplierCode || "",
       timestamp: new Date().toLocaleString("zh-CN"),
     };
     setPriceHistory([...priceHistory, historyRecord]);
@@ -519,7 +600,12 @@ export default function QuotePage() {
         product.weight,
         product.laborCost,
         product.karat,
-        false
+        false,
+        product.accessoryCost || 0,
+        product.stoneCost || 0,
+        product.platingCost || 0,
+        product.moldCost || 0,
+        product.commission || 0
       );
 
       const newRetailPrice = calculatePrice(
@@ -527,7 +613,12 @@ export default function QuotePage() {
         product.weight,
         product.laborCost,
         product.karat,
-        true
+        true,
+        product.accessoryCost || 0,
+        product.stoneCost || 0,
+        product.platingCost || 0,
+        product.moldCost || 0,
+        product.commission || 0
       );
 
       // 创建新的产品记录
@@ -543,6 +634,12 @@ export default function QuotePage() {
         goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
+        accessoryCost: product.accessoryCost || 0,
+        stoneCost: product.stoneCost || 0,
+        platingCost: product.platingCost || 0,
+        moldCost: product.moldCost || 0,
+        commission: product.commission || 0,
+        supplierCode: product.supplierCode || "",
         timestamp: new Date().toLocaleString("zh-CN"),
       };
 
@@ -560,6 +657,12 @@ export default function QuotePage() {
         goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
+        accessoryCost: product.accessoryCost || 0,
+        stoneCost: product.stoneCost || 0,
+        platingCost: product.platingCost || 0,
+        moldCost: product.moldCost || 0,
+        commission: product.commission || 0,
+        supplierCode: product.supplierCode || "",
         timestamp: new Date().toLocaleString("zh-CN"),
       };
       setPriceHistory((prev) => [...prev, historyRecord]);
@@ -724,12 +827,38 @@ export default function QuotePage() {
           h && h.includes("人工") || h && h.includes("工费")
         );
 
+        // 新增的成本列
+        const accessoryCostIndex = headers.findIndex(h =>
+          h && h.includes("配件") && h.includes("成本")
+        );
+        const stoneCostIndex = headers.findIndex(h =>
+          h && h.includes("石头") && h.includes("成本")
+        );
+        const platingCostIndex = headers.findIndex(h =>
+          h && h.includes("电镀") && h.includes("成本")
+        );
+        const moldCostIndex = headers.findIndex(h =>
+          h && h.includes("模具") && h.includes("成本")
+        );
+        const commissionIndex = headers.findIndex(h =>
+          h && h.includes("佣金")
+        );
+        const supplierCodeIndex = headers.findIndex(h =>
+          h && h.includes("供应商")
+        );
+
         console.log("列索引:", {
           productCodeIndex,
           productNameIndex,
           specificationIndex,
           weightIndex,
-          laborCostIndex
+          laborCostIndex,
+          accessoryCostIndex,
+          stoneCostIndex,
+          platingCostIndex,
+          moldCostIndex,
+          commissionIndex,
+          supplierCodeIndex
         });
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
@@ -747,6 +876,14 @@ export default function QuotePage() {
           const weight = importWeight && weightIndex !== -1 ? Number(row[weightIndex]) || 0 : 0;
           const laborCost = importLaborCost && laborCostIndex !== -1 ? Number(row[laborCostIndex]) || 0 : 0;
 
+          // 读取新的成本字段
+          const accessoryCost = accessoryCostIndex !== -1 ? Number(row[accessoryCostIndex]) || 0 : 0;
+          const stoneCost = stoneCostIndex !== -1 ? Number(row[stoneCostIndex]) || 0 : 0;
+          const platingCost = platingCostIndex !== -1 ? Number(row[platingCostIndex]) || 0 : 0;
+          const moldCost = moldCostIndex !== -1 ? Number(row[moldCostIndex]) || 0 : 0;
+          const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
+          const supplierCode = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) || "" : "";
+
           if (!productCode || !productName) return;
 
           const wholesalePrice = calculatePrice(
@@ -754,7 +891,12 @@ export default function QuotePage() {
             weight,
             laborCost,
             defaultKarat,
-            false
+            false,
+            accessoryCost,
+            stoneCost,
+            platingCost,
+            moldCost,
+            commission
           );
 
           const retailPrice = calculatePrice(
@@ -762,7 +904,12 @@ export default function QuotePage() {
             weight,
             laborCost,
             defaultKarat,
-            true
+            true,
+            accessoryCost,
+            stoneCost,
+            platingCost,
+            moldCost,
+            commission
           );
 
           const newProduct: Product = {
@@ -777,6 +924,12 @@ export default function QuotePage() {
             wholesalePrice,
             retailPrice,
             goldPrice,
+            accessoryCost,
+            stoneCost,
+            platingCost,
+            moldCost,
+            commission,
+            supplierCode,
             timestamp: new Date().toLocaleString("zh-CN"),
           };
 
@@ -795,6 +948,12 @@ export default function QuotePage() {
             goldPrice,
             wholesalePrice,
             retailPrice,
+            accessoryCost,
+            stoneCost,
+            platingCost,
+            moldCost,
+            commission,
+            supplierCode,
             timestamp: new Date().toLocaleString("zh-CN"),
           };
           newHistory.push(historyRecord);
@@ -1696,6 +1855,123 @@ export default function QuotePage() {
                 </div>
               </div>
 
+              {/* 新增成本字段 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    配件成本（人民币）
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.accessoryCost}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        accessoryCost: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    石头成本（人民币）
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.stoneCost}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        stoneCost: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    电镀成本（人民币）
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.platingCost}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        platingCost: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    模具成本（人民币）
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.moldCost}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        moldCost: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    佣金（%）
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.commission}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        commission: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    step="0.01"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    供应商代码
+                  </label>
+                  <input
+                    type="text"
+                    value={currentProduct.supplierCode}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        supplierCode: e.target.value,
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-900">
                   金成色
@@ -1754,6 +2030,42 @@ export default function QuotePage() {
                 </div>
               )}
             </div>
+
+            {/* 搜索框 */}
+            <div className="mb-4 flex items-center gap-4">
+              <div className="flex-1 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="输入关键词搜索..."
+                  className="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  suppressHydrationWarning
+                />
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value as "name" | "specification" | "all")}
+                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  suppressHydrationWarning
+                >
+                  <option value="all">全部</option>
+                  <option value="name">产品名称</option>
+                  <option value="specification">规格</option>
+                </select>
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchType("all");
+                  }}
+                  className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 text-sm"
+                  suppressHydrationWarning
+                >
+                  清除搜索
+                </button>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
@@ -1762,7 +2074,15 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">规格</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">配件</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">石头</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">电镀</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
@@ -1770,7 +2090,24 @@ export default function QuotePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.filter(p => p.category === currentCategory).map((product) => (
+                  {products
+                    .filter(p => p.category === currentCategory)
+                    .filter(p => {
+                      if (!searchQuery) return true;
+                      const query = searchQuery.toLowerCase();
+                      if (searchType === "name") {
+                        return p.productName.toLowerCase().includes(query);
+                      } else if (searchType === "specification") {
+                        return p.specification.toLowerCase().includes(query);
+                      } else {
+                        return (
+                          p.productName.toLowerCase().includes(query) ||
+                          p.specification.toLowerCase().includes(query) ||
+                          p.productCode.toLowerCase().includes(query)
+                        );
+                      }
+                    })
+                    .map((product) => (
                     <tr key={product.id}>
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <input
@@ -1792,12 +2129,15 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">{product.weight}</div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          {formatDate(product.timestamp)}
-                        </div>
-                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.laborCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.accessoryCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.stoneCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.platingCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.moldCost.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.commission}%</td>
+                      <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="text-gray-900">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
