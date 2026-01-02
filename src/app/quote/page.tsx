@@ -37,6 +37,7 @@ export default function QuotePage() {
   const [goldPrice, setGoldPrice] = useState<number>(500); // 市场金价（元/克）
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     productCode: "",
     productName: "",
@@ -165,9 +166,18 @@ export default function QuotePage() {
     });
   };
 
-  // 更新产品价格（当金价变化时）- 为所有产品添加新记录
+  // 更新选中产品的价格（当金价变化时）- 只为选中的产品添加新记录
   const updatePrices = () => {
-    const newProducts = products.map((product) => {
+    if (selectedProducts.size === 0) {
+      alert("请先选择要更新的产品！");
+      return;
+    }
+
+    const newProducts: Product[] = [];
+    selectedProducts.forEach((productId) => {
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+
       const newWholesalePrice = calculatePrice(
         goldPrice,
         product.weight,
@@ -186,7 +196,7 @@ export default function QuotePage() {
 
       // 创建新的产品记录
       const newProduct: Product = {
-        id: Date.now().toString() + "_" + product.id,
+        id: Date.now().toString() + "_" + productId,
         productCode: product.productCode,
         productName: product.productName,
         specification: product.specification,
@@ -216,12 +226,14 @@ export default function QuotePage() {
       };
       setPriceHistory((prev) => [...prev, historyRecord]);
 
-      return newProduct;
+      newProducts.push(newProduct);
     });
 
     // 将新产品添加到列表最后面
     setProducts([...products, ...newProducts]);
-    alert("已为所有产品添加新价格记录！");
+    // 清空选择
+    setSelectedProducts(new Set());
+    alert(`已为选中的 ${newProducts.length} 个产品添加新价格记录！`);
   };
 
   // 导出 Excel（CSV 格式）- 横向展开，一个货号一行
@@ -308,12 +320,24 @@ export default function QuotePage() {
                 step="0.01"
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <button
                 onClick={updatePrices}
                 className="rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
               >
-                更新所有产品价格
+                更新选中产品价格
+              </button>
+              <button
+                onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
+                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+              >
+                全选
+              </button>
+              <button
+                onClick={() => setSelectedProducts(new Set())}
+                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+              >
+                取消全选
               </button>
             </div>
           </div>
@@ -462,6 +486,7 @@ export default function QuotePage() {
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
                   <tr>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12">选择</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
@@ -475,6 +500,22 @@ export default function QuotePage() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id}>
+                      <td className="border border-gray-200 px-3 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.has(product.id)}
+                          onChange={(e) => {
+                            const newSelected = new Set(selectedProducts);
+                            if (e.target.checked) {
+                              newSelected.add(product.id);
+                            } else {
+                              newSelected.delete(product.id);
+                            }
+                            setSelectedProducts(newSelected);
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
@@ -517,7 +558,7 @@ export default function QuotePage() {
                   ))}
                   {products.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={9} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无产品数据
                       </td>
                     </tr>
