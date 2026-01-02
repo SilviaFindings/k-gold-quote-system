@@ -1836,11 +1836,11 @@ export default function QuotePage() {
                 批量更新供应商代码
               </button>
               <button
-                onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
+                onClick={() => setSelectedProducts(new Set(products.filter(p => p.category === currentCategory).map(p => p.id)))}
                 className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
                 suppressHydrationWarning
               >
-                全选
+                全选（当前分类）
               </button>
               <button
                 onClick={() => setSelectedProducts(new Set())}
