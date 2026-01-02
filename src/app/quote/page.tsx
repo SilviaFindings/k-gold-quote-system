@@ -675,7 +675,7 @@ export default function QuotePage() {
         {/* 金价设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">金价设置</h2>
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4 flex gap-2" suppressHydrationWarning>
             <button
               onClick={() => {
                 if (confirm("确定要导出所有数据备份吗？")) {
@@ -694,6 +694,7 @@ export default function QuotePage() {
                 }
               }}
               className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+              suppressHydrationWarning
             >
               备份数据
             </button>
@@ -727,6 +728,7 @@ export default function QuotePage() {
                 input.click();
               }}
               className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+              suppressHydrationWarning
             >
               恢复数据
             </button>
@@ -749,6 +751,7 @@ export default function QuotePage() {
                 alert(message);
               }}
               className="rounded bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
+              suppressHydrationWarning
             >
               查看数据统计
             </button>
@@ -936,6 +939,7 @@ export default function QuotePage() {
                   accept=".xlsx,.xls,.csv"
                   onChange={importExcel}
                   className="block w-48 text-sm text-gray-900 file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-700 hover:file:bg-blue-100"
+                  suppressHydrationWarning
                 />
               </div>
             </div>
