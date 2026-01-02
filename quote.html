@@ -360,10 +360,10 @@
 
             tbody.innerHTML = products.map(product => `
                 <tr>
-                    <td class="border border-gray-200 px-3 py-2">${product.productCode}</td>
-                    <td class="border border-gray-200 px-3 py-2">${product.productName}</td>
-                    <td class="border border-gray-200 px-3 py-2">${product.karat}</td>
-                    <td class="border border-gray-200 px-3 py-2 text-right">${product.weight}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.productCode}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.productName}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.karat}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">${product.weight}</td>
                     <td class="border border-gray-200 px-3 py-2 text-right font-medium text-green-600">
                         CAD$${product.wholesalePrice.toFixed(2)}
                     </td>
@@ -400,12 +400,12 @@
             const reversedHistory = [...priceHistory].reverse();
             tbody.innerHTML = reversedHistory.map(history => `
                 <tr>
-                    <td class="border border-gray-200 px-3 py-2 whitespace-nowrap">${history.timestamp}</td>
-                    <td class="border border-gray-200 px-3 py-2">${history.productCode}</td>
-                    <td class="border border-gray-200 px-3 py-2">${history.productName}</td>
-                    <td class="border border-gray-200 px-3 py-2">${history.karat}</td>
-                    <td class="border border-gray-200 px-3 py-2 text-right">${history.weight}</td>
-                    <td class="border border-gray-200 px-3 py-2 text-right">
+                    <td class="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">${history.timestamp}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.productCode}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.productName}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.karat}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">${history.weight}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">
                         ¥${history.goldPrice.toFixed(2)}
                     </td>
                     <td class="border border-gray-200 px-3 py-2 text-right text-green-600">

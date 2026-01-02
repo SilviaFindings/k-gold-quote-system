@@ -412,10 +412,10 @@ export default function QuotePage() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id}>
-                      <td className="border border-gray-200 px-3 py-2">{product.productCode}</td>
-                      <td className="border border-gray-200 px-3 py-2">{product.productName}</td>
-                      <td className="border border-gray-200 px-3 py-2">{product.karat}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right">{product.weight}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right font-medium text-green-600">
                         CAD${product.wholesalePrice.toFixed(2)}
                       </td>
@@ -477,14 +477,14 @@ export default function QuotePage() {
               <tbody>
                 {priceHistory.slice().reverse().map((history) => (
                   <tr key={history.id}>
-                    <td className="border border-gray-200 px-3 py-2 whitespace-nowrap">
+                    <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">
                       {history.timestamp}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2">{history.productCode}</td>
-                    <td className="border border-gray-200 px-3 py-2">{history.productName}</td>
-                    <td className="border border-gray-200 px-3 py-2">{history.karat}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-right">{history.weight}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-right">
+                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productCode}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productName}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.karat}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{history.weight}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
                       ¥{history.goldPrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
