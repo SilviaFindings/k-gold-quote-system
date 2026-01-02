@@ -30,14 +30,14 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
 
-// 收货部门列表
-export const RECEIVING_DEPARTMENTS = [
+// 下单口列表
+export const ORDER_CHANNELS = [
   { code: "Van", name: "Van (Vancouver)" },
   { code: "US201", name: "US201 (US office)" },
   { code: "US202", name: "US202 (Show team)" },
 ] as const;
 
-export type ReceivingDepartment = typeof RECEIVING_DEPARTMENTS[number]["code"];
+export type OrderChannel = typeof ORDER_CHANNELS[number]["code"];
 
 // 产品信息类型
 interface Product {
@@ -59,7 +59,7 @@ interface Product {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
-  receivingDepartment: ReceivingDepartment | "";  // 收货部门
+  orderChannel: OrderChannel | "";  // 下单口
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -91,7 +91,7 @@ interface PriceHistory {
   moldCost: number;             // 模具成本
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
-  receivingDepartment: ReceivingDepartment | "";  // 收货部门
+  orderChannel: OrderChannel | "";  // 下单口
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -147,7 +147,7 @@ export default function QuotePage() {
     moldCost: 0,
     commission: 0,
     supplierCode: "",
-    receivingDepartment: "",
+    orderChannel: "",
   });
 
   // 导入Excel相关状态
@@ -724,7 +724,7 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
-      receivingDepartment: currentProduct.receivingDepartment || "",
+      orderChannel: currentProduct.orderChannel || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -764,7 +764,7 @@ export default function QuotePage() {
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
-      receivingDepartment: currentProduct.receivingDepartment || "",
+      orderChannel: currentProduct.orderChannel || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -854,7 +854,7 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
-        receivingDepartment: product.receivingDepartment || "",
+        orderChannel: product.orderChannel || "",
         // 成本时间戳（从旧记录继承或使用当前时间）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -886,7 +886,7 @@ export default function QuotePage() {
         moldCost: product.moldCost || 0,
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
-        receivingDepartment: product.receivingDepartment || "",
+        orderChannel: product.orderChannel || "",
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -1010,12 +1010,12 @@ export default function QuotePage() {
         row[`第${suffix}次佣金时间`] = formatDate(record.commissionDate || record.timestamp);
         row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
         row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
-        // 添加收货部门
-        if (record.receivingDepartment) {
-          const dept = RECEIVING_DEPARTMENTS.find(d => d.code === record.receivingDepartment);
-          row[`第${suffix}次收货部门`] = dept ? dept.name : record.receivingDepartment;
+        // 添加下单口
+        if (record.orderChannel) {
+          const channel = ORDER_CHANNELS.find(d => d.code === record.orderChannel);
+          row[`第${suffix}次下单口`] = channel ? channel.name : record.orderChannel;
         } else {
-          row[`第${suffix}次收货部门`] = "";
+          row[`第${suffix}次下单口`] = "";
         }
       });
 
@@ -1172,8 +1172,8 @@ export default function QuotePage() {
         const supplierCodeIndex = headers.findIndex(h =>
           h && h.includes("供应商")
         );
-        const receivingDepartmentIndex = headers.findIndex(h =>
-          h && h.includes("收货部门")
+        const orderChannelIndex = headers.findIndex(h =>
+          h && h.includes("下单口")
         );
 
         console.log("列索引:", {
@@ -1188,7 +1188,7 @@ export default function QuotePage() {
           moldCostIndex,
           commissionIndex,
           supplierCodeIndex,
-          receivingDepartmentIndex
+          orderChannelIndex
         });
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
@@ -1213,25 +1213,25 @@ export default function QuotePage() {
           const moldCost = moldCostIndex !== -1 ? Number(row[moldCostIndex]) || 0 : 0;
           const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
           const supplierCode = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) || "" : "";
-          const receivingDepartment = receivingDepartmentIndex !== -1 ? String(row[receivingDepartmentIndex]) || "" : "";
+          const orderChannel = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) || "" : "";
 
-          // 尝试将收货部门映射到有效的代码
-          let validReceivingDepartment: ReceivingDepartment | "" = "";
-          if (receivingDepartment) {
-            const deptValue = String(receivingDepartment).trim();
+          // 尝试将下单口映射到有效的代码
+          let validOrderChannel: OrderChannel | "" = "";
+          if (orderChannel) {
+            const channelValue = String(orderChannel).trim();
             // 先尝试直接匹配代码
-            const foundByCode = RECEIVING_DEPARTMENTS.find(d => d.code === deptValue);
+            const foundByCode = ORDER_CHANNELS.find(d => d.code === channelValue);
             if (foundByCode) {
-              validReceivingDepartment = foundByCode.code;
+              validOrderChannel = foundByCode.code;
             } else {
               // 尝试匹配名称
-              const foundByName = RECEIVING_DEPARTMENTS.find(d =>
-                d.name.toLowerCase() === deptValue.toLowerCase() ||
-                d.name.includes(deptValue) ||
-                deptValue.includes(d.name)
+              const foundByName = ORDER_CHANNELS.find(d =>
+                d.name.toLowerCase() === channelValue.toLowerCase() ||
+                d.name.includes(channelValue) ||
+                channelValue.includes(d.name)
               );
               if (foundByName) {
-                validReceivingDepartment = foundByName.code;
+                validOrderChannel = foundByName.code;
               }
             }
           }
@@ -1287,7 +1287,7 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
-            receivingDepartment: validReceivingDepartment,
+            orderChannel: validOrderChannel,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -1320,7 +1320,7 @@ export default function QuotePage() {
             moldCost,
             commission,
             supplierCode,
-            receivingDepartment: validReceivingDepartment,
+            orderChannel: validOrderChannel,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2444,23 +2444,23 @@ export default function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-900">
-                    收货部门
+                    下单口
                   </label>
                   <select
-                    value={currentProduct.receivingDepartment || ""}
+                    value={currentProduct.orderChannel || ""}
                     onChange={(e) =>
                       setCurrentProduct({
                         ...currentProduct,
-                        receivingDepartment: e.target.value as ReceivingDepartment | "",
+                        orderChannel: e.target.value as OrderChannel | "",
                       })
                     }
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     suppressHydrationWarning
                   >
-                    <option value="">请选择收货部门</option>
-                    {RECEIVING_DEPARTMENTS.map((dept) => (
-                      <option key={dept.code} value={dept.code}>
-                        {dept.name}
+                    <option value="">请选择下单口</option>
+                    {ORDER_CHANNELS.map((channel) => (
+                      <option key={channel.code} value={channel.code}>
+                        {channel.name}
                       </option>
                     ))}
                   </select>
@@ -2623,7 +2623,7 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">收货部门</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">下单口</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
@@ -2702,10 +2702,10 @@ export default function QuotePage() {
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
-                        {product.receivingDepartment ? (
+                        {product.orderChannel ? (
                           (() => {
-                            const dept = RECEIVING_DEPARTMENTS.find(d => d.code === product.receivingDepartment);
-                            return dept ? dept.name : product.receivingDepartment;
+                            const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
+                            return channel ? channel.name : product.orderChannel;
                           })()
                         ) : "-"}
                       </td>
@@ -2777,7 +2777,7 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">收货部门</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">下单口</th>
                 </tr>
               </thead>
               <tbody>
@@ -2801,10 +2801,10 @@ export default function QuotePage() {
                       CAD${history.wholesalePrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
-                      {history.receivingDepartment ? (
+                      {history.orderChannel ? (
                         (() => {
-                          const dept = RECEIVING_DEPARTMENTS.find(d => d.code === history.receivingDepartment);
-                          return dept ? dept.name : history.receivingDepartment;
+                          const channel = ORDER_CHANNELS.find(d => d.code === history.orderChannel);
+                          return channel ? channel.name : history.orderChannel;
                         })()
                       ) : "-"}
                     </td>
