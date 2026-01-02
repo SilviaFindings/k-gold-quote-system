@@ -62,6 +62,45 @@ export default function QuotePage() {
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
   const [defaultKarat, setDefaultKarat] = useState<"14K" | "18K">("18K");
 
+  // 价格系数配置
+  const [coefficients, setCoefficients] = useState<{
+    goldFactor14K: number;
+    goldFactor18K: number;
+    laborFactorRetail: number;
+    laborFactorWholesale: number;
+    materialLoss: number;
+    materialCost: number;
+    profitMargin: number;
+    exchangeRate: number;
+  }>(() => {
+    if (typeof window === 'undefined') {
+      return {
+        goldFactor14K: 0.586,
+        goldFactor18K: 0.755,
+        laborFactorRetail: 5,
+        laborFactorWholesale: 3,
+        materialLoss: 1.15,
+        materialCost: 1.1,
+        profitMargin: 1.25,
+        exchangeRate: 5,
+      };
+    }
+    const savedCoefficients = localStorage.getItem("priceCoefficients");
+    if (savedCoefficients) {
+      return JSON.parse(savedCoefficients);
+    }
+    return {
+      goldFactor14K: 0.586,
+      goldFactor18K: 0.755,
+      laborFactorRetail: 5,
+      laborFactorWholesale: 3,
+      materialLoss: 1.15,
+      materialCost: 1.1,
+      profitMargin: 1.25,
+      exchangeRate: 5,
+    };
+  });
+
   // 格式化日期为年月日
   const formatDate = (timestamp: string): string => {
     return new Date(timestamp).toLocaleDateString("zh-CN");
@@ -125,6 +164,12 @@ export default function QuotePage() {
     localStorage.setItem("goldPriceTimestamp", new Date().toLocaleString("zh-CN"));
   }, [goldPrice]);
 
+  // 保存系数到 localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem("priceCoefficients", JSON.stringify(coefficients));
+  }, [coefficients]);
+
   // 计算价格函数
   const calculatePrice = (
     marketGoldPrice: number,
@@ -133,18 +178,18 @@ export default function QuotePage() {
     karat: "14K" | "18K",
     isRetail: boolean
   ): number => {
-    const goldFactor = karat === "14K" ? 0.586 : 0.755; // 14K金含金量约为58.6%，18K金为75.5%
-    const laborFactor = isRetail ? 5 : 3; // 零售价用5/5工费，批发价用3/5工费
+    const goldFactor = karat === "14K" ? coefficients.goldFactor14K : coefficients.goldFactor18K;
+    const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
 
-    // 材料价 = 市场金价 x 金含量 x 重量 x 1.15 x 1.1 / 5
+    // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料成本 / 汇率
     const materialPrice =
-      marketGoldPrice * goldFactor * weight * 1.15 * 1.1 / 5;
+      marketGoldPrice * goldFactor * weight * coefficients.materialLoss * coefficients.materialCost / coefficients.exchangeRate;
 
-    // 工费 = 人工成本 x 系数 / 5
-    const laborPrice = laborCost * laborFactor / 5;
+    // 工费 = 人工成本 x 系数 / 汇率
+    const laborPrice = laborCost * laborFactor / coefficients.exchangeRate;
 
-    // 总价 = (材料价 + 工费) x 1.25
-    const totalPrice = (materialPrice + laborPrice) * 1.25;
+    // 总价 = (材料价 + 工费) x 利润率
+    const totalPrice = (materialPrice + laborPrice) * coefficients.profitMargin;
 
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
@@ -579,6 +624,124 @@ export default function QuotePage() {
               >
                 取消全选
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 系数设置区域 */}
+        <div className="mb-6 rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-gray-800">价格系数设置</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* 金含量系数 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                14K金含量系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.goldFactor14K}
+                onChange={(e) => setCoefficients({...coefficients, goldFactor14K: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.001"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 0.586</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                18K金含量系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.goldFactor18K}
+                onChange={(e) => setCoefficients({...coefficients, goldFactor18K: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.001"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 0.755</div>
+            </div>
+
+            {/* 工费系数 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                零售价工费系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.laborFactorRetail}
+                onChange={(e) => setCoefficients({...coefficients, laborFactorRetail: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.1"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 5</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                批发价工费系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.laborFactorWholesale}
+                onChange={(e) => setCoefficients({...coefficients, laborFactorWholesale: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.1"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 3</div>
+            </div>
+
+            {/* 材料系数 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                材料损耗系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.materialLoss}
+                onChange={(e) => setCoefficients({...coefficients, materialLoss: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.01"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 1.15</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                材料成本系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.materialCost}
+                onChange={(e) => setCoefficients({...coefficients, materialCost: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.01"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 1.1</div>
+            </div>
+
+            {/* 利润和汇率 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                利润率系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.profitMargin}
+                onChange={(e) => setCoefficients({...coefficients, profitMargin: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.01"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 1.25</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-900">
+                汇率（人民币/加币）
+              </label>
+              <input
+                type="number"
+                value={coefficients.exchangeRate}
+                onChange={(e) => setCoefficients({...coefficients, exchangeRate: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                step="0.01"
+              />
+              <div className="mt-1 text-xs text-gray-500">默认: 5</div>
             </div>
           </div>
         </div>
