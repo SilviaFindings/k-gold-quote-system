@@ -365,7 +365,7 @@ export default function QuotePage() {
           <h2 className="mb-4 text-xl font-semibold text-gray-800">金价设置</h2>
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col">
-              <label className="mb-2 text-sm font-medium text-gray-700">
+              <label className="mb-2 text-sm font-medium text-gray-900">
                 市场金价（人民币/克）
               </label>
               <input
@@ -412,7 +412,7 @@ export default function QuotePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
                     产品货号 *
                   </label>
                   <input
@@ -428,7 +428,7 @@ export default function QuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
                     产品名称 *
                   </label>
                   <input
@@ -446,7 +446,7 @@ export default function QuotePage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-medium text-gray-900">
                   产品规格
                 </label>
                 <input
@@ -464,7 +464,7 @@ export default function QuotePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text料-700">
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
                     重量（克）
                   </label>
                   <input
@@ -481,7 +481,7 @@ export default function QuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
                     人工成本（人民币）
                   </label>
                   <input
@@ -500,7 +500,7 @@ export default function QuotePage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-medium text-gray-900">
                   金成色
                 </label>
                 <select
