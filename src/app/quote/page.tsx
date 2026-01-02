@@ -164,8 +164,24 @@ export default function QuotePage() {
     if (typeof window === 'undefined') return;
     const savedProducts = localStorage.getItem("goldProducts");
     const savedHistory = localStorage.getItem("goldPriceHistory");
-    if (savedProducts) setProducts(JSON.parse(savedProducts));
-    if (savedHistory) setPriceHistory(JSON.parse(savedHistory));
+    if (savedProducts) {
+      const parsedProducts = JSON.parse(savedProducts);
+      // 数据迁移：将"水滴扣"改为"扣子"
+      const migratedProducts = parsedProducts.map((p: Product) => ({
+        ...p,
+        category: (p.category as any) === "水滴扣" ? "扣子" : p.category
+      }));
+      setProducts(migratedProducts);
+    }
+    if (savedHistory) {
+      const parsedHistory = JSON.parse(savedHistory);
+      // 数据迁移：将"水滴扣"改为"扣子"
+      const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
+        ...h,
+        category: (h.category as any) === "水滴扣" ? "扣子" : h.category
+      }));
+      setPriceHistory(migratedHistory);
+    }
   }, []);
 
   // 保存数据到 localStorage
