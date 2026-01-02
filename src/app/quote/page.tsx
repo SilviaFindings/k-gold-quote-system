@@ -131,8 +131,8 @@ export default function QuotePage() {
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
-    // 添加到产品列表（添加到最前面，按时间倒序）
-    setProducts([newProduct, ...products]);
+    // 添加到产品列表（添加到最后面，按时间正序）
+    setProducts([...products, newProduct]);
 
     // 添加到历史记录
     const historyRecord: PriceHistory = {
@@ -215,8 +215,8 @@ export default function QuotePage() {
       return newProduct;
     });
 
-    // 将新产品添加到列表最前面
-    setProducts([...newProducts, ...products]);
+    // 将新产品添加到列表最后面
+    setProducts([...products, ...newProducts]);
     alert("已为所有产品添加新价格记录！");
   };
 
@@ -505,7 +505,7 @@ export default function QuotePage() {
                 </tr>
               </thead>
               <tbody>
-                {priceHistory.slice().reverse().map((history) => (
+                {priceHistory.map((history) => (
                   <tr key={history.id}>
                     <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">
                       {formatDate(history.timestamp)}
