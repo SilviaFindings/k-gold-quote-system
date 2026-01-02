@@ -813,21 +813,26 @@ export default function QuotePage() {
   const diagnoseData = () => {
     console.log("========== 数据诊断开始 ==========");
 
-    const products = localStorage.getItem("goldProducts");
-    const history = localStorage.getItem("goldPriceHistory");
-    const goldPrice = localStorage.getItem("goldPrice");
-    const goldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
-    const coefficients = localStorage.getItem("priceCoefficients");
+    const lsProducts = localStorage.getItem("goldProducts");
+    const lsHistory = localStorage.getItem("goldPriceHistory");
+    const lsGoldPrice = localStorage.getItem("goldPrice");
+    const lsGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
+    const lsCoefficients = localStorage.getItem("priceCoefficients");
 
     let message = "🔍 数据诊断报告\n";
     message += "=".repeat(40) + "\n\n";
 
     // 诊断产品数据
     message += "【产品数据】\n";
-    if (products) {
+
+    // 检查 React state
+    message += `📱 React State: ${products.length} 条\n`;
+
+    // 检查 localStorage
+    if (lsProducts) {
       try {
-        const parsed = JSON.parse(products);
-        message += `✅ 存在数据，共 ${parsed.length} 条记录\n`;
+        const parsed = JSON.parse(lsProducts);
+        message += `💾 LocalStorage: ${parsed.length} 条\n`;
 
         if (parsed.length > 0) {
           const categories = [...new Set(parsed.map((p: any) => p.category))];
@@ -839,35 +844,42 @@ export default function QuotePage() {
           message += `   重量: ${parsed[0].weight}g\n`;
           message += `   零售价: CAD$${parsed[0].retailPrice?.toFixed(2) || "N/A"}\n`;
         }
+
+        // 对比状态
+        if (parsed.length !== products.length) {
+          message += `⚠️ 警告：LocalStorage 和 React State 数据不一致！\n`;
+          message += `   建议点击\"重新加载数据\"按钮\n`;
+        }
       } catch (e) {
         message += `❌ 数据解析失败: ${(e as Error).message}\n`;
       }
     } else {
-      message += `⚠️ LocalStorage 中没有产品数据\n`;
+      message += `💾 LocalStorage: 无数据\n`;
     }
 
     message += "\n";
 
     // 诊断历史记录
     message += "【历史记录】\n";
-    if (history) {
+    message += `📱 React State: ${priceHistory.length} 条\n`;
+    if (lsHistory) {
       try {
-        const parsed = JSON.parse(history);
-        message += `✅ 存在数据，共 ${parsed.length} 条记录\n`;
+        const parsed = JSON.parse(lsHistory);
+        message += `💾 LocalStorage: ${parsed.length} 条\n`;
       } catch (e) {
         message += `❌ 数据解析失败: ${(e as Error).message}\n`;
       }
     } else {
-      message += `⚠️ LocalStorage 中没有历史记录\n`;
+      message += `💾 LocalStorage: 无数据\n`;
     }
 
     message += "\n";
 
     // 诊断金价
     message += "【金价设置】\n";
-    if (goldPrice) {
-      message += `✅ 金价: ¥${goldPrice}/克\n`;
-      message += `📅 更新时间: ${goldPriceTimestamp || "未知"}\n`;
+    if (lsGoldPrice) {
+      message += `✅ 金价: ¥${lsGoldPrice}/克\n`;
+      message += `📅 更新时间: ${lsGoldPriceTimestamp || "未知"}\n`;
     } else {
       message += `⚠️ LocalStorage 中没有金价数据\n`;
     }
@@ -876,9 +888,9 @@ export default function QuotePage() {
 
     // 诊断系数
     message += "【价格系数】\n";
-    if (coefficients) {
+    if (lsCoefficients) {
       try {
-        const coeff = JSON.parse(coefficients);
+        const coeff = JSON.parse(lsCoefficients);
         message += `✅ 系数已设置\n`;
         message += `   14K金含量: ${coeff.goldFactor14K}\n`;
         message += `   18K金含量: ${coeff.goldFactor18K}\n`;
@@ -894,7 +906,7 @@ export default function QuotePage() {
     message += "\n";
     message += "=".repeat(40) + "\n";
     message += "💡 提示：\n";
-    message += "1. 如果没有数据，请先添加产品或从备份恢复\n";
+    message += "1. 如果 React State 和 LocalStorage 不一致，请点击\"重新加载数据\"\n";
     message += "2. 诊断结果已同步到控制台 (F12)\n";
     message += "3. 可以使用\"查看备份文件\"功能检查备份文件内容\n";
 
@@ -906,9 +918,45 @@ export default function QuotePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">
+        <h1 className="mb-4 text-3xl font-bold text-gray-900">
           K金产品报价计算表
         </h1>
+
+        {/* 数据状态显示 */}
+        <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-lg font-semibold text-blue-900">
+                📊 当前数据状态：
+              </span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                products.length > 0
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {products.length > 0 ? `共有 ${products.length} 个产品` : "暂无数据"}
+              </span>
+              {products.length > 0 && (
+                <span className="text-sm text-blue-700">
+                  分布在 {[...new Set(products.map(p => p.category))].length} 个分类
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                console.log("当前 products state:", products);
+                console.log("当前 priceHistory state:", priceHistory);
+                console.log("LocalStorage products:", localStorage.getItem("goldProducts"));
+                console.log("LocalStorage history:", localStorage.getItem("goldPriceHistory"));
+                alert(`当前 products 长度: ${products.length}\n当前 priceHistory 长度: ${priceHistory.length}\n\n详细信息请查看控制台 (F12)`);
+              }}
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              suppressHydrationWarning
+            >
+              调试状态
+            </button>
+          </div>
+        </div>
 
         {/* 分类导航区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
