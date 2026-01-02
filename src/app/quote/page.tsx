@@ -131,8 +131,8 @@ export default function QuotePage() {
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
-    // 添加到产品列表
-    setProducts([...products, newProduct]);
+    // 添加到产品列表（添加到最前面，按时间倒序）
+    setProducts([newProduct, ...products]);
 
     // 添加到历史记录
     const historyRecord: PriceHistory = {
@@ -162,9 +162,9 @@ export default function QuotePage() {
     });
   };
 
-  // 更新产品价格（当金价变化时）
+  // 更新产品价格（当金价变化时）- 为所有产品添加新记录
   const updatePrices = () => {
-    const updatedProducts = products.map((product) => {
+    const newProducts = products.map((product) => {
       const newWholesalePrice = calculatePrice(
         goldPrice,
         product.weight,
@@ -181,16 +181,30 @@ export default function QuotePage() {
         true
       );
 
-      // 添加到历史记录
-      const historyRecord: PriceHistory = {
-        id: Date.now().toString() + "_update",
-        productId: product.id,
+      // 创建新的产品记录
+      const newProduct: Product = {
+        id: Date.now().toString() + "_" + product.id,
         productCode: product.productCode,
         productName: product.productName,
         specification: product.specification,
         weight: product.weight,
         laborCost: product.laborCost,
         karat: product.karat,
+        wholesalePrice: newWholesalePrice,
+        retailPrice: newRetailPrice,
+        timestamp: new Date().toLocaleString("zh-CN"),
+      };
+
+      // 添加到历史记录
+      const historyRecord: PriceHistory = {
+        id: newProduct.id + "_hist",
+        productId: newProduct.id,
+        productCode: newProduct.productCode,
+        productName: newProduct.productName,
+        specification: newProduct.specification,
+        weight: newProduct.weight,
+        laborCost: newProduct.laborCost,
+        karat: newProduct.karat,
         goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
@@ -198,16 +212,12 @@ export default function QuotePage() {
       };
       setPriceHistory((prev) => [...prev, historyRecord]);
 
-      return {
-        ...product,
-        wholesalePrice: newWholesalePrice,
-        retailPrice: newRetailPrice,
-        timestamp: new Date().toLocaleString("zh-CN"),
-      };
+      return newProduct;
     });
 
-    setProducts(updatedProducts);
-    alert("价格已更新！");
+    // 将新产品添加到列表最前面
+    setProducts([...newProducts, ...products]);
+    alert("已为所有产品添加新价格记录！");
   };
 
   // 导出 Excel（CSV 格式）
