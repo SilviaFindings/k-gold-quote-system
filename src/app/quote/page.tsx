@@ -45,6 +45,11 @@ export default function QuotePage() {
     karat: "18K",
   });
 
+  // 格式化日期为年月日
+  const formatDate = (timestamp: string): string => {
+    return new Date(timestamp).toLocaleDateString("zh-CN");
+  };
+
   // 从 localStorage 加载数据
   useEffect(() => {
     const savedProducts = localStorage.getItem("goldProducts");
@@ -415,13 +420,18 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">{product.weight}</div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatDate(product.timestamp)}
+                        </div>
+                      </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="font-medium text-green-600">
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
-                          {product.timestamp}
+                          {formatDate(product.timestamp)}
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
@@ -429,7 +439,7 @@ export default function QuotePage() {
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
-                          {product.timestamp}
+                          {formatDate(product.timestamp)}
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-center">
@@ -488,7 +498,7 @@ export default function QuotePage() {
                 {priceHistory.slice().reverse().map((history) => (
                   <tr key={history.id}>
                     <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">
-                      {history.timestamp}
+                      {formatDate(history.timestamp)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productCode}</td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productName}</td>
