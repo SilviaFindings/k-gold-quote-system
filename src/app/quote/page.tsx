@@ -36,6 +36,7 @@ interface Product {
   weight: number;
   laborCost: number;
   karat: "14K" | "18K";
+  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -66,6 +67,7 @@ interface PriceHistory {
   weight: number;
   laborCost: number;
   karat: "14K" | "18K";
+  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -123,6 +125,7 @@ export default function QuotePage() {
     weight: 0,
     laborCost: 0,
     karat: "18K",
+    goldColor: "黄金",
     accessoryCost: 0,
     stoneCost: 0,
     platingCost: 0,
@@ -242,6 +245,7 @@ export default function QuotePage() {
           moldCost: p.moldCost || 0,
           commission: p.commission || 0,
           supplierCode: p.supplierCode || "",
+          goldColor: (p as any).goldColor || "黄金",
           // 添加成本时间戳（兼容旧数据）
           laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
           accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
@@ -276,6 +280,7 @@ export default function QuotePage() {
           moldCost: h.moldCost || 0,
           commission: h.commission || 0,
           supplierCode: h.supplierCode || "",
+          goldColor: (h as any).goldColor || "黄金",
           // 添加成本时间戳（兼容旧数据）
           laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
           accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
@@ -350,6 +355,7 @@ export default function QuotePage() {
           moldCost: p.moldCost || 0,
           commission: p.commission || 0,
           supplierCode: p.supplierCode || "",
+          goldColor: (p as any).goldColor || "黄金",
           // 添加成本时间戳（兼容旧数据）
           laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
           accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
@@ -385,6 +391,7 @@ export default function QuotePage() {
           moldCost: h.moldCost || 0,
           commission: h.commission || 0,
           supplierCode: h.supplierCode || "",
+          goldColor: (h as any).goldColor || "黄金",
           // 添加成本时间戳（兼容旧数据）
           laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
           accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
@@ -573,6 +580,7 @@ export default function QuotePage() {
       weight: currentProduct.weight || 0,
       laborCost: currentProduct.laborCost || 0,
       karat: currentProduct.karat || "18K",
+      goldColor: currentProduct.goldColor || "黄金",
       wholesalePrice,
       retailPrice,
       goldPrice,
@@ -611,6 +619,7 @@ export default function QuotePage() {
       weight: newProduct.weight,
       laborCost: currentProduct.laborCost || 0,
       karat: newProduct.karat,
+      goldColor: newProduct.goldColor,
       goldPrice,
       wholesalePrice,
       retailPrice,
@@ -640,6 +649,7 @@ export default function QuotePage() {
       weight: 0,
       laborCost: 0,
       karat: "18K",
+      goldColor: "黄金",
     });
 
     // 提示用户
@@ -698,6 +708,7 @@ export default function QuotePage() {
         weight: product.weight,
         laborCost: product.laborCost,
         karat: product.karat,
+        goldColor: product.goldColor,
         goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
@@ -728,6 +739,7 @@ export default function QuotePage() {
         weight: newProduct.weight,
         laborCost: newProduct.laborCost,
         karat: newProduct.karat,
+        goldColor: newProduct.goldColor,
         goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
@@ -1002,6 +1014,7 @@ export default function QuotePage() {
             weight,
             laborCost,
             karat: defaultKarat,
+            goldColor: "黄金",
             wholesalePrice,
             retailPrice,
             goldPrice,
@@ -1033,6 +1046,7 @@ export default function QuotePage() {
             weight: newProduct.weight,
             laborCost: newProduct.laborCost,
             karat: newProduct.karat,
+            goldColor: "黄金",
             goldPrice,
             wholesalePrice,
             retailPrice,
@@ -2087,6 +2101,27 @@ export default function QuotePage() {
                 </select>
               </div>
 
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-900">
+                  金子颜色
+                </label>
+                <select
+                  value={currentProduct.goldColor}
+                  onChange={(e) =>
+                    setCurrentProduct({
+                      ...currentProduct,
+                      goldColor: e.target.value as "黄金" | "白金" | "玫瑰金",
+                    })
+                  }
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  suppressHydrationWarning
+                >
+                  <option value="黄金">黄金</option>
+                  <option value="白金">白金</option>
+                  <option value="玫瑰金">玫瑰金</option>
+                </select>
+              </div>
+
               <button
                 onClick={addProduct}
                 className="w-full rounded bg-green-600 px-6 py-3 text-white hover:bg-green-700"
@@ -2188,20 +2223,15 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">规格</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">工费</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">工费日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">配件</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">配件日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">石头</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">石头日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">电镀</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">电镀日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">模具日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 text-xs">佣金日期</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
@@ -2252,20 +2282,33 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.goldColor}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.laborCost.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.laborCostDate)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.accessoryCost.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.accessoryCostDate)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.stoneCost.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.stoneCostDate)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.platingCost.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.platingCostDate)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">¥{product.moldCost.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.moldCostDate)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.commission}%</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-gray-500 text-xs">{formatDate(product.commissionDate)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">¥{product.laborCost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.laborCostDate)}</div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">¥{product.accessoryCost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.accessoryCostDate)}</div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">¥{product.stoneCost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.stoneCostDate)}</div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">¥{product.platingCost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.platingCostDate)}</div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">¥{product.moldCost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.moldCostDate)}</div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">{product.commission}%</div>
+                        <div className="text-xs text-gray-500">{formatDate(product.commissionDate)}</div>
+                      </td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="text-gray-900">
@@ -2304,7 +2347,7 @@ export default function QuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={24} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
@@ -2330,6 +2373,7 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
@@ -2345,6 +2389,7 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productCode}</td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productName}</td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.karat}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.goldColor}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{history.weight}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
                       ¥{history.goldPrice.toFixed(2)}
@@ -2360,7 +2405,7 @@ export default function QuotePage() {
                 {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="border border-gray-200 px-3 py-4 text-center text-gray-500"
                     >
                       暂无{currentCategory}历史记录
