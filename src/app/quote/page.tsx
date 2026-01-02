@@ -704,7 +704,7 @@ export default function QuotePage() {
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-900">
-                材料成本系数
+                材料浮动系数
               </label>
               <input
                 type="number"
@@ -719,7 +719,7 @@ export default function QuotePage() {
             {/* 利润和汇率 */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-900">
-                利润率系数
+                国际运输及关税系数
               </label>
               <input
                 type="number"
