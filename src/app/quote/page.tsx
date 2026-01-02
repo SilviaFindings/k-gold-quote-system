@@ -794,6 +794,10 @@ export default function QuotePage() {
     let updatedCount = 0;
     const updatedProducts: Product[] = [...products];
 
+    console.log("========== 批量更新供应商代码 ==========");
+    console.log("当前分类:", currentCategory);
+    console.log("更新规则:", batchUpdateRules);
+
     // 提取货号中的数字部分进行比较
     const extractNumber = (code: string): number => {
       const match = code.match(/(\d+)$/);
@@ -819,12 +823,17 @@ export default function QuotePage() {
         // 提取数字并检查范围
         const productNum = extractNumber(product.productCode);
         if (productNum >= startNum && productNum <= endNum) {
+          const oldCode = product.supplierCode;
           product.supplierCode = rule.supplierCode;
+          console.log(`✓ ${product.productCode}: ${oldCode} → ${rule.supplierCode}`);
           updatedCount++;
           break; // 找到匹配的规则后，跳出循环，不再检查其他规则
         }
       }
     });
+
+    console.log(`总计更新 ${updatedCount} 个产品`);
+    console.log("=========================================");
 
     // 更新产品列表
     setProducts(updatedProducts);
@@ -2504,7 +2513,7 @@ export default function QuotePage() {
             </p>
 
             <div className="space-y-3 mb-4">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
+              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
                 <div className="col-span-4">起始货号</div>
                 <div className="col-span-4">结束货号</div>
                 <div className="col-span-3">供应商代码</div>
@@ -2512,7 +2521,7 @@ export default function QuotePage() {
               </div>
 
               {batchUpdateRules.map((rule, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2">
+                <div key={index} className="grid grid-cols-12 gap-3 items-center">
                   <div>
                     <input
                       type="text"
@@ -2522,7 +2531,8 @@ export default function QuotePage() {
                         newRules[index].startCode = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full min-w-[100px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      placeholder="KEW001"
                       suppressHydrationWarning
                     />
                   </div>
@@ -2535,7 +2545,8 @@ export default function QuotePage() {
                         newRules[index].endCode = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full min-w-[100px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      placeholder="KEW021"
                       suppressHydrationWarning
                     />
                   </div>
@@ -2548,7 +2559,8 @@ export default function QuotePage() {
                         newRules[index].supplierCode = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      placeholder="J5"
                       suppressHydrationWarning
                     />
                   </div>
@@ -2558,7 +2570,7 @@ export default function QuotePage() {
                         const newRules = batchUpdateRules.filter((_, i) => i !== index);
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600 text-xs"
+                      className="w-full rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600 text-xs"
                       suppressHydrationWarning
                     >
                       删除
