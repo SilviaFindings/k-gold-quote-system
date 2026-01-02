@@ -561,7 +561,7 @@ export default function QuotePage() {
             <div className="mb-4 rounded bg-gray-50 p-3">
               <p className="mb-2 text-sm font-medium text-gray-900">导入选项：</p>
               <div className="flex flex-wrap gap-4 text-sm">
-                <label className="flex items-center">
+                <label className="flex items-center text-gray-900">
                   <input
                     type="checkbox"
                     checked={importWeight}
@@ -570,7 +570,7 @@ export default function QuotePage() {
                   />
                   导入重量
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center text-gray-900">
                   <input
                     type="checkbox"
                     checked={importLaborCost}
@@ -580,7 +580,7 @@ export default function QuotePage() {
                   导入人工成本
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-700">默认成色：</span>
+                  <span className="text-gray-900">默认成色：</span>
                   <select
                     value={defaultKarat}
                     onChange={(e) => setDefaultKarat(e.target.value as "14K" | "18K")}
