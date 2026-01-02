@@ -52,6 +52,32 @@ export default function QuotePage() {
     return new Date(timestamp).toLocaleDateString("zh-CN");
   };
 
+  // 根据货号查找产品（获取最新的记录）
+  const findLatestProductByCode = (code: string): Product | undefined => {
+    const codeProducts = products.filter((p) => p.productCode === code);
+    if (codeProducts.length === 0) return undefined;
+    // 返回最新的记录
+    return codeProducts[codeProducts.length - 1];
+  };
+
+  // 当货号改变时，自动填充已存在产品的信息
+  useEffect(() => {
+    if (currentProduct.productCode) {
+      const existingProduct = findLatestProductByCode(currentProduct.productCode);
+      if (existingProduct) {
+        // 自动填充已存在产品的信息
+        setCurrentProduct({
+          ...currentProduct,
+          productName: existingProduct.productName,
+          specification: existingProduct.specification,
+          weight: existingProduct.weight,
+          laborCost: existingProduct.laborCost,
+          karat: existingProduct.karat,
+        });
+      }
+    }
+  }, [currentProduct.productCode]);
+
   // 从 localStorage 加载数据
   useEffect(() => {
     const savedProducts = localStorage.getItem("goldProducts");
@@ -97,7 +123,7 @@ export default function QuotePage() {
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
 
-  // 添加产品
+  // 添加/更新产品
   const addProduct = () => {
     if (!currentProduct.productCode || !currentProduct.productName) {
       alert("请填写产品货号和名称");
@@ -145,15 +171,18 @@ export default function QuotePage() {
       productName: newProduct.productName,
       specification: newProduct.specification,
       weight: newProduct.weight,
-      laborCost: newProduct.laborCost,
+      laborCost: currentProduct.laborCost || 0,
       karat: newProduct.karat,
       goldPrice,
       wholesalePrice,
       retailPrice,
-      goldPrice,
       timestamp: new Date().toLocaleString("zh-CN"),
     };
     setPriceHistory([...priceHistory, historyRecord]);
+
+    // 判断是新增还是更新
+    const existingProduct = findLatestProductByCode(currentProduct.productCode!);
+    const isNewProduct = !existingProduct;
 
     // 重置当前产品表单
     setCurrentProduct({
@@ -164,6 +193,13 @@ export default function QuotePage() {
       laborCost: 0,
       karat: "18K",
     });
+
+    // 提示用户
+    if (isNewProduct) {
+      alert("新产品添加成功！");
+    } else {
+      alert(`产品 ${currentProduct.productCode} 更新成功！已添加新价格记录`);
+    }
   };
 
   // 更新选中产品的价格（当金价变化时）- 只为选中的产品添加新记录
@@ -350,9 +386,13 @@ export default function QuotePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 产品录入区域 */}
           <div className="rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-4 text-xl font-semibold text-gray-800">
+            <h2 className="mb-2 text-xl font-semibold text-gray-800">
               产品信息录入
             </h2>
+            <p className="mb-4 text-sm text-gray-600">
+              💡 <strong>快速更新模式</strong>：输入已存在的产品货号，自动填充信息并更新价格<br/>
+              💡 <strong>新增产品模式</strong>：输入新货号，添加新产品
+            </p>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
