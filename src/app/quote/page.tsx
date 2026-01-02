@@ -142,6 +142,18 @@ export default function QuotePage() {
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
 
+  // 批量更新供应商代码相关状态
+  const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
+  const [batchUpdateRules, setBatchUpdateRules] = useState<{
+    startCode: string;
+    endCode: string;
+    supplierCode: string;
+  }[]>([
+    { startCode: "KEW001", endCode: "KEW021", supplierCode: "J5" },
+    { startCode: "KEW022", endCode: "KEW030", supplierCode: "K2" },
+    { startCode: "KEW031", endCode: "KEW032", supplierCode: "K15" },
+  ]);
+
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
     goldFactor14K: number;
@@ -775,6 +787,48 @@ export default function QuotePage() {
     // 清空选择
     setSelectedProducts(new Set());
     alert(`已更新 ${updatedProducts.length} 个产品的价格！`);
+  };
+
+  // 批量更新供应商代码
+  const batchUpdateSupplierCode = () => {
+    let updatedCount = 0;
+    const updatedProducts: Product[] = [...products];
+
+    batchUpdateRules.forEach((rule) => {
+      // 提取货号中的数字部分进行比较
+      const extractNumber = (code: string): number => {
+        const match = code.match(/(\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+      };
+
+      const startNum = extractNumber(rule.startCode);
+      const endNum = extractNumber(rule.endCode);
+
+      // 获取货号的前缀（非数字部分）
+      const codePrefix = rule.startCode.replace(/\d+$/, "");
+
+      // 更新符合条件的产品
+      updatedProducts.forEach((product) => {
+        // 只更新当前分类的产品
+        if (product.category !== currentCategory) return;
+
+        // 检查货号是否匹配前缀
+        if (!product.productCode.startsWith(codePrefix)) return;
+
+        // 提取数字并检查范围
+        const productNum = extractNumber(product.productCode);
+        if (productNum >= startNum && productNum <= endNum) {
+          product.supplierCode = rule.supplierCode;
+          updatedCount++;
+        }
+      });
+    });
+
+    // 更新产品列表
+    setProducts(updatedProducts);
+
+    alert(`已批量更新 ${updatedCount} 个产品的供应商代码！`);
+    setShowBatchUpdateModal(false);
   };
 
   // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
@@ -1665,6 +1719,13 @@ export default function QuotePage() {
                 更新选中产品价格
               </button>
               <button
+                onClick={() => setShowBatchUpdateModal(true)}
+                className="rounded bg-purple-600 px-6 py-2 text-white hover:bg-purple-700"
+                suppressHydrationWarning
+              >
+                批量更新供应商代码
+              </button>
+              <button
                 onClick={() => setSelectedProducts(new Set(products.map(p => p.id)))}
                 className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
                 suppressHydrationWarning
@@ -2430,6 +2491,108 @@ export default function QuotePage() {
           </div>
         </div>
       </div>
+
+      {/* 批量更新供应商代码对话框 */}
+      {showBatchUpdateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量更新供应商代码</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              为当前分类（{currentCategory}）的产品批量设置供应商代码。按照货号范围进行更新。
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
+                <div className="col-span-4">起始货号</div>
+                <div className="col-span-4">结束货号</div>
+                <div className="col-span-3">供应商代码</div>
+                <div className="col-span-1">操作</div>
+              </div>
+
+              {batchUpdateRules.map((rule, index) => (
+                <div key={index} className="grid grid-cols-12 gap-2">
+                  <div>
+                    <input
+                      type="text"
+                      value={rule.startCode}
+                      onChange={(e) => {
+                        const newRules = [...batchUpdateRules];
+                        newRules[index].startCode = e.target.value;
+                        setBatchUpdateRules(newRules);
+                      }}
+                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={rule.endCode}
+                      onChange={(e) => {
+                        const newRules = [...batchUpdateRules];
+                        newRules[index].endCode = e.target.value;
+                        setBatchUpdateRules(newRules);
+                      }}
+                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={rule.supplierCode}
+                      onChange={(e) => {
+                        const newRules = [...batchUpdateRules];
+                        newRules[index].supplierCode = e.target.value;
+                        setBatchUpdateRules(newRules);
+                      }}
+                      className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        const newRules = batchUpdateRules.filter((_, i) => i !== index);
+                        setBatchUpdateRules(newRules);
+                      }}
+                      className="w-full rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600 text-xs"
+                      suppressHydrationWarning
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() => setBatchUpdateRules([...batchUpdateRules, { startCode: "", endCode: "", supplierCode: "" }])}
+                className="w-full rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 text-sm"
+                suppressHydrationWarning
+              >
+                + 添加规则
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => setShowBatchUpdateModal(false)}
+                className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+                suppressHydrationWarning
+              >
+                取消
+              </button>
+              <button
+                onClick={batchUpdateSupplierCode}
+                className="rounded bg-purple-600 px-6 py-2 text-white hover:bg-purple-700"
+                suppressHydrationWarning
+              >
+                确认批量更新
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
