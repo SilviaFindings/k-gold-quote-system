@@ -11,6 +11,7 @@ interface Product {
   weight: number;
   laborCost: number;
   karat: "14K" | "18K";
+  goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
   timestamp: string;
@@ -128,6 +129,7 @@ export default function QuotePage() {
       karat: currentProduct.karat || "18K",
       wholesalePrice,
       retailPrice,
+      goldPrice,
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
@@ -147,6 +149,7 @@ export default function QuotePage() {
       goldPrice,
       wholesalePrice,
       retailPrice,
+      goldPrice,
       timestamp: new Date().toLocaleString("zh-CN"),
     };
     setPriceHistory([...priceHistory, historyRecord]);
@@ -190,6 +193,7 @@ export default function QuotePage() {
         weight: product.weight,
         laborCost: product.laborCost,
         karat: product.karat,
+        goldPrice,
         wholesalePrice: newWholesalePrice,
         retailPrice: newRetailPrice,
         timestamp: new Date().toLocaleString("zh-CN"),
@@ -251,6 +255,7 @@ export default function QuotePage() {
         const suffix = index + 1;
         row[`第${suffix}次时间`] = formatDate(record.timestamp);
         row[`第${suffix}次重量`] = record.weight;
+        row[`第${suffix}次金价`] = record.goldPrice ? `¥${record.goldPrice.toFixed(2)}` : "";
         row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
         row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
       });
@@ -461,6 +466,7 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
                     <th className="border border-gray-200 px-3 py-2 text-center text-gray-900">操作</th>
@@ -476,6 +482,11 @@ export default function QuotePage() {
                         <div className="text-gray-900">{product.weight}</div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(product.timestamp)}
+                        </div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        <div className="text-gray-900">
+                          {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
@@ -506,7 +517,7 @@ export default function QuotePage() {
                   ))}
                   {products.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={8} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
                         暂无产品数据
                       </td>
                     </tr>
