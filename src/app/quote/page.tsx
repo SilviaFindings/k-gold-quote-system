@@ -409,8 +409,8 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
                     <th className="border border-gray-200 px-3 py-2 text-center text-gray-900">操作</th>
                   </tr>
                 </thead>
@@ -427,16 +427,16 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-green-600">
-                          CAD${product.wholesalePrice.toFixed(2)}
+                        <div className="font-medium text-red-600">
+                          CAD${product.retailPrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-red-600">
-                          CAD${product.retailPrice.toFixed(2)}
+                        <div className="font-medium text-green-600">
+                          CAD${product.wholesalePrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(product.timestamp)}
@@ -490,8 +490,8 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
                 </tr>
               </thead>
               <tbody>
@@ -507,11 +507,11 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
                       ¥{history.goldPrice.toFixed(2)}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
-                      CAD${history.wholesalePrice.toFixed(2)}
-                    </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-red-600">
                       CAD${history.retailPrice.toFixed(2)}
+                    </td>
+                    <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
+                      CAD${history.wholesalePrice.toFixed(2)}
                     </td>
                   </tr>
                 ))}
