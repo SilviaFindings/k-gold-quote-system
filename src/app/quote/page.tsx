@@ -164,23 +164,34 @@ export default function QuotePage() {
     if (typeof window === 'undefined') return;
     const savedProducts = localStorage.getItem("goldProducts");
     const savedHistory = localStorage.getItem("goldPriceHistory");
+
+    console.log("LocalStorage中的产品数据:", savedProducts);
+    console.log("LocalStorage中的历史记录:", savedHistory);
+
     if (savedProducts) {
       const parsedProducts = JSON.parse(savedProducts);
+      console.log("解析后的产品数量:", parsedProducts.length);
       // 数据迁移：将"水滴扣"改为"扣子"
       const migratedProducts = parsedProducts.map((p: Product) => ({
         ...p,
         category: (p.category as any) === "水滴扣" ? "扣子" : p.category
       }));
       setProducts(migratedProducts);
+    } else {
+      console.log("LocalStorage中没有产品数据");
     }
+
     if (savedHistory) {
       const parsedHistory = JSON.parse(savedHistory);
+      console.log("解析后的历史记录数量:", parsedHistory.length);
       // 数据迁移：将"水滴扣"改为"扣子"
       const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
         ...h,
         category: (h.category as any) === "水滴扣" ? "扣子" : h.category
       }));
       setPriceHistory(migratedHistory);
+    } else {
+      console.log("LocalStorage中没有历史记录");
     }
   }, []);
 
@@ -664,6 +675,84 @@ export default function QuotePage() {
         {/* 金价设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">金价设置</h2>
+          <div className="mb-4 flex gap-2">
+            <button
+              onClick={() => {
+                if (confirm("确定要导出所有数据备份吗？")) {
+                  const backup = {
+                    products: localStorage.getItem("goldProducts"),
+                    history: localStorage.getItem("goldPriceHistory"),
+                    goldPrice: localStorage.getItem("goldPrice"),
+                    goldPriceTimestamp: localStorage.getItem("goldPriceTimestamp"),
+                    coefficients: localStorage.getItem("priceCoefficients"),
+                  };
+                  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+                  const link = document.createElement("a");
+                  link.href = URL.createObjectURL(blob);
+                  link.download = "K金报价系统数据备份_" + new Date().toLocaleDateString("zh-CN") + ".json";
+                  link.click();
+                }
+              }}
+              className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+            >
+              备份数据
+            </button>
+            <button
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".json";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    try {
+                      const backup = JSON.parse(event.target?.result as string);
+                      if (confirm("确定要恢复数据吗？这将覆盖当前所有数据！")) {
+                        if (backup.products) localStorage.setItem("goldProducts", backup.products);
+                        if (backup.history) localStorage.setItem("goldPriceHistory", backup.history);
+                        if (backup.goldPrice) localStorage.setItem("goldPrice", backup.goldPrice);
+                        if (backup.goldPriceTimestamp) localStorage.setItem("goldPriceTimestamp", backup.goldPriceTimestamp);
+                        if (backup.coefficients) localStorage.setItem("priceCoefficients", backup.coefficients);
+                        alert("数据恢复成功！请刷新页面");
+                        location.reload();
+                      }
+                    } catch (err) {
+                      alert("备份文件格式错误！");
+                    }
+                  };
+                  reader.readAsText(file);
+                };
+                input.click();
+              }}
+              className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+            >
+              恢复数据
+            </button>
+            <button
+              onClick={() => {
+                const productCount = JSON.parse(localStorage.getItem("goldProducts") || "[]").length;
+                const historyCount = JSON.parse(localStorage.getItem("goldPriceHistory") || "[]").length;
+                const products = JSON.parse(localStorage.getItem("goldProducts") || "[]");
+                const categories = [...new Set(products.map((p: any) => p.category))];
+
+                let message = `数据统计：\n\n`;
+                message += `产品总数：${productCount}\n`;
+                message += `历史记录数：${historyCount}\n\n`;
+                message += `各分类产品数量：\n`;
+                categories.forEach((cat: any) => {
+                  const count = products.filter((p: any) => p.category === cat).length;
+                  message += `- ${cat}: ${count}个\n`;
+                });
+
+                alert(message);
+              }}
+              className="rounded bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
+            >
+              查看数据统计
+            </button>
+          </div>
           <div className="flex flex-wrap gap-4" suppressHydrationWarning>
             <div className="flex flex-col">
               <label className="mb-2 text-sm font-medium text-gray-900">
