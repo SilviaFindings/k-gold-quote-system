@@ -367,6 +367,7 @@ export default function QuotePage() {
 
   // 导入Excel文件
   const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("importExcel 函数被调用");
     const file = e.target.files?.[0];
     console.log("选择的文件:", file);
 
@@ -374,6 +375,9 @@ export default function QuotePage() {
       console.log("没有选择文件");
       return;
     }
+
+    console.log("开始读取文件...");
+    alert("正在读取文件: " + file.name);
 
     const reader = new FileReader();
     reader.onload = (event) => {
