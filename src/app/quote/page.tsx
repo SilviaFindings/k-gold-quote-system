@@ -806,7 +806,9 @@ export default function QuotePage() {
         分类: records[0].category,
         名称: records[0].productName,
         成色: records[0].karat,
+        金子颜色: records[0].goldColor || "黄金",
         规格: records[0].specification || "",
+        供应商代码: records[0].supplierCode || "",
       };
 
       // 动态添加每次修改的数据
@@ -815,6 +817,17 @@ export default function QuotePage() {
         row[`第${suffix}次时间`] = formatDate(record.timestamp);
         row[`第${suffix}次重量`] = record.weight;
         row[`第${suffix}次金价`] = record.goldPrice ? `¥${record.goldPrice.toFixed(2)}` : "";
+        row[`第${suffix}次工费`] = `¥${record.laborCost.toFixed(2)}`;
+        row[`第${suffix}次配件成本`] = `¥${(record.accessoryCost || 0).toFixed(2)}`;
+        row[`第${suffix}次配件时间`] = formatDate(record.accessoryCostDate || record.timestamp);
+        row[`第${suffix}次石头成本`] = `¥${(record.stoneCost || 0).toFixed(2)}`;
+        row[`第${suffix}次石头时间`] = formatDate(record.stoneCostDate || record.timestamp);
+        row[`第${suffix}次电镀成本`] = `¥${(record.platingCost || 0).toFixed(2)}`;
+        row[`第${suffix}次电镀时间`] = formatDate(record.platingCostDate || record.timestamp);
+        row[`第${suffix}次模具成本`] = `¥${(record.moldCost || 0).toFixed(2)}`;
+        row[`第${suffix}次模具时间`] = formatDate(record.moldCostDate || record.timestamp);
+        row[`第${suffix}次佣金率`] = `${(record.commission || 0).toFixed(2)}%`;
+        row[`第${suffix}次佣金时间`] = formatDate(record.commissionDate || record.timestamp);
         row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
         row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
       });
