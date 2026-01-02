@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 // 产品分类列表
 export const PRODUCT_CATEGORIES = [
   "耳环/耳逼",
-  "水滴扣",
+  "扣子",
   "开口圈/闭口圈",
   "圆珠",
   "车花珠",
