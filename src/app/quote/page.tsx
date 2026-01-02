@@ -38,6 +38,10 @@ export default function QuotePage() {
     const savedGoldPrice = localStorage.getItem("goldPrice");
     return savedGoldPrice ? Number(savedGoldPrice) : 500;
   });
+  const [goldPriceTimestamp, setGoldPriceTimestamp] = useState<string>(() => {
+    const savedGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
+    return savedGoldPriceTimestamp || new Date().toLocaleString("zh-CN");
+  });
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -105,6 +109,8 @@ export default function QuotePage() {
   // 保存金价到 localStorage
   useEffect(() => {
     localStorage.setItem("goldPrice", goldPrice.toString());
+    setGoldPriceTimestamp(new Date().toLocaleString("zh-CN"));
+    localStorage.setItem("goldPriceTimestamp", new Date().toLocaleString("zh-CN"));
   }, [goldPrice]);
 
   // 计算价格函数
@@ -375,6 +381,9 @@ export default function QuotePage() {
                 className="w-48 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                 step="0.01"
               />
+              <div className="mt-1 text-xs text-gray-500">
+                更新时间: {formatDate(goldPriceTimestamp)}
+              </div>
             </div>
             <div className="flex items-end gap-2">
               <button
