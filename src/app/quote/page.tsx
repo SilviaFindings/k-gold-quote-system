@@ -82,9 +82,9 @@ export default function QuotePage() {
     const goldFactor = karat === "14K" ? 0.586 : 0.755; // 14K金含金量约为58.6%，18K金为75.5%
     const laborFactor = isRetail ? 5 : 3; // 零售价用5/5工费，批发价用3/5工费
 
-    // 材料价 = 市场金价 x 金含量 x 1.15 x 1.1 / 5
+    // 材料价 = 市场金价 x 金含量 x 重量 x 1.15 x 1.1 / 5
     const materialPrice =
-      marketGoldPrice * goldFactor * 1.15 * 1.1 / 5;
+      marketGoldPrice * goldFactor * weight * 1.15 * 1.1 / 5;
 
     // 工费 = 人工成本 x 系数 / 5
     const laborPrice = laborCost * laborFactor / 5;
