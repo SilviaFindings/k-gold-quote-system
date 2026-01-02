@@ -1604,9 +1604,9 @@ export default function QuotePage() {
           )}
         </div>
 
-        {/* 金价设置区域 */}
+        {/* 数据管理区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">金价设置</h2>
+          <h2 className="mb-4 text-xl font-semibold text-gray-800">数据管理</h2>
           <div className="mb-4 flex gap-2" suppressHydrationWarning>
             <button
               onClick={() => {
