@@ -123,7 +123,7 @@ export default function QuotePage() {
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
 
-  // 添加/更新产品
+  // 添加/更新产品（覆盖模式：每个货号只保留最新一条记录）
   const addProduct = () => {
     if (!currentProduct.productCode || !currentProduct.productName) {
       alert("请填写产品货号和名称");
@@ -160,10 +160,15 @@ export default function QuotePage() {
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
-    // 添加到产品列表（添加到最后面，按时间正序）
-    setProducts([...products, newProduct]);
+    // 判断是否为更新操作
+    const existingRecords = products.filter((p) => p.productCode === currentProduct.productCode);
+    const isUpdate = existingRecords.length > 0;
 
-    // 添加到历史记录
+    // 删除该货号的所有旧记录，只保留新的
+    const filteredProducts = products.filter((p) => p.productCode !== currentProduct.productCode);
+    setProducts([...filteredProducts, newProduct]);
+
+    // 添加到历史记录（保留所有历史）
     const historyRecord: PriceHistory = {
       id: Date.now().toString() + "_hist",
       productId: newProduct.id,
@@ -180,10 +185,6 @@ export default function QuotePage() {
     };
     setPriceHistory([...priceHistory, historyRecord]);
 
-    // 判断是新增还是更新
-    const existingProduct = findLatestProductByCode(currentProduct.productCode!);
-    const isNewProduct = !existingProduct;
-
     // 重置当前产品表单
     setCurrentProduct({
       productCode: "",
@@ -195,21 +196,21 @@ export default function QuotePage() {
     });
 
     // 提示用户
-    if (isNewProduct) {
-      alert("新产品添加成功！");
+    if (isUpdate) {
+      alert(`产品 ${currentProduct.productCode} 更新成功！`);
     } else {
-      alert(`产品 ${currentProduct.productCode} 更新成功！已添加新价格记录`);
+      alert("新产品添加成功！");
     }
   };
 
-  // 更新选中产品的价格（当金价变化时）- 只为选中的产品添加新记录
+  // 更新选中产品的价格（覆盖模式：每个货号只保留最新一条记录）
   const updatePrices = () => {
     if (selectedProducts.size === 0) {
       alert("请先选择要更新的产品！");
       return;
     }
 
-    const newProducts: Product[] = [];
+    const updatedProducts: Product[] = [];
     selectedProducts.forEach((productId) => {
       const product = products.find((p) => p.id === productId);
       if (!product) return;
@@ -262,25 +263,32 @@ export default function QuotePage() {
       };
       setPriceHistory((prev) => [...prev, historyRecord]);
 
-      newProducts.push(newProduct);
+      updatedProducts.push(newProduct);
     });
 
-    // 将新产品添加到列表最后面
-    setProducts([...products, ...newProducts]);
+    // 删除旧记录，只保留更新后的记录
+    const productCodesToUpdate = new Set(
+      updatedProducts.map((p) => p.productCode)
+    );
+    const otherProducts = products.filter(
+      (p) => !productCodesToUpdate.has(p.productCode)
+    );
+    setProducts([...otherProducts, ...updatedProducts]);
+
     // 清空选择
     setSelectedProducts(new Set());
-    alert(`已为选中的 ${newProducts.length} 个产品添加新价格记录！`);
+    alert(`已更新 ${updatedProducts.length} 个产品的价格！`);
   };
 
-  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行
-  const exportToExcel = (data: Product[], filename: string) => {
-    // 按货号分组
-    const productGroups: { [key: string]: Product[] } = {};
-    data.forEach((product) => {
-      if (!productGroups[product.productCode]) {
-        productGroups[product.productCode] = [];
+  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
+  const exportToExcel = () => {
+    // 按货号分组（从历史记录中获取）
+    const productGroups: { [key: string]: PriceHistory[] } = {};
+    priceHistory.forEach((history) => {
+      if (!productGroups[history.productCode]) {
+        productGroups[history.productCode] = [];
       }
-      productGroups[product.productCode].push(product);
+      productGroups[history.productCode].push(history);
     });
 
     // 为每个货号构建一行数据（按时间正序）
@@ -324,7 +332,7 @@ export default function QuotePage() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = filename;
+    link.download = "产品报价单_" + new Date().toLocaleDateString("zh-CN") + ".csv";
     link.click();
   };
 
@@ -517,9 +525,7 @@ export default function QuotePage() {
               <h2 className="text-xl font-semibold text-gray-800">当前产品列表</h2>
               {products.length > 0 && (
                 <button
-                  onClick={() =>
-                    exportToExcel(products, `当前报价单_${new Date().toLocaleDateString("zh-CN")}.csv`)
-                  }
+                  onClick={() => exportToExcel()}
                   className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
                 >
                   导出Excel
