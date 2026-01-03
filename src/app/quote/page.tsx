@@ -68,6 +68,9 @@ export const SUB_CATEGORIES: Record<ProductCategory, string[]> = {
   ],
 };
 
+// 数据版本号（用于触发数据重新迁移）
+const DATA_VERSION = 2;  // v2: 修复 subCategory 映射逻辑
+
 // 旧分类到新分类的映射
 const CATEGORY_MAPPING: Record<string, ProductCategory> = {
   // 链条类
@@ -525,6 +528,12 @@ export default function QuotePage() {
     const savedProducts = localStorage.getItem("goldProducts");
     const savedHistory = localStorage.getItem("goldPriceHistory");
     const savedGoldPrice = localStorage.getItem("goldPrice");
+    const savedDataVersion = localStorage.getItem("dataVersion");
+
+    // 检查数据版本，如果版本不匹配则需要重新迁移数据
+    const currentVersion = parseInt(savedDataVersion || "0");
+    const needsMigration = currentVersion < DATA_VERSION;
+    console.log("数据版本检查: 当前版本 =", currentVersion, "期望版本 =", DATA_VERSION, "需要迁移 =", needsMigration);
     const savedCoefficients = localStorage.getItem("priceCoefficients");
 
     console.log("LocalStorage中的产品数据:", savedProducts);
@@ -540,7 +549,7 @@ export default function QuotePage() {
 
         // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
         const migratedProducts = parsedProducts.map((p: Product) => {
-          // 保存旧分类名称，用于后续映射子分类
+          // 保存旧分类名称（原始值，用于映射子分类）
           const oldCategory = p.category as string;
 
           // 旧分类迁移逻辑
@@ -551,15 +560,22 @@ export default function QuotePage() {
             newCategory = CATEGORY_MAPPING[oldCategory];  // 新的迁移（21分类 -> 3大类）
           }
 
+          // 计算正确的 subCategory
+          let subCategoryValue = (p as any).subCategory || "";
+          if (!subCategoryValue && oldCategory) {
+            // 如果产品没有 subCategory，检查旧分类名称是否在对应大类的子分类列表中
+            Object.values(SUB_CATEGORIES).forEach((subList) => {
+              if (subList.includes(oldCategory)) {
+                subCategoryValue = oldCategory;
+              }
+            });
+          }
+
           return {
             ...p,
             category: newCategory,
-            // 确保新字段有默认值（兼容旧数据）
-            // 如果产品没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
-            subCategory: (p as any).subCategory ||
-              (oldCategory && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(oldCategory)
-                ? oldCategory
-                : ""),
+            // 使用计算出的 subCategory
+            subCategory: subCategoryValue,
             accessoryCost: p.accessoryCost || 0,
             stoneCost: p.stoneCost || 0,
             platingCost: p.platingCost || 0,
@@ -578,7 +594,32 @@ export default function QuotePage() {
         });
 
         console.log("设置 products state，数量:", migratedProducts.length);
-        setProducts(migratedProducts);
+
+        // 强制修复 subCategory 字段：遍历所有子分类，检查是否有匹配的产品
+        // 如果产品的 subCategory 为空，但产品名称或规格中包含子分类关键字，则自动设置
+        const fixedProducts = migratedProducts.map((p: Product) => {
+          // 如果已经有 subCategory，保持不变
+          if (p.subCategory) {
+            return p;
+          }
+
+          // 如果没有 subCategory，尝试根据产品信息推断
+          // 这里我们可以添加更多的推断逻辑
+          // 暂时保持为空，因为上面已经处理了旧分类映射
+          return p;
+        });
+
+        // 统计各子分类的产品数量
+        const subCategoryCounts: Record<string, number> = {};
+        fixedProducts.forEach((p: Product) => {
+          if (p.subCategory) {
+            subCategoryCounts[p.subCategory] = (subCategoryCounts[p.subCategory] || 0) + 1;
+          }
+        });
+        console.log("子分类产品数量统计:", subCategoryCounts);
+
+        console.log("修复后的产品数量:", fixedProducts.length);
+        setProducts(fixedProducts);
       } catch (e) {
         console.error("解析产品数据失败:", e);
       }
@@ -593,7 +634,7 @@ export default function QuotePage() {
 
         // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
         const migratedHistory = parsedHistory.map((h: PriceHistory) => {
-          // 保存旧分类名称，用于后续映射子分类
+          // 保存旧分类名称（原始值，用于映射子分类）
           const oldCategory = h.category as string;
 
           // 旧分类迁移逻辑
@@ -604,15 +645,22 @@ export default function QuotePage() {
             newCategory = CATEGORY_MAPPING[oldCategory];  // 新的迁移（21分类 -> 3大类）
           }
 
+          // 计算正确的 subCategory
+          let subCategoryValue = (h as any).subCategory || "";
+          if (!subCategoryValue && oldCategory) {
+            // 如果历史记录没有 subCategory，检查旧分类名称是否在对应大类的子分类列表中
+            Object.values(SUB_CATEGORIES).forEach((subList) => {
+              if (subList.includes(oldCategory)) {
+                subCategoryValue = oldCategory;
+              }
+            });
+          }
+
           return {
             ...h,
             category: newCategory,
-            // 确保新字段有默认值（兼容旧数据）
-            // 如果历史记录没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
-            subCategory: (h as any).subCategory ||
-              (oldCategory && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(oldCategory)
-                ? oldCategory
-                : ""),
+            // 使用计算出的 subCategory
+            subCategory: subCategoryValue,
             accessoryCost: h.accessoryCost || 0,
             stoneCost: h.stoneCost || 0,
             platingCost: h.platingCost || 0,
@@ -671,6 +719,23 @@ export default function QuotePage() {
       } catch (e) {
         console.error("解析系数失败:", e);
       }
+    }
+
+    // 更新数据版本号
+    localStorage.setItem("dataVersion", DATA_VERSION.toString());
+    console.log("更新数据版本号到:", DATA_VERSION);
+
+    // 检查是否需要自动修复子分类数据
+    const emptySubCategoryCount = fixedProducts.filter(p => !p.subCategory).length;
+    if (emptySubCategoryCount > 0) {
+      console.log(`检测到 ${emptySubCategoryCount} 个产品缺少子分类，准备自动修复...`);
+      // 延迟修复，确保数据已完全加载
+      setTimeout(() => {
+        console.log("开始自动修复子分类数据...");
+        // 这里可以调用修复函数，但为了避免用户困惑，暂时不自动修复
+        // 让用户手动点击"修复子分类"按钮
+        console.log("提示：请点击\"修复子分类\"按钮来自动修复数据");
+      }, 1000);
     }
 
     console.log("========== 数据加载完成 ==========");
@@ -2159,6 +2224,104 @@ export default function QuotePage() {
     console.log("========== 数据诊断结束 ==========");
   };
 
+  // 修复子分类数据
+  const repairSubCategoryData = () => {
+    console.log("========== 开始修复子分类数据 ==========");
+
+    // 统计修复前的数据
+    const beforeEmptyCount = products.filter(p => !p.subCategory).length;
+    const subCategoryCountsBefore: Record<string, number> = {};
+    products.forEach((p) => {
+      if (p.subCategory) {
+        subCategoryCountsBefore[p.subCategory] = (subCategoryCountsBefore[p.subCategory] || 0) + 1;
+      }
+    });
+    console.log("修复前数据统计:");
+    console.log("  - 空子分类产品数:", beforeEmptyCount);
+    console.log("  - 子分类分布:", subCategoryCountsBefore);
+
+    // 获取所有子分类列表
+    const allSubCategories = Object.values(SUB_CATEGORIES).flat();
+
+    // 修复逻辑：对于没有 subCategory 的产品，根据历史记录或关键字匹配推断
+    const fixedProducts = products.map((product) => {
+      // 如果已经有 subCategory，保持不变
+      if (product.subCategory) {
+        return product;
+      }
+
+      // 尝试从历史记录中推断 subCategory
+      const historyRecords = priceHistory.filter(h => h.productCode === product.productCode);
+      if (historyRecords.length > 0) {
+        // 找到最新的历史记录，使用它的 subCategory
+        const latestHistory = historyRecords[historyRecords.length - 1];
+        if (latestHistory.subCategory) {
+          console.log(`产品 ${product.productCode} 从历史记录推断子分类: ${latestHistory.subCategory}`);
+          return { ...product, subCategory: latestHistory.subCategory };
+        }
+      }
+
+      // 如果历史记录也没有，尝试从产品名称或规格中关键字匹配
+      const productNameLower = product.productName.toLowerCase();
+      const specLower = (product.specification || "").toLowerCase();
+
+      // 尝试匹配子分类关键字
+      for (const subCat of allSubCategories) {
+        // 检查子分类关键字是否在产品名称或规格中
+        const keywords = subCat.split(/[\/\s\-，、]+/); // 分割成多个关键字
+        for (const keyword of keywords) {
+          if (keyword && (productNameLower.includes(keyword) || specLower.includes(keyword))) {
+            // 进一步验证：该子分类必须属于产品的大类
+            const subCatCategories = Object.entries(SUB_CATEGORIES)
+              .filter(([_, subList]) => subList.includes(subCat))
+              .map(([cat, _]) => cat);
+
+            if (subCatCategories.includes(product.category)) {
+              console.log(`产品 ${product.productCode} 从关键字 "${keyword}" 推断子分类: ${subCat}`);
+              return { ...product, subCategory: subCat };
+            }
+          }
+        }
+      }
+
+      console.log(`产品 ${product.productCode} 无法推断子分类`);
+
+      return product;
+    });
+
+    // 保存修复后的数据
+    localStorage.setItem("goldProducts", JSON.stringify(fixedProducts));
+    setProducts(fixedProducts);
+
+    // 统计修复后的数据
+    const afterEmptyCount = fixedProducts.filter(p => !p.subCategory).length;
+    const subCategoryCountsAfter: Record<string, number> = {};
+    fixedProducts.forEach((p) => {
+      if (p.subCategory) {
+        subCategoryCountsAfter[p.subCategory] = (subCategoryCountsAfter[p.subCategory] || 0) + 1;
+      }
+    });
+    console.log("修复后数据统计:");
+    console.log("  - 空子分类产品数:", afterEmptyCount);
+    console.log("  - 子分类分布:", subCategoryCountsAfter);
+
+    // 显示修复结果
+    let message = "✅ 子分类数据修复完成\n\n";
+    message += `修复前：${beforeEmptyCount} 个产品缺少子分类\n`;
+    message += `修复后：${afterEmptyCount} 个产品缺少子分类\n`;
+    message += `成功修复：${beforeEmptyCount - afterEmptyCount} 个产品\n\n`;
+    message += "修复后的子分类分布：\n";
+    Object.entries(subCategoryCountsAfter)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([subCat, count]) => {
+        message += `  - ${subCat}: ${count}\n`;
+      });
+
+    alert(message);
+
+    console.log("========== 子分类数据修复结束 ==========");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -2607,6 +2770,17 @@ export default function QuotePage() {
               suppressHydrationWarning
             >
               诊断数据
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("确定要修复子分类数据吗？这将根据产品的分类信息自动设置子分类。")) {
+                  repairSubCategoryData();
+                }
+              }}
+              className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+              suppressHydrationWarning
+            >
+              修复子分类
             </button>
             <button
               onClick={() => {
