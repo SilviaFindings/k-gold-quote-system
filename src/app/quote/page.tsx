@@ -1239,6 +1239,16 @@ export default function QuotePage() {
     const coefficientsChanged =
       JSON.stringify(oldSpecialCoefficients) !== JSON.stringify(newSpecialCoefficients);
 
+    // 检查成本是否被修改（工费、配件、石头、电镀、模具、佣金、重量）
+    const costChanged =
+      (newProduct.laborCost !== undefined && newProduct.laborCost !== oldProduct.laborCost) ||
+      (newProduct.accessoryCost !== undefined && newProduct.accessoryCost !== oldProduct.accessoryCost) ||
+      (newProduct.stoneCost !== undefined && newProduct.stoneCost !== oldProduct.stoneCost) ||
+      (newProduct.platingCost !== undefined && newProduct.platingCost !== oldProduct.platingCost) ||
+      (newProduct.moldCost !== undefined && newProduct.moldCost !== oldProduct.moldCost) ||
+      (newProduct.commission !== undefined && newProduct.commission !== oldProduct.commission) ||
+      (newProduct.weight !== undefined && newProduct.weight !== oldProduct.weight);
+
     // 检查规格是否被修改
     const specificationChanged =
       newProduct.specification !== undefined &&
@@ -1247,14 +1257,24 @@ export default function QuotePage() {
     // 判断修改类型
     if (specificationChanged) {
       return 'specification';
-    } else if (!coefficientsChanged) {
+    } else if (!coefficientsChanged && !costChanged) {
+      // 没有任何修改：只是查看产品，不生成副号
       return 'none';
-    } else if (hasOldSpecialCoefficients && !hasNewSpecialCoefficients) {
-      // 清空所有特殊系数：回到固定系数模式
-      return 'clear-coefficients';
-    } else {
-      // 修改或新增特殊系数
+    } else if (!hasOldSpecialCoefficients && !coefficientsChanged && costChanged) {
+      // 固定系数模式下：修改成本 → 不生成副号
+      return 'none';
+    } else if (!hasOldSpecialCoefficients && coefficientsChanged && hasNewSpecialCoefficients) {
+      // 固定系数模式下：首次设置特殊系数 → 生成 DU1
       return 'coefficient';
+    } else if (hasOldSpecialCoefficients && !hasNewSpecialCoefficients && coefficientsChanged) {
+      // 特殊系数模式下：清空所有特殊系数 → 回到基础货号
+      return 'clear-coefficients';
+    } else if (hasOldSpecialCoefficients) {
+      // 特殊系数模式下：修改特殊系数或修改成本 → 生成新副号
+      return 'coefficient';
+    } else {
+      // 固定系数模式下：其他情况 → 不生成副号
+      return 'none';
     }
   };
 
