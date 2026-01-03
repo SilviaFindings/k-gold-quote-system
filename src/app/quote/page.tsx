@@ -3574,7 +3574,7 @@ export default function QuotePage() {
                         const newRules = batchUpdateRules.filter((_, i) => i !== index);
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600 text-xs"
+                      className="w-full rounded bg-gray-400 px-3 py-2 text-white hover:bg-gray-500 text-xs"
                       suppressHydrationWarning
                     >
                       删除
@@ -3667,7 +3667,7 @@ export default function QuotePage() {
                         const newRules = batchUpdateChannelRules.filter((_, i) => i !== index);
                         setBatchUpdateChannelRules(newRules);
                       }}
-                      className="w-full rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600 text-xs"
+                      className="w-full rounded bg-gray-400 px-3 py-2 text-white hover:bg-gray-500 text-xs"
                       suppressHydrationWarning
                     >
                       删除
