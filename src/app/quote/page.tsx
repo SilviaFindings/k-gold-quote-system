@@ -2393,6 +2393,41 @@ export default function QuotePage() {
     console.log("========== 分类详情显示结束 ==========");
   };
 
+  // 显示原始数据（用于调试）
+  const showRawData = () => {
+    console.log("========== 开始显示原始数据 ==========");
+
+    const rawProducts = localStorage.getItem("goldProducts");
+    if (rawProducts) {
+      try {
+        const parsedProducts = JSON.parse(rawProducts);
+        let message = "📄 原始产品数据（前10个）\n";
+        message += "=".repeat(50) + "\n\n";
+
+        parsedProducts.slice(0, 10).forEach((p: any, index: number) => {
+          message += `${index + 1}. ${p.productCode}\n`;
+          message += `   category: "${p.category}"\n`;
+          message += `   subCategory: "${p.subCategory || '❌ 无'}"\n`;
+          message += `   productName: "${p.productName}"\n\n`;
+        });
+
+        message += `\n总产品数: ${parsedProducts.length}\n`;
+        message += `\n💡 提示：\n`;
+        message += "- 如果 category 是"配件"、"宝石托"、"链条"，说明数据已经迁移过\n`;
+        message += "- 如果 subCategory 为空，说明子分类没有被正确设置\n`;
+
+        alert(message);
+      } catch (e) {
+        console.error("解析原始数据失败:", e);
+        alert("解析原始数据失败: " + e);
+      }
+    } else {
+      alert("localStorage 中没有产品数据");
+    }
+
+    console.log("========== 原始数据显示结束 ==========");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -2617,8 +2652,14 @@ export default function QuotePage() {
                             <button
                               key={subCat}
                               onClick={() => {
+                                console.log(`点击子分类按钮: ${subCat}`);
+                                console.log(`当前选中子分类: ${currentSubCategory}`);
+                                const matchedProducts = products.filter(p => p.category === category && p.subCategory === subCat);
+                                console.log(`匹配的产品数量: ${matchedProducts.length}`);
+                                if (matchedProducts.length > 0) {
+                                  console.log("前3个匹配产品:", matchedProducts.slice(0, 3).map(p => ({ code: p.productCode, subCategory: p.subCategory })));
+                                }
                                 setCurrentSubCategory(subCat);
-                                // 清除大类选择，显示子分类产品
                               }}
                               suppressHydrationWarning
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
@@ -2859,6 +2900,13 @@ export default function QuotePage() {
               suppressHydrationWarning
             >
               查看分类详情
+            </button>
+            <button
+              onClick={showRawData}
+              className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+              suppressHydrationWarning
+            >
+              查看原始数据
             </button>
             <button
               onClick={() => {
