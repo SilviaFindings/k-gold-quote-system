@@ -1384,12 +1384,11 @@ export default function QuotePage() {
         石头: `¥${(product.stoneCost || 0).toFixed(2)}\n${formatDate(product.stoneCostDate || product.timestamp)}`,
         电镀: `¥${(product.platingCost || 0).toFixed(2)}\n${formatDate(product.platingCostDate || product.timestamp)}`,
         模具: `¥${(product.moldCost || 0).toFixed(2)}\n${formatDate(product.moldCostDate || product.timestamp)}`,
-        佣金: `${(product.commission || 0).toFixed(2)}%\n${formatDate(product.commissionDate || product.timestamp)}`,
+        佣金: `${(product.commission || 0).toFixed(2)}%\n${formatDate(product.commissionDate || product.timestamp)}\n${formatDate(product.timestamp)}`,
         下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
         // 价格：修改过的用★标记
         零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
-        更新时间: formatDate(product.timestamp),
         _modified: modified,  // 内部字段，用于标记是否修改过
       };
 
@@ -1400,7 +1399,7 @@ export default function QuotePage() {
     const allColumns = [
       "货号", "分类", "名称", "成色", "金子颜色", "规格", "形状", "供应商代码",
       "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金", "下单口",
-      "零售价", "批发价", "更新时间"
+      "零售价", "批发价"
     ];
 
     // 生成表头和数据数组
@@ -1431,11 +1430,10 @@ export default function QuotePage() {
       { wch: 20 },  // 石头
       { wch: 20 },  // 电镀
       { wch: 20 },  // 模具
-      { wch: 20 },  // 佣金
+      { wch: 25 },  // 佣金（包含更新时间）
       { wch: 10 },  // 下单口
       { wch: 18 },  // 零售价
       { wch: 18 },  // 批发价
-      { wch: 12 },  // 更新时间
     ];
 
     // 设置表头样式
@@ -1454,7 +1452,7 @@ export default function QuotePage() {
     rows.forEach((row, rowIndex) => {
       for (let col = 0; col < allColumns.length; col++) {
         const cellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: col });
-        if (ws[cellAddress] && !ws[cellAddress].s) {
+        if (ws[cellAddress]) {
           ws[cellAddress].s = {
             alignment: { horizontal: "left", vertical: "center", wrapText: true },
           };
@@ -1475,7 +1473,7 @@ export default function QuotePage() {
         ws[retailCellAddress].s = {
           font: {
             bold: true,
-            color: { rgb: modified ? "FF0000" : "008000" }  // 修改过的红色，否则绿色
+            color: { rgb: modified ? "FFFF0000" : "FF008000" }  // 修改过的红色，否则绿色（添加FF前缀表示ARGB格式）
           },
           alignment: { horizontal: "right", vertical: "center" },
         };
@@ -1487,9 +1485,9 @@ export default function QuotePage() {
         ws[wholesaleCellAddress].s = {
           font: {
             bold: true,
-            color: { rgb: modified ? "FF0000" : "0000FF" }  // 修改过的红色，否则蓝色
+            color: { rgb: modified ? "FFFF0000" : "FF0000FF" }  // 修改过的红色，否则蓝色（添加FF前缀表示ARGB格式）
           },
-          alignment: { horizontal: "right" },
+          alignment: { horizontal: "right", vertical: "center" },
         };
       }
     });
