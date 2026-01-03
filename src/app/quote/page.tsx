@@ -191,6 +191,15 @@ export default function QuotePage() {
     { productCodes: "K14KEW027/K14", supplierCode: "K14" },
   ]);
 
+  // 批量修改下单口相关状态
+  const [showBatchUpdateChannelModal, setShowBatchUpdateChannelModal] = useState<boolean>(false);
+  const [batchUpdateChannelRules, setBatchUpdateChannelRules] = useState<{
+    productCodes: string;
+    orderChannel: OrderChannel | "";
+  }[]>([
+    { productCodes: "", orderChannel: "" },
+  ]);
+
   // 批量修改价格系数相关状态
   const [showBatchModifyModal, setShowBatchModifyModal] = useState<boolean>(false);
   const [batchModifyConfig, setBatchModifyConfig] = useState<{
@@ -1042,6 +1051,47 @@ export default function QuotePage() {
 
     alert(`已批量更新 ${updatedCount} 个产品的供应商代码！`);
     setShowBatchUpdateModal(false);
+  };
+
+  // 批量修改下单口
+  const batchUpdateOrderChannel = () => {
+    let updatedCount = 0;
+    const updatedProducts: Product[] = [...products];
+
+    console.log("========== 批量修改下单口 ==========");
+    console.log("当前分类:", currentCategory);
+    console.log("更新规则:", batchUpdateChannelRules);
+
+    // 遍历每个产品，查找第一个匹配的规则
+    updatedProducts.forEach((product) => {
+      // 只更新当前分类的产品
+      if (product.category !== currentCategory) return;
+
+      // 遍历规则，找到第一个匹配的
+      for (const rule of batchUpdateChannelRules) {
+        if (!rule.productCodes || !rule.orderChannel) continue;
+
+        // 解析货号列表（逗号分隔）
+        const codes = rule.productCodes.split(',').map(c => c.trim());
+
+        // 检查产品货号是否在列表中
+        if (codes.includes(product.productCode)) {
+          const oldChannel = product.orderChannel;
+          product.orderChannel = rule.orderChannel;
+          console.log(`✓ ${product.productCode}: ${oldChannel} → ${rule.orderChannel}`);
+          updatedCount++;
+          break; // 找到匹配的规则后，跳出循环，不再检查其他规则
+        }
+      }
+    });
+
+    console.log(`总计更新 ${updatedCount} 个产品`);
+    console.log("=========================================");
+
+    // 更新产品列表
+    setProducts(updatedProducts);
+    alert(`已批量更新 ${updatedCount} 个产品的下单口！`);
+    setShowBatchUpdateChannelModal(false);
   };
 
   // 批量修改价格系数
@@ -2307,6 +2357,13 @@ export default function QuotePage() {
                   🏷️ 批量更新供应商代码
                 </button>
                 <button
+                  onClick={() => setShowBatchUpdateChannelModal(true)}
+                  className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-white font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                  suppressHydrationWarning
+                >
+                  📦 批量修改下单口
+                </button>
+                <button
                   onClick={deleteSelectedProducts}
                   className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-white font-medium hover:bg-red-700 transition-colors shadow-sm"
                   suppressHydrationWarning
@@ -3315,6 +3372,99 @@ export default function QuotePage() {
               <button
                 onClick={batchUpdateSupplierCode}
                 className="rounded bg-purple-600 px-6 py-2 text-white hover:bg-purple-700"
+                suppressHydrationWarning
+              >
+                确认批量更新
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 批量修改下单口对话框 */}
+      {showBatchUpdateChannelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量修改下单口</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              为当前分类（{currentCategory}）的产品批量设置下单口。按照货号范围进行更新。
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
+                <div className="col-span-8">货号列表（用逗号分隔）</div>
+                <div className="col-span-3">下单口</div>
+                <div className="col-span-1">操作</div>
+              </div>
+
+              {batchUpdateChannelRules.map((rule, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 items-center">
+                  <div className="col-span-8">
+                    <textarea
+                      value={rule.productCodes}
+                      onChange={(e) => {
+                        const newRules = [...batchUpdateChannelRules];
+                        newRules[index].productCodes = e.target.value;
+                        setBatchUpdateChannelRules(newRules);
+                      }}
+                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900 resize-none"
+                      placeholder="KEW001,KEW002,KEW003"
+                      rows={2}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <select
+                      value={rule.orderChannel}
+                      onChange={(e) => {
+                        const newRules = [...batchUpdateChannelRules];
+                        newRules[index].orderChannel = e.target.value as OrderChannel | "";
+                        setBatchUpdateChannelRules(newRules);
+                      }}
+                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      suppressHydrationWarning
+                    >
+                      <option value="">请选择</option>
+                      {ORDER_CHANNELS.map(channel => (
+                        <option key={channel.code} value={channel.code}>{channel.code}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-span-1">
+                    <button
+                      onClick={() => {
+                        const newRules = batchUpdateChannelRules.filter((_, i) => i !== index);
+                        setBatchUpdateChannelRules(newRules);
+                      }}
+                      className="w-full rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600 text-xs"
+                      suppressHydrationWarning
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() => setBatchUpdateChannelRules([...batchUpdateChannelRules, { productCodes: "", orderChannel: "" }])}
+                className="w-full rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 text-sm"
+                suppressHydrationWarning
+              >
+                + 添加规则
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => setShowBatchUpdateChannelModal(false)}
+                className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+                suppressHydrationWarning
+              >
+                取消
+              </button>
+              <button
+                onClick={batchUpdateOrderChannel}
+                className="rounded bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700"
                 suppressHydrationWarning
               >
                 确认批量更新
