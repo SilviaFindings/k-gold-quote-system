@@ -3468,7 +3468,7 @@ export default function QuotePage() {
                 <select
                   value={coefficients.laborFactorRetailMode}
                   onChange={(e) => setCoefficients({...coefficients, laborFactorRetailMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
                   suppressHydrationWarning
                 >
                   <option value="fixed">固定</option>
@@ -3493,7 +3493,7 @@ export default function QuotePage() {
                 <select
                   value={coefficients.laborFactorWholesaleMode}
                   onChange={(e) => setCoefficients({...coefficients, laborFactorWholesaleMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
                   suppressHydrationWarning
                 >
                   <option value="fixed">固定</option>
@@ -3520,7 +3520,7 @@ export default function QuotePage() {
                 <select
                   value={coefficients.materialLossMode}
                   onChange={(e) => setCoefficients({...coefficients, materialLossMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
                   suppressHydrationWarning
                 >
                   <option value="fixed">固定</option>
@@ -3545,7 +3545,7 @@ export default function QuotePage() {
                 <select
                   value={coefficients.materialCostMode}
                   onChange={(e) => setCoefficients({...coefficients, materialCostMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
                   suppressHydrationWarning
                 >
                   <option value="fixed">固定</option>
@@ -3572,7 +3572,7 @@ export default function QuotePage() {
                 <select
                   value={coefficients.profitMarginMode}
                   onChange={(e) => setCoefficients({...coefficients, profitMarginMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
                   suppressHydrationWarning
                 >
                   <option value="fixed">固定</option>
