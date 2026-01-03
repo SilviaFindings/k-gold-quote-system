@@ -2351,7 +2351,7 @@ export default function QuotePage() {
 
                   {/* 子分类列表 */}
                   {isExpanded && (
-                    <div className="px-4 py-3 bg-white border-t border-gray-200">
+                    <div className="px-4 py-3 bg-white border-t border-gray-200" suppressHydrationWarning>
                       <div className="flex flex-wrap gap-2">
                         {subCategories.map((subCat) => {
                           const subCount = products.filter(p => p.category === category && p.subCategory === subCat).length;
@@ -2362,6 +2362,7 @@ export default function QuotePage() {
                                 setCurrentSubCategory(subCat);
                                 // 清除大类选择，显示子分类产品
                               }}
+                              suppressHydrationWarning
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
                                 currentSubCategory === subCat
                                   ? "bg-blue-600 text-white border-blue-600"
