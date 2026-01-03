@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import XLSX from "xlsx-js-style";
+import { AuthProtection } from "@/components/AuthProtection";
 
 // 产品分类列表（新的三大类）
 export const PRODUCT_CATEGORIES = [
@@ -240,7 +241,7 @@ interface PriceHistory {
   timestamp: string;
 }
 
-export default function QuotePage() {
+function QuotePage() {
   const [goldPrice, setGoldPrice] = useState<number>(() => {
     if (typeof window === 'undefined') return 500;
     const savedGoldPrice = localStorage.getItem("goldPrice");
@@ -2774,9 +2775,37 @@ export default function QuotePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-4 text-3xl font-bold text-black">
-          K金产品报价计算表
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-bold text-black">
+            K金产品报价计算表
+          </h1>
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/auth/logout', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                  },
+                });
+
+                if (response.ok) {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user');
+                  window.location.href = '/login';
+                }
+              } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            登出
+          </button>
+        </div>
 
         {/* 数据状态显示 */}
         <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
@@ -5147,5 +5176,14 @@ export default function QuotePage() {
         </div>
       )}
     </div>
+  );
+}
+
+// 用 AuthProtection 包装主组件
+export default function ProtectedQuotePage() {
+  return (
+    <AuthProtection>
+      <QuotePage />
+    </AuthProtection>
   );
 }
