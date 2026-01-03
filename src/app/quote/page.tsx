@@ -1407,33 +1407,82 @@ export default function QuotePage() {
       allColumns.map((col) => row[col] || "")
     );
 
+    // 智能计算列宽的函数
+    const calculateColumnWidth = (columnData: string[], header: string): number => {
+      // 统计所有单元格的最大字符数（包括表头）
+      const maxLength = Math.max(
+        ...columnData.map(cell => String(cell).length),
+        header.length
+      );
+
+      // 考虑换行情况，取最长的一行
+      const getLineLength = (text: string) => {
+        const lines = String(text).split('\n');
+        return Math.max(...lines.map(line => line.length));
+      };
+
+      const maxLineLength = Math.max(
+        ...columnData.map(cell => getLineLength(cell)),
+        getLineLength(header)
+      );
+
+      // 根据列的类型设置不同的最小和最大宽度
+      let minWidth = 8;
+      let maxWidth = 20;
+
+      // 特殊列的处理
+      if (header === "货号") {
+        minWidth = 12;
+        maxWidth = 18;
+      } else if (header === "分类" || header === "金子颜色" || header === "形状" || header === "成色") {
+        minWidth = 6;
+        maxWidth = 12;
+      } else if (header === "名称" || header === "规格") {
+        minWidth = 15;
+        maxWidth = 30;
+      } else if (header === "供应商代码" || header === "下单口") {
+        minWidth = 8;
+        maxWidth = 12;
+      } else if (header === "重量") {
+        minWidth = 6;
+        maxWidth = 10;
+      } else if (header === "零售价" || header === "批发价" || header === "金价") {
+        minWidth = 12;
+        maxWidth = 16;
+      } else if (header === "工费" || header === "配件" || header === "石头" || header === "电镀" || header === "模具" || header === "佣金") {
+        // 成本列：价格 + 日期，需要两行显示
+        minWidth = 10;
+        maxWidth = 18;
+      }
+
+      // 计算最终宽度：在最小和最大之间，取内容需要的宽度
+      // 添加一点余量（1-2个字符），避免太紧
+      let width = Math.min(Math.max(maxLineLength + 1, minWidth), maxWidth);
+
+      // 对于包含日期的列，确保能显示完整的日期时间格式
+      if (["工费", "配件", "石头", "电镀", "模具", "佣金"].includes(header)) {
+        // 日期格式类似 "2025/1/15 14:30:45" 约19个字符
+        const dateLength = 19;
+        width = Math.min(Math.max(Math.max(maxLineLength + 1, dateLength), minWidth), maxWidth);
+      }
+
+      return width;
+    };
+
     // 创建工作簿和工作表
     const wb = XLSX.utils.book_new();
     const wsData = [headerRow, ...dataRows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // 设置列宽
-    ws['!cols'] = [
-      { wch: 18 },  // 货号
-      { wch: 12 },  // 分类
-      { wch: 20 },  // 名称
-      { wch: 6 },   // 成色
-      { wch: 8 },   // 金子颜色
-      { wch: 25 },  // 规格
-      { wch: 8 },   // 形状
-      { wch: 12 },  // 供应商代码
-      { wch: 10 },  // 重量
-      { wch: 12 },  // 金价
-      { wch: 12 },  // 工费
-      { wch: 20 },  // 配件
-      { wch: 20 },  // 石头
-      { wch: 20 },  // 电镀
-      { wch: 20 },  // 模具
-      { wch: 25 },  // 佣金（包含更新时间）
-      { wch: 10 },  // 下单口
-      { wch: 18 },  // 零售价
-      { wch: 18 },  // 批发价
-    ];
+    // 智能计算每列的宽度
+    const colWidths = allColumns.map((header, colIndex) => {
+      const columnData = rows.map(row => row[header] || "");
+      return {
+        wch: calculateColumnWidth(columnData, header)
+      };
+    });
+
+    ws['!cols'] = colWidths;
 
     // 设置表头样式
     for (let col = 0; col < headerRow.length; col++) {
