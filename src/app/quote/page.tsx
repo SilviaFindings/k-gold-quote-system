@@ -3400,7 +3400,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-green-600">
+                        <div className="font-medium text-red-600">
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
@@ -3408,7 +3408,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-blue-600">
+                        <div className="font-medium text-red-600">
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
