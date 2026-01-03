@@ -69,7 +69,7 @@ export const SUB_CATEGORIES: Record<ProductCategory, string[]> = {
 };
 
 // 数据版本号（用于触发数据重新迁移）
-const DATA_VERSION = 2;  // v2: 修复 subCategory 映射逻辑
+const DATA_VERSION = 3;  // v2: 修复 subCategory 映射逻辑; v3: 自动设置默认子分类
 
 // 旧分类到新分类的映射
 const CATEGORY_MAPPING: Record<string, ProductCategory> = {
@@ -603,9 +603,13 @@ export default function QuotePage() {
             return p;
           }
 
-          // 如果没有 subCategory，尝试根据产品信息推断
-          // 这里我们可以添加更多的推断逻辑
-          // 暂时保持为空，因为上面已经处理了旧分类映射
+          // 如果没有 subCategory，根据大类设置默认子分类
+          const subCategoryList = SUB_CATEGORIES[p.category as ProductCategory];
+          if (subCategoryList && subCategoryList.length > 0) {
+            console.log(`产品 ${p.productCode} 使用默认子分类: ${subCategoryList[0]} (大类: ${p.category})`);
+            return { ...p, subCategory: subCategoryList[0] };
+          }
+
           return p;
         });
 
@@ -678,8 +682,25 @@ export default function QuotePage() {
           };
         });
 
-        console.log("设置 priceHistory state，数量:", migratedHistory.length);
-        setPriceHistory(migratedHistory);
+        // 强制修复历史记录的 subCategory 字段：确保所有历史记录都有子分类
+        const fixedHistory = migratedHistory.map((h: PriceHistory) => {
+          // 如果已经有 subCategory，保持不变
+          if (h.subCategory) {
+            return h;
+          }
+
+          // 如果没有 subCategory，根据大类设置默认子分类
+          const subCategoryList = SUB_CATEGORIES[h.category as ProductCategory];
+          if (subCategoryList && subCategoryList.length > 0) {
+            console.log(`历史记录 ${h.productCode} 使用默认子分类: ${subCategoryList[0]} (大类: ${h.category})`);
+            return { ...h, subCategory: subCategoryList[0] };
+          }
+
+          return h;
+        });
+
+        console.log("设置 priceHistory state，数量:", fixedHistory.length);
+        setPriceHistory(fixedHistory);
       } catch (e) {
         console.error("解析历史记录失败:", e);
       }
@@ -2287,8 +2308,14 @@ export default function QuotePage() {
         }
       }
 
-      console.log(`产品 ${product.productCode} 无法推断子分类`);
+      // 如果无法推断，根据大类设置默认子分类
+      const subCategoryList = SUB_CATEGORIES[product.category as ProductCategory];
+      if (subCategoryList && subCategoryList.length > 0) {
+        console.log(`产品 ${product.productCode} 使用默认子分类: ${subCategoryList[0]} (大类: ${product.category})`);
+        return { ...product, subCategory: subCategoryList[0] };
+      }
 
+      console.log(`产品 ${product.productCode} 无法推断子分类（大类也没有子分类列表）`);
       return product;
     });
 
