@@ -1866,9 +1866,9 @@ export default function QuotePage() {
             if (emptyOrderChannelCount > 0) {
               return (
                 <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ 发现 {emptyOrderChannelCount} 个产品没有下单口！</p>
+                  <p className="text-sm text-yellow-900 font-semibold mb-2">⚠️ 发现 {emptyOrderChannelCount} 个产品没有下单口！</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <label className="text-xs text-yellow-700">批量设置为:</label>
+                    <label className="text-xs text-yellow-900">批量设置为:</label>
                     <select
                       id="batchOrderChannelSelect"
                       defaultValue="Van"
