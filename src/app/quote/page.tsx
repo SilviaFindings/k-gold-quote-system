@@ -1470,6 +1470,9 @@ export default function QuotePage() {
         const laborCostIndex = headers.findIndex(h =>
           h && String(h).includes("人工") || h && String(h).includes("工费")
         );
+        const karatIndex = headers.findIndex(h =>
+          h && String(h).includes("成色")
+        );
 
         // 新增的成本列
         const accessoryCostIndex = headers.findIndex(h =>
@@ -1503,6 +1506,7 @@ export default function QuotePage() {
           specificationIndex,
           weightIndex,
           laborCostIndex,
+          karatIndex,
           accessoryCostIndex,
           stoneCostIndex,
           platingCostIndex,
@@ -1545,6 +1549,16 @@ export default function QuotePage() {
 
           const shape = shapeIndex !== -1 ? String(row[shapeIndex]) || "" : "";
 
+          // 读取成色（材质）：优先使用Excel中的成色，如果没有则从货号智能识别
+          const karatRaw = karatIndex !== -1 ? String(row[karatIndex]) : "";
+          let validKarat: "10K" | "14K" | "18K" = "14K";
+          if (karatRaw) {
+            const karatValue = String(karatRaw).trim().toUpperCase();
+            if (karatValue === "10K" || karatValue === "14K" || karatValue === "18K") {
+              validKarat = karatValue as "10K" | "14K" | "18K";
+            }
+          }
+
           // 尝试将下单口映射到有效的代码
           let validOrderChannel: OrderChannel | "" = "";
           if (orderChannel) {
@@ -1586,15 +1600,20 @@ export default function QuotePage() {
 
           if (!productCode || !productName) return;
 
-          // 从货号智能识别材质类型
+          // 确定最终使用的成色：优先使用Excel中的成色，如果没有则从货号智能识别
+          const finalKarat = validKarat || "14K";
           const detectedMaterial = detectMaterialFromCode(String(productCode));
-          const detectedKarat = detectedMaterial.karat;
+          // 如果Excel中有成色就用Excel的，否则使用智能识别的结果
+          const karat = karatRaw ? finalKarat : detectedMaterial.karat;
+
+          // 调试日志：输出成色识别结果
+          console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}"`);
 
           const wholesalePrice = calculatePrice(
             goldPrice,
             weight,
             laborCost,
-            detectedKarat,
+            karat,
             false,
             accessoryCost,
             stoneCost,
@@ -1607,7 +1626,7 @@ export default function QuotePage() {
             goldPrice,
             weight,
             laborCost,
-            detectedKarat,
+            karat,
             true,
             accessoryCost,
             stoneCost,
@@ -1624,7 +1643,7 @@ export default function QuotePage() {
             specification: String(specification || ""),
             weight,
             laborCost,
-            karat: detectedKarat,
+            karat: karat,
             goldColor: detectedMaterial.goldColor,
             wholesalePrice,
             retailPrice,
