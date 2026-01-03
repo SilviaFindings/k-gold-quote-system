@@ -1873,10 +1873,11 @@ export default function QuotePage() {
                       id="batchOrderChannelSelect"
                       defaultValue="Van"
                       className="px-2 py-1 text-xs border border-yellow-300 rounded"
+                      style={{ color: "black" }}
                       suppressHydrationWarning
                     >
                       {ORDER_CHANNELS.map(channel => (
-                        <option key={channel.code} value={channel.code}>{channel.name}</option>
+                        <option key={channel.code} value={channel.code} style={{ color: "black" }}>{channel.name}</option>
                       ))}
                     </select>
                     <button
