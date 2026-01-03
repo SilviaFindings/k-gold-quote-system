@@ -1860,6 +1860,63 @@ export default function QuotePage() {
             return null;
           })()}
 
+          {/* 显示没有下单口的产品修复工具 */}
+          {products.length > 0 && (() => {
+            const emptyOrderChannelCount = products.filter(p => !p.orderChannel || p.orderChannel === "").length;
+            if (emptyOrderChannelCount > 0) {
+              return (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ 发现 {emptyOrderChannelCount} 个产品没有下单口！</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="text-xs text-yellow-700">批量设置为:</label>
+                    <select
+                      id="batchOrderChannelSelect"
+                      defaultValue="Van"
+                      className="px-2 py-1 text-xs border border-yellow-300 rounded"
+                      suppressHydrationWarning
+                    >
+                      {ORDER_CHANNELS.map(channel => (
+                        <option key={channel.code} value={channel.code}>{channel.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const select = document.getElementById("batchOrderChannelSelect") as HTMLSelectElement;
+                        const channelCode = select?.value || "Van";
+                        const channelName = ORDER_CHANNELS.find(c => c.code === channelCode)?.name || channelCode;
+
+                        if (!confirm(`确定将这 ${emptyOrderChannelCount} 个没有下单口的产品批量设置为 "${channelName}" 吗？`)) return;
+
+                        const updatedProducts = products.map(p => {
+                          if (!p.orderChannel || p.orderChannel === "") {
+                            return { ...p, orderChannel: channelCode as OrderChannel };
+                          }
+                          return p;
+                        });
+
+                        const updatedHistory = priceHistory.map(h => {
+                          if (!h.orderChannel || h.orderChannel === "") {
+                            return { ...h, orderChannel: channelCode as OrderChannel };
+                          }
+                          return h;
+                        });
+
+                        setProducts(updatedProducts);
+                        setPriceHistory(updatedHistory);
+                        alert(`✅ 成功将 ${emptyOrderChannelCount} 个产品和对应的历史记录设置为 "${channelName}" 下单口！`);
+                      }}
+                      className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+                      suppressHydrationWarning
+                    >
+                      批量修复下单口
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <div className="flex flex-wrap gap-2">
             {PRODUCT_CATEGORIES.map((category) => {
               const count = products.filter(p => p.category === category).length;
