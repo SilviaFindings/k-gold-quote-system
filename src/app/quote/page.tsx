@@ -2489,7 +2489,7 @@ export default function QuotePage() {
                 </button>
                 <button
                   onClick={() => setShowBatchModifyModal(true)}
-                  className="w-full rounded-lg bg-orange-600 px-4 py-2.5 text-white font-medium hover:bg-orange-700 transition-colors shadow-sm"
+                  className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-white font-medium hover:bg-blue-800 transition-colors shadow-sm"
                   suppressHydrationWarning
                 >
                   ✏️ 批量修改价格系数
@@ -4022,7 +4022,7 @@ export default function QuotePage() {
                   // 实现批量修改逻辑
                   handleBatchModify();
                 }}
-                className="rounded bg-orange-600 px-6 py-2 text-white hover:bg-orange-700"
+                className="rounded bg-blue-700 px-6 py-2 text-white hover:bg-blue-800"
                 suppressHydrationWarning
               >
                 确认修改
