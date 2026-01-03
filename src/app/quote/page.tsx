@@ -39,6 +39,23 @@ export const ORDER_CHANNELS = [
 
 export type OrderChannel = typeof ORDER_CHANNELS[number]["code"];
 
+// 形状列表
+export const PRODUCT_SHAPES = [
+  "圆形",
+  "椭圆形",
+  "心形",
+  "方形",
+  "长方形",
+  "马蹄形",
+  "水滴形",
+  "菱形",
+  "星形",
+  "花形",
+  "其他",
+] as const;
+
+export type ProductShape = typeof PRODUCT_SHAPES[number] | "";
+
 // 产品信息类型
 interface Product {
   id: string;
@@ -60,6 +77,7 @@ interface Product {
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
   orderChannel: OrderChannel | "";  // 下单口
+  shape: ProductShape;          // 形状
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -92,6 +110,7 @@ interface PriceHistory {
   commission: number;            // 佣金
   supplierCode: string;         // 供应商代码
   orderChannel: OrderChannel | "";  // 下单口
+  shape: ProductShape;          // 形状
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -131,7 +150,7 @@ export default function QuotePage() {
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchType, setSearchType] = useState<"name" | "specification" | "supplierCode" | "all">("all");
+  const [searchType, setSearchType] = useState<"name" | "specification" | "supplierCode" | "karat" | "shape" | "all">("all");
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     category: "耳环/耳逼",
     productCode: "",
@@ -148,6 +167,7 @@ export default function QuotePage() {
     commission: 0,
     supplierCode: "",
     orderChannel: "",
+    shape: "",
   });
 
   // 导入Excel相关状态
@@ -725,6 +745,7 @@ export default function QuotePage() {
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
       orderChannel: currentProduct.orderChannel || "",
+      shape: currentProduct.shape || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -765,6 +786,7 @@ export default function QuotePage() {
       commission: currentProduct.commission || 0,
       supplierCode: currentProduct.supplierCode || "",
       orderChannel: currentProduct.orderChannel || "",
+      shape: currentProduct.shape || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -855,6 +877,7 @@ export default function QuotePage() {
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
         orderChannel: product.orderChannel || "",
+        shape: product.shape || "",
         // 成本时间戳（从旧记录继承或使用当前时间）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -887,6 +910,7 @@ export default function QuotePage() {
         commission: product.commission || 0,
         supplierCode: product.supplierCode || "",
         orderChannel: product.orderChannel || "",
+        shape: product.shape || "",
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -988,6 +1012,7 @@ export default function QuotePage() {
         成色: records[0].karat,
         金子颜色: records[0].goldColor || "黄金",
         规格: records[0].specification || "",
+        形状: records[0].shape || "",
         供应商代码: records[0].supplierCode || "",
       };
 
@@ -1175,6 +1200,9 @@ export default function QuotePage() {
         const orderChannelIndex = headers.findIndex(h =>
           h && h.includes("下单口")
         );
+        const shapeIndex = headers.findIndex(h =>
+          h && h.includes("形状")
+        );
 
         console.log("列索引:", {
           productCodeIndex,
@@ -1188,7 +1216,8 @@ export default function QuotePage() {
           moldCostIndex,
           commissionIndex,
           supplierCodeIndex,
-          orderChannelIndex
+          orderChannelIndex,
+          shapeIndex
         });
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
@@ -1214,6 +1243,7 @@ export default function QuotePage() {
           const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
           const supplierCode = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) || "" : "";
           const orderChannel = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) || "" : "";
+          const shape = shapeIndex !== -1 ? String(row[shapeIndex]) || "" : "";
 
           // 尝试将下单口映射到有效的代码
           let validOrderChannel: OrderChannel | "" = "";
@@ -1233,6 +1263,24 @@ export default function QuotePage() {
               if (foundByName) {
                 validOrderChannel = foundByName.code;
               }
+            }
+          }
+
+          // 尝试将形状映射到有效的选项
+          let validShape: ProductShape = "";
+          if (shape) {
+            const shapeValue = String(shape).trim();
+            // 尝试匹配
+            const foundShape = PRODUCT_SHAPES.find(s =>
+              s.toLowerCase() === shapeValue.toLowerCase() ||
+              s.includes(shapeValue) ||
+              shapeValue.includes(s)
+            );
+            if (foundShape) {
+              validShape = foundShape;
+            } else {
+              // 如果找不到，直接使用原始值（用户可能自定义了新形状）
+              validShape = shapeValue as ProductShape;
             }
           }
 
@@ -1288,6 +1336,7 @@ export default function QuotePage() {
             commission,
             supplierCode,
             orderChannel: validOrderChannel,
+            shape: validShape,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -1321,6 +1370,7 @@ export default function QuotePage() {
             commission,
             supplierCode,
             orderChannel: validOrderChannel,
+            shape: validShape,
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2465,6 +2515,29 @@ export default function QuotePage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                    形状
+                  </label>
+                  <select
+                    value={currentProduct.shape || ""}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        shape: e.target.value as ProductShape,
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    suppressHydrationWarning
+                  >
+                    <option value="">请选择形状</option>
+                    {PRODUCT_SHAPES.map((shape) => (
+                      <option key={shape} value={shape}>
+                        {shape}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -2564,7 +2637,7 @@ export default function QuotePage() {
                 />
                 <select
                   value={searchType}
-                  onChange={(e) => setSearchType(e.target.value as "name" | "specification" | "all")}
+                  onChange={(e) => setSearchType(e.target.value as "name" | "specification" | "supplierCode" | "karat" | "shape" | "all")}
                   className="px-3 py-2 border border-gray-300 rounded text-sm"
                   suppressHydrationWarning
                 >
@@ -2572,6 +2645,8 @@ export default function QuotePage() {
                   <option value="name">产品名称</option>
                   <option value="specification">规格</option>
                   <option value="supplierCode">供应商代码</option>
+                  <option value="karat">K金含量</option>
+                  <option value="shape">形状</option>
                 </select>
               </div>
               {searchQuery && (
@@ -2615,6 +2690,7 @@ export default function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">规格</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">形状</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">工费</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">配件</th>
@@ -2642,12 +2718,18 @@ export default function QuotePage() {
                         return p.specification.toLowerCase().includes(query);
                       } else if (searchType === "supplierCode") {
                         return p.supplierCode.toLowerCase().includes(query);
+                      } else if (searchType === "karat") {
+                        return p.karat.toLowerCase().includes(query);
+                      } else if (searchType === "shape") {
+                        return (p.shape || "").toLowerCase().includes(query);
                       } else {
                         return (
                           p.productName.toLowerCase().includes(query) ||
                           p.specification.toLowerCase().includes(query) ||
                           p.productCode.toLowerCase().includes(query) ||
-                          p.supplierCode.toLowerCase().includes(query)
+                          p.supplierCode.toLowerCase().includes(query) ||
+                          p.karat.toLowerCase().includes(query) ||
+                          (p.shape || "").toLowerCase().includes(query)
                         );
                       }
                     })
@@ -2675,6 +2757,7 @@ export default function QuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.goldColor}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.shape || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="text-gray-900">¥{product.laborCost.toFixed(2)}</div>
@@ -2773,6 +2856,7 @@ export default function QuotePage() {
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">形状</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
                   <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
@@ -2790,6 +2874,7 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productName}</td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.karat}</td>
                     <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.goldColor}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.shape || "-"}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{history.weight}</td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
                       ¥{history.goldPrice.toFixed(2)}
