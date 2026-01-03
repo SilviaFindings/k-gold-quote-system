@@ -37,6 +37,37 @@ export const OLD_PRODUCT_CATEGORIES = [
   "金链",
 ] as const;
 
+// 大分类和子分类的映射关系
+export const SUB_CATEGORIES: Record<ProductCategory, string[]> = {
+  "配件": [
+    "耳环/耳逼",
+    "扣子",
+    "开口圈/闭口圈",
+    "圆珠",
+    "车花珠",
+    "定位珠/短管",
+    "包扣",
+    "字印片/吊牌",
+    "珠针",
+    "空心管",
+    "珠托",
+    "吊坠夹",
+    "镶嵌配件",
+    "珍珠配件",
+    "金线",
+  ],
+  "宝石托": [
+    "戒子托",
+    "耳环托",
+    "耳钉托",
+    "吊坠托",
+  ],
+  "链条": [
+    "金链",
+    "延长链",
+  ],
+};
+
 // 旧分类到新分类的映射
 const CATEGORY_MAPPING: Record<string, ProductCategory> = {
   // 链条类
@@ -213,6 +244,9 @@ export default function QuotePage() {
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [currentCategory, setCurrentCategory] = useState<ProductCategory>("配件");
+
+  // 分类展开/折叠状态
+  const [expandedCategories, setExpandedCategories] = useState<Set<ProductCategory>>(new Set(["配件"]));
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -2245,37 +2279,78 @@ export default function QuotePage() {
             return null;
           })()}
 
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-4">
             {PRODUCT_CATEGORIES.map((category) => {
               const count = products.filter(p => p.category === category).length;
               const hasData = count > 0;
+              const isExpanded = expandedCategories.has(category);
+              const subCategories = SUB_CATEGORIES[category];
+
               return (
-                <button
-                  key={category}
-                  onClick={() => {
-                    setCurrentCategory(category);
-                    setCurrentProduct({ ...currentProduct, category });
-                  }}
-                  className={`relative px-4 py-2 rounded-lg font-medium transition-colors ${
-                    currentCategory === category
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  suppressHydrationWarning
-                >
-                  {category}
-                  {hasData && (
-                    <span
-                      className={`ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full ${
-                        currentCategory === category
-                          ? "bg-white text-blue-600"
-                          : "bg-blue-600 text-white"
-                      }`}
+                <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* 大分类按钮 */}
+                  <button
+                    onClick={() => {
+                      setCurrentCategory(category);
+                      setCurrentProduct({ ...currentProduct, category });
+                      // 展开/折叠子分类
+                      setExpandedCategories(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has(category)) {
+                          newSet.delete(category);
+                        } else {
+                          newSet.add(category);
+                        }
+                        return newSet;
+                      });
+                    }}
+                    className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${
+                      currentCategory === category
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    suppressHydrationWarning
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-lg">{category}</span>
+                      {hasData && (
+                        <span
+                          className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full ${
+                            currentCategory === category
+                              ? "bg-white text-blue-600"
+                              : "bg-blue-600 text-white"
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      {count}
-                    </span>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* 子分类列表 */}
+                  {isExpanded && (
+                    <div className="px-4 py-3 bg-white border-t border-gray-200">
+                      <div className="flex flex-wrap gap-2">
+                        {subCategories.map((subCat) => (
+                          <span
+                            key={subCat}
+                            className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-gray-50 text-gray-700 border border-gray-200"
+                          >
+                            {subCat}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
