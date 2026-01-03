@@ -1406,9 +1406,10 @@ export default function QuotePage() {
     const headers = allColumns.join(",");
     const dataRows = rows.map((row) =>
       allColumns.map((col) => {
-        // 处理包含换行符的字段，用引号包裹
-        const value = String(row[col] || "");
-        return value.includes("\n") ? `"${value.replace(/"/g, '""')}"` : value;
+        // 处理包含换行符的字段，将换行符替换为空格，确保CSV格式正确
+        const value = String(row[col] || "").replace(/\n/g, " ");
+        // 处理包含逗号的字段，用引号包裹
+        return value.includes(",") ? `"${value.replace(/"/g, '""')}"` : value;
       }).join(",")
     );
     const csv = [headers, ...dataRows].join("\n");
