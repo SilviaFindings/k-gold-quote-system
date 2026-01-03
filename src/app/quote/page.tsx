@@ -2101,6 +2101,7 @@ function QuotePage() {
 
   // 导出数据备份（包括产品、历史记录、配置）
   const exportDataBackup = async () => {
+    // 新功能：支持导出Excel和JSON格式备份
     if (!confirm(`确定要导出${exportBackupFormat === 'excel' ? 'Excel' : 'JSON'}格式备份吗？这将包含所有产品、价格历史和配置数据。`)) {
       return;
     }
@@ -3572,6 +3573,7 @@ function QuotePage() {
                 <div className="pt-2 border-t border-gray-200 mt-2">
                   <div className="flex items-center justify-between text-xs text-black mb-2">
                     <span>导出数据备份（含产品、历史、配置）</span>
+                    <span className="text-purple-600 font-bold">✨ 新功能</span>
                   </div>
                   <div className="flex gap-2">
                     <select
