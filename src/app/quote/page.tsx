@@ -2690,7 +2690,7 @@ export default function QuotePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-4 text-3xl font-bold text-gray-900">
+        <h1 className="mb-4 text-3xl font-bold text-black">
           K金产品报价计算表
         </h1>
 
@@ -2732,7 +2732,7 @@ export default function QuotePage() {
 
         {/* 分类导航区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
+          <h2 className="mb-4 text-xl font-semibold text-black">产品分类</h2>
 
           {/* 显示没有分类的产品修复工具 */}
           {products.length > 0 && (() => {
@@ -2873,7 +2873,7 @@ export default function QuotePage() {
                     className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${
                       currentCategory === category
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
                     }`}
                     suppressHydrationWarning
                   >
@@ -2924,7 +2924,7 @@ export default function QuotePage() {
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
                                 currentSubCategory === subCat
                                   ? "bg-blue-600 text-white border-blue-600"
-                                  : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                                  : "bg-gray-50 text-black border-gray-200 hover:bg-gray-100"
                               }`}
                             >
                               {subCat}
@@ -2934,7 +2934,7 @@ export default function QuotePage() {
                                     ? "bg-white text-blue-600"
                                     : subCount > 0
                                       ? "bg-blue-600 text-white"
-                                      : "bg-gray-300 text-gray-600"
+                                      : "bg-gray-300 text-black"
                                 }`}
                               >
                                 {subCount}
@@ -2961,7 +2961,7 @@ export default function QuotePage() {
 
         {/* 数据管理区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">数据管理</h2>
+          <h2 className="mb-4 text-xl font-semibold text-black">数据管理</h2>
           <div className="mb-4 flex gap-2" suppressHydrationWarning>
             <button
               onClick={() => {
@@ -3291,7 +3291,7 @@ export default function QuotePage() {
                     type="number"
                     value={goldPrice}
                     onChange={(e) => setGoldPrice(Number(e.target.value))}
-                    className="w-full rounded-lg border-2 border-amber-300 px-4 py-2.5 focus:border-amber-500 focus:outline-none text-gray-900 font-medium"
+                    className="w-full rounded-lg border-2 border-amber-300 px-4 py-2.5 focus:border-amber-500 focus:outline-none text-black font-medium"
                     step="0.01"
                     suppressHydrationWarning
                   />
@@ -3359,7 +3359,7 @@ export default function QuotePage() {
                 <div className="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center text-white">
                   ✅
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">导出管理</h3>
+                <h3 className="text-lg font-semibold text-black">导出管理</h3>
               </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -3380,13 +3380,13 @@ export default function QuotePage() {
                 </div>
                 <button
                   onClick={() => setSelectedProducts(new Set())}
-                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-black font-medium hover:bg-gray-100 transition-colors"
                   suppressHydrationWarning
                 >
                   ❌ 取消全选
                 </button>
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <div className="flex items-center justify-between text-xs text-black mb-2">
                     <span>已选产品: <strong className="text-blue-600">{selectedProducts.size}</strong> 个</span>
                   </div>
                   <div className="flex gap-2">
@@ -3413,56 +3413,56 @@ export default function QuotePage() {
 
         {/* 系数设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">价格系数设置</h2>
+          <h2 className="mb-4 text-xl font-semibold text-black">价格系数设置</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
             {/* 金含量系数 */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
+              <label className="mb-2 block text-sm font-medium text-black">
                 10K金含量系数
               </label>
               <input
                 type="number"
                 value={coefficients.goldFactor10K}
                 onChange={(e) => setCoefficients({...coefficients, goldFactor10K: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.001"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 0.417</div>
+              <div className="mt-1 text-xs text-black">默认: 0.417</div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
+              <label className="mb-2 block text-sm font-medium text-black">
                 14K金含量系数
               </label>
               <input
                 type="number"
                 value={coefficients.goldFactor14K}
                 onChange={(e) => setCoefficients({...coefficients, goldFactor14K: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.001"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 0.586</div>
+              <div className="mt-1 text-xs text-black">默认: 0.586</div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
+              <label className="mb-2 block text-sm font-medium text-black">
                 18K金含量系数
               </label>
               <input
                 type="number"
                 value={coefficients.goldFactor18K}
                 onChange={(e) => setCoefficients({...coefficients, goldFactor18K: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.001"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 0.755</div>
+              <div className="mt-1 text-xs text-black">默认: 0.755</div>
             </div>
 
             {/* 工费系数 */}
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-900">
+                <label className="block text-sm font-medium text-black">
                   零售价工费系数
                 </label>
                 <select
@@ -3479,15 +3479,15 @@ export default function QuotePage() {
                 type="number"
                 value={coefficients.laborFactorRetail}
                 onChange={(e) => setCoefficients({...coefficients, laborFactorRetail: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 5 {coefficients.laborFactorRetailMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 5 {coefficients.laborFactorRetailMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-900">
+                <label className="block text-sm font-medium text-black">
                   批发价工费系数
                 </label>
                 <select
@@ -3504,17 +3504,17 @@ export default function QuotePage() {
                 type="number"
                 value={coefficients.laborFactorWholesale}
                 onChange={(e) => setCoefficients({...coefficients, laborFactorWholesale: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 3 {coefficients.laborFactorWholesaleMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 3 {coefficients.laborFactorWholesaleMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
 
             {/* 材料系数 */}
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-900">
+                <label className="block text-sm font-medium text-black">
                   材料损耗系数
                 </label>
                 <select
@@ -3531,15 +3531,15 @@ export default function QuotePage() {
                 type="number"
                 value={coefficients.materialLoss}
                 onChange={(e) => setCoefficients({...coefficients, materialLoss: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.15 {coefficients.materialLossMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.15 {coefficients.materialLossMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   材料浮动系数
                 </label>
                 <select
@@ -3556,17 +3556,17 @@ export default function QuotePage() {
                 type="number"
                 value={coefficients.materialCost}
                 onChange={(e) => setCoefficients({...coefficients, materialCost: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.1 {coefficients.materialCostMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.1 {coefficients.materialCostMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
 
             {/* 利润和汇率 */}
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   国际运输及关税系数
                 </label>
                 <select
@@ -3583,25 +3583,25 @@ export default function QuotePage() {
                 type="number"
                 value={coefficients.profitMargin}
                 onChange={(e) => setCoefficients({...coefficients, profitMargin: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.25 {coefficients.profitMarginMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.25 {coefficients.profitMarginMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
+              <label className="mb-2 block text-sm font-medium text-black">
                 汇率（人民币/加币）
               </label>
               <input
                 type="number"
                 value={coefficients.exchangeRate}
                 onChange={(e) => setCoefficients({...coefficients, exchangeRate: Number(e.target.value)})}
-                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 5</div>
+              <div className="mt-1 text-xs text-black">默认: 5</div>
             </div>
           </div>
         </div>
@@ -3610,16 +3610,16 @@ export default function QuotePage() {
           {/* 产品录入区域 */}
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">
+              <h2 className="text-xl font-semibold text-black">
                 产品信息录入
               </h2>
               <div className="flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-900">批量导入：</label>
+                <label className="block text-sm font-medium text-black">批量导入：</label>
                 <input
                   type="file"
                   accept=".xlsx,.xls,.csv"
                   onChange={importExcel}
-                  className="block w-48 text-sm text-gray-900 file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-48 text-sm text-black file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:text-blue-700 hover:file:bg-blue-100"
                   suppressHydrationWarning
                 />
               </div>
@@ -3627,9 +3627,9 @@ export default function QuotePage() {
 
             {/* 导入选项 */}
             <div className="mb-4 rounded bg-gray-50 p-3">
-              <p className="mb-2 text-sm font-medium text-gray-900">导入选项：</p>
+              <p className="mb-2 text-sm font-medium text-black">导入选项：</p>
               <div className="flex flex-wrap gap-4 text-sm">
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={importWeight}
@@ -3639,7 +3639,7 @@ export default function QuotePage() {
                   />
                   导入重量
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={importLaborCost}
@@ -3650,11 +3650,11 @@ export default function QuotePage() {
                   导入人工成本
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-900">默认材质：</span>
+                  <span className="text-black">默认材质：</span>
                   <select
                     value={defaultKarat}
                     onChange={(e) => setDefaultKarat(e.target.value as "10K" | "14K" | "18K")}
-                    className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   >
                     <option value="10K">10K金</option>
@@ -3665,26 +3665,26 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <p className="mb-4 text-sm text-gray-600">
+            <p className="mb-4 text-sm text-black">
               💡 <strong>快速更新模式</strong>：输入已存在的产品货号，自动填充信息并更新价格<br/>
               💡 <strong>新增产品模式</strong>：输入新货号，添加新产品
             </p>
             <div className="space-y-4" suppressHydrationWarning>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   当前分类
                 </label>
                 <input
                   type="text"
                   value={currentSubCategory ? `${currentCategory} / ${currentSubCategory}` : currentCategory}
                   readOnly
-                  className="w-full rounded border border-gray-300 px-4 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"
+                  className="w-full rounded border border-gray-300 px-4 py-2 bg-gray-100 text-black cursor-not-allowed"
                   suppressHydrationWarning
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     产品货号 *
                   </label>
                   <input
@@ -3696,12 +3696,12 @@ export default function QuotePage() {
                         productCode: e.target.value,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     产品名称 *
                   </label>
                   <input
@@ -3713,7 +3713,7 @@ export default function QuotePage() {
                         productName: e.target.value,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   />
                 </div>
@@ -3722,16 +3722,16 @@ export default function QuotePage() {
               {/* 特殊系数设置（可选） */}
               <div className="rounded-lg border-2 border-gray-200 p-4">
                 <div className="mb-3">
-                  <label className="block text-sm font-semibold text-gray-900">
+                  <label className="block text-sm font-semibold text-black">
                     特殊系数设置（可选，留空则使用全局固定系数）
                   </label>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-black">
                     为此产品单独设置不同的系数，覆盖全局固定系数
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                    <label className="mb-2 block text-sm font-medium text-black">
                       特殊材料损耗系数
                     </label>
                     <input
@@ -3743,14 +3743,14 @@ export default function QuotePage() {
                           specialMaterialLoss: e.target.value ? Number(e.target.value) : undefined,
                         })
                       }
-                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                       step="0.01"
                       placeholder={`默认: ${coefficients.materialLoss}`}
                       suppressHydrationWarning
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                    <label className="mb-2 block text-sm font-medium text-black">
                       特殊材料浮动系数
                     </label>
                     <input
@@ -3762,14 +3762,14 @@ export default function QuotePage() {
                           specialMaterialCost: e.target.value ? Number(e.target.value) : undefined,
                         })
                       }
-                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                       step="0.01"
                       placeholder={`默认: ${coefficients.materialCost}`}
                       suppressHydrationWarning
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                    <label className="mb-2 block text-sm font-medium text-black">
                       特殊关税系数
                     </label>
                     <input
@@ -3781,7 +3781,7 @@ export default function QuotePage() {
                           specialProfitMargin: e.target.value ? Number(e.target.value) : undefined,
                         })
                       }
-                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                       step="0.01"
                       placeholder={`默认: ${coefficients.profitMargin}`}
                       suppressHydrationWarning
@@ -3791,7 +3791,7 @@ export default function QuotePage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   产品规格
                 </label>
                 <input
@@ -3803,14 +3803,14 @@ export default function QuotePage() {
                       specification: e.target.value,
                     })
                   }
-                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                   suppressHydrationWarning
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     重量（克）
                   </label>
                   <input
@@ -3822,13 +3822,13 @@ export default function QuotePage() {
                         weight: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     人工成本（人民币）
                   </label>
                   <input
@@ -3840,7 +3840,7 @@ export default function QuotePage() {
                         laborCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
@@ -3850,7 +3850,7 @@ export default function QuotePage() {
               {/* 新增成本字段 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     配件成本（人民币）
                   </label>
                   <input
@@ -3862,13 +3862,13 @@ export default function QuotePage() {
                         accessoryCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     石头成本（人民币）
                   </label>
                   <input
@@ -3880,7 +3880,7 @@ export default function QuotePage() {
                         stoneCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
@@ -3889,7 +3889,7 @@ export default function QuotePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     电镀成本（人民币）
                   </label>
                   <input
@@ -3901,13 +3901,13 @@ export default function QuotePage() {
                         platingCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     模具成本（人民币）
                   </label>
                   <input
@@ -3919,7 +3919,7 @@ export default function QuotePage() {
                         moldCost: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
@@ -3928,7 +3928,7 @@ export default function QuotePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     佣金（%）
                   </label>
                   <input
@@ -3940,13 +3940,13 @@ export default function QuotePage() {
                         commission: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     step="0.01"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     供应商代码
                   </label>
                   <input
@@ -3958,12 +3958,12 @@ export default function QuotePage() {
                         supplierCode: e.target.value,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     下单口
                   </label>
                   <select
@@ -3974,7 +3974,7 @@ export default function QuotePage() {
                         orderChannel: e.target.value as OrderChannel | "",
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   >
                     <option value="">请选择下单口</option>
@@ -3986,7 +3986,7 @@ export default function QuotePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     形状
                   </label>
                   <select
@@ -3997,7 +3997,7 @@ export default function QuotePage() {
                         shape: e.target.value as ProductShape,
                       })
                     }
-                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                     suppressHydrationWarning
                   >
                     <option value="">请选择形状</option>
@@ -4011,7 +4011,7 @@ export default function QuotePage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   材质类型
                 </label>
                 <select
@@ -4022,20 +4022,20 @@ export default function QuotePage() {
                       karat: e.target.value as "10K" | "14K" | "18K",
                     })
                   }
-                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                   suppressHydrationWarning
                 >
                   <option value="10K">10K金</option>
                   <option value="14K">14K金</option>
                   <option value="18K">18K金</option>
                 </select>
-                <div className="mt-1 text-xs text-gray-500">
+                <div className="mt-1 text-xs text-black">
                   💡 货号中包含 /10K、/14K、/18K、/K10、/K14、/K18 等标识会自动识别
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-medium text-black">
                   金子颜色
                 </label>
                 <select
@@ -4046,7 +4046,7 @@ export default function QuotePage() {
                       goldColor: e.target.value as "黄金" | "白金" | "玫瑰金",
                     })
                   }
-                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                   suppressHydrationWarning
                 >
                   <option value="黄金">黄金</option>
@@ -4068,16 +4068,16 @@ export default function QuotePage() {
           {/* 当前产品列表 */}
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">
+              <h2 className="text-xl font-semibold text-black">
                 当前产品列表 - {currentCategory}{currentSubCategory ? ` / ${currentSubCategory}` : ''}
               </h2>
               {products.filter(p => p.category === currentCategory).length > 0 && (
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-900 font-medium">导出范围:</label>
+                  <label className="text-sm text-black font-medium">导出范围:</label>
                   <select
                     value={exportScope}
                     onChange={(e) => setExportScope(e.target.value as "current" | "all")}
-                    className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
+                    className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                     suppressHydrationWarning
                   >
                     <option value="current">当前分类</option>
@@ -4102,13 +4102,13 @@ export default function QuotePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="输入关键词搜索..."
-                  className="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                  className="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                   suppressHydrationWarning
                 />
                 <select
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value as "name" | "specification" | "supplierCode" | "karat" | "shape" | "all")}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                   suppressHydrationWarning
                 >
                   <option value="all">全部</option>
@@ -4121,7 +4121,7 @@ export default function QuotePage() {
                 <select
                   value={searchScope}
                   onChange={(e) => setSearchScope(e.target.value as "current" | "all")}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                   suppressHydrationWarning
                 >
                   <option value="current">当前分类</option>
@@ -4134,7 +4134,7 @@ export default function QuotePage() {
                     setSearchQuery("");
                     setSearchType("all");
                   }}
-                  className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 text-sm"
+                  className="rounded bg-gray-200 px-4 py-2 text-black hover:bg-gray-300 text-sm"
                   suppressHydrationWarning
                 >
                   清除搜索
@@ -4148,7 +4148,7 @@ export default function QuotePage() {
               style={{ maxWidth: '70%' }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-700">↔️ 横向滚动</span>
+                <span className="text-xs font-medium text-black">↔️ 横向滚动</span>
                 <button 
                   onClick={() => {
                     const scrollBar = scrollBarRef.current;
@@ -4172,7 +4172,7 @@ export default function QuotePage() {
               >
                 <div id="scrollBarContent" style={{ width: '20000px', height: '20px' }}></div>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-black mt-1">
                 表格宽度: <span id="tableWidthInfo">--</span> px | 滚动条宽度: <span id="scrollBarWidthInfo">--</span> px
               </div>
             </div>
@@ -4189,7 +4189,7 @@ export default function QuotePage() {
               >
                 <thead className="bg-gray-100 sticky top-0 z-10" style={{ position: 'sticky' }}>
                   <tr>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12 bg-gray-100">
+                    <th className="border border-gray-200 px-3 py-2 text-center text-black w-12 bg-gray-100">
                       <input
                         type="checkbox"
                         checked={(() => {
@@ -4277,25 +4277,25 @@ export default function QuotePage() {
                         suppressHydrationWarning
                       />
                     </th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">货号</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">名称</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">成色</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">颜色</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">规格</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">形状</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">重量</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">工费</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">配件</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">石头</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">电镀</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">模具</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">佣金</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">供应商</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">下单口</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">金价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">零售价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">批发价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 bg-gray-100">操作</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">颜色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">规格</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">形状</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">重量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">配件</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">石头</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">电镀</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">模具</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">佣金</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">供应商</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">下单口</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">金价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">零售价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">批发价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-black bg-gray-100">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4407,7 +4407,7 @@ export default function QuotePage() {
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
-                        <div className="mt-1 text-xs text-gray-900">
+                        <div className="mt-1 text-xs text-black">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
@@ -4416,7 +4416,7 @@ export default function QuotePage() {
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
-                        <div className="mt-1 text-xs text-gray-900">
+                        <div className="mt-1 text-xs text-black">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
@@ -4433,7 +4433,7 @@ export default function QuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                      <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-black">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
@@ -4447,7 +4447,7 @@ export default function QuotePage() {
         {/* 历史记录 */}
         <div className="mt-6 rounded-lg bg-white p-6 shadow">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h2 className="text-xl font-semibold text-black">
               价格历史记录 - {currentCategory}
             </h2>
           </div>
@@ -4455,17 +4455,17 @@ export default function QuotePage() {
             <table className="w-full border-collapse border border-gray-200 text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">时间</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">形状</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">市场金价（人民币/克）</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
-                  <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">下单口</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">时间</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">名称</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">成色</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">颜色</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">形状</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-black">重量</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-black">市场金价（人民币/克）</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">下单口</th>
                 </tr>
               </thead>
               <tbody>
@@ -4503,7 +4503,7 @@ export default function QuotePage() {
                   <tr>
                     <td
                       colSpan={10}
-                      className="border border-gray-200 px-3 py-4 text-center text-gray-500"
+                      className="border border-gray-200 px-3 py-4 text-center text-black"
                     >
                       暂无{currentCategory}历史记录
                     </td>
@@ -4519,13 +4519,13 @@ export default function QuotePage() {
       {showBatchUpdateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量更新供应商代码</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <h2 className="text-xl font-semibold text-black mb-4">批量更新供应商代码</h2>
+            <p className="text-sm text-black mb-4">
               为当前分类（{currentCategory}）的产品批量设置供应商代码。按照货号范围进行更新。
             </p>
 
             <div className="space-y-3 mb-4">
-              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
+              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-black bg-gray-100 p-2 rounded">
                 <div className="col-span-8">货号列表（用逗号分隔）</div>
                 <div className="col-span-3">供应商代码</div>
                 <div className="col-span-1">操作</div>
@@ -4541,7 +4541,7 @@ export default function QuotePage() {
                         newRules[index].productCodes = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900 resize-none"
+                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-black resize-none"
                       placeholder="KEW001,KEW002,KEW003"
                       rows={2}
                       suppressHydrationWarning
@@ -4556,7 +4556,7 @@ export default function QuotePage() {
                         newRules[index].supplierCode = e.target.value;
                         setBatchUpdateRules(newRules);
                       }}
-                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-black"
                       placeholder="J5"
                       suppressHydrationWarning
                     />
@@ -4609,13 +4609,13 @@ export default function QuotePage() {
       {showBatchUpdateChannelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量修改下单口</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <h2 className="text-xl font-semibold text-black mb-4">批量修改下单口</h2>
+            <p className="text-sm text-black mb-4">
               为当前分类（{currentCategory}）的产品批量设置下单口。按照货号范围进行更新。
             </p>
 
             <div className="space-y-3 mb-4">
-              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-gray-900 bg-gray-100 p-2 rounded">
+              <div className="grid grid-cols-12 gap-3 text-sm font-medium text-black bg-gray-100 p-2 rounded">
                 <div className="col-span-8">货号列表（用逗号分隔）</div>
                 <div className="col-span-3">下单口</div>
                 <div className="col-span-1">操作</div>
@@ -4631,7 +4631,7 @@ export default function QuotePage() {
                         newRules[index].productCodes = e.target.value;
                         setBatchUpdateChannelRules(newRules);
                       }}
-                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900 resize-none"
+                      className="w-full min-w-[200px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-black resize-none"
                       placeholder="KEW001,KEW002,KEW003"
                       rows={2}
                       suppressHydrationWarning
@@ -4645,7 +4645,7 @@ export default function QuotePage() {
                         newRules[index].orderChannel = e.target.value as OrderChannel | "";
                         setBatchUpdateChannelRules(newRules);
                       }}
-                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-gray-900"
+                      className="w-full min-w-[80px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none text-black"
                       suppressHydrationWarning
                     >
                       <option value="">请选择</option>
@@ -4702,16 +4702,16 @@ export default function QuotePage() {
       {showBatchModifyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量修改价格系数</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <h2 className="text-xl font-semibold text-black mb-4">批量修改价格系数</h2>
+            <p className="text-sm text-black mb-4">
               批量修改符合条件的产品的价格系数和成本。修改后将自动重新计算价格。
             </p>
 
             {/* 修改范围 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">修改范围</label>
+              <label className="block text-sm font-medium text-black mb-2">修改范围</label>
               <div className="flex gap-4">
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="radio"
                     name="scope"
@@ -4722,7 +4722,7 @@ export default function QuotePage() {
                   />
                   当前分类（{currentCategory}）
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="radio"
                     name="scope"
@@ -4738,9 +4738,9 @@ export default function QuotePage() {
 
             {/* 选择要修改的字段 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">选择要修改的字段</label>
+              <label className="block text-sm font-medium text-black mb-2">选择要修改的字段</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.laborCost}
@@ -4750,7 +4750,7 @@ export default function QuotePage() {
                   />
                   工费
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.accessoryCost}
@@ -4760,7 +4760,7 @@ export default function QuotePage() {
                   />
                   配件成本
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.stoneCost}
@@ -4770,7 +4770,7 @@ export default function QuotePage() {
                   />
                   石头成本
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.platingCost}
@@ -4780,7 +4780,7 @@ export default function QuotePage() {
                   />
                   电镀成本
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.moldCost}
@@ -4790,7 +4790,7 @@ export default function QuotePage() {
                   />
                   模具成本
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.commission}
@@ -4800,7 +4800,7 @@ export default function QuotePage() {
                   />
                   佣金率
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.weight}
@@ -4810,7 +4810,7 @@ export default function QuotePage() {
                   />
                   重量
                 </label>
-                <label className="flex items-center text-gray-900">
+                <label className="flex items-center text-black">
                   <input
                     type="checkbox"
                     checked={batchModifyConfig.fields.goldPrice}
@@ -4825,11 +4825,11 @@ export default function QuotePage() {
 
             {/* 新值输入 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">输入新值（人民币）</label>
+              <label className="block text-sm font-medium text-black mb-2">输入新值（人民币）</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {batchModifyConfig.fields.laborCost && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">工费</label>
+                    <label className="block text-xs text-black mb-1">工费</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.laborCost}
@@ -4842,7 +4842,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.accessoryCost && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">配件成本</label>
+                    <label className="block text-xs text-black mb-1">配件成本</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.accessoryCost}
@@ -4855,7 +4855,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.stoneCost && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">石头成本</label>
+                    <label className="block text-xs text-black mb-1">石头成本</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.stoneCost}
@@ -4868,7 +4868,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.platingCost && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">电镀成本</label>
+                    <label className="block text-xs text-black mb-1">电镀成本</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.platingCost}
@@ -4881,7 +4881,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.moldCost && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">模具成本</label>
+                    <label className="block text-xs text-black mb-1">模具成本</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.moldCost}
@@ -4894,7 +4894,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.commission && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">佣金率（%）</label>
+                    <label className="block text-xs text-black mb-1">佣金率（%）</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.commission}
@@ -4907,7 +4907,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.weight && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">重量（克）</label>
+                    <label className="block text-xs text-black mb-1">重量（克）</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.weight}
@@ -4920,7 +4920,7 @@ export default function QuotePage() {
                 )}
                 {batchModifyConfig.fields.goldPrice && (
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">市场金价（元/克）</label>
+                    <label className="block text-xs text-black mb-1">市场金价（元/克）</label>
                     <input
                       type="number"
                       value={batchModifyConfig.newValues.goldPrice}
@@ -4936,10 +4936,10 @@ export default function QuotePage() {
 
             {/* 筛选条件 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">筛选条件（留空表示不筛选）</label>
+              <label className="block text-sm font-medium text-black mb-2">筛选条件（留空表示不筛选）</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">产品名称</label>
+                  <label className="block text-xs text-black mb-1">产品名称</label>
                   <input
                     type="text"
                     value={batchModifyConfig.filters.productName}
@@ -4950,7 +4950,7 @@ export default function QuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">货号</label>
+                  <label className="block text-xs text-black mb-1">货号</label>
                   <input
                     type="text"
                     value={batchModifyConfig.filters.productCode}
@@ -4961,7 +4961,7 @@ export default function QuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">供应商代码</label>
+                  <label className="block text-xs text-black mb-1">供应商代码</label>
                   <input
                     type="text"
                     value={batchModifyConfig.filters.supplierCode}
@@ -4972,7 +4972,7 @@ export default function QuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">形状</label>
+                  <label className="block text-xs text-black mb-1">形状</label>
                   <select
                     value={batchModifyConfig.filters.shape}
                     onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, shape: e.target.value}})}
@@ -4986,7 +4986,7 @@ export default function QuotePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">K金含量</label>
+                  <label className="block text-xs text-black mb-1">K金含量</label>
                   <select
                     value={batchModifyConfig.filters.karat}
                     onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, karat: e.target.value}})}
