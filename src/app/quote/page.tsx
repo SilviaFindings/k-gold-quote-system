@@ -1166,13 +1166,12 @@ export default function QuotePage() {
     existingProducts: Product[],
     modificationType: 'coefficient' | 'specification'
   ): string => {
-    // 获取同一基础货号的所有产品（包括已有副号的产品）
-    const sameCodeProducts = existingProducts.filter(p =>
-      p.productCode === baseCode || p.productCode.startsWith(baseCode + '-')
-    );
-
     if (modificationType === 'coefficient') {
-      // DU系列：查找最大的DU编号
+      // DU系列：基于基础货号生成，查找最大的DU编号
+      const sameCodeProducts = existingProducts.filter(p =>
+        p.productCode === baseCode || p.productCode.startsWith(baseCode + '-')
+      );
+
       const duProducts = sameCodeProducts.filter(p =>
         /-DU\d+$/.test(p.productCode)
       );
@@ -1188,10 +1187,19 @@ export default function QuotePage() {
 
       return `${baseCode}-DU${nextDuNumber}`;
     } else {
-      // 字母系列：查找最大的字母
-      const letterProducts = sameCodeProducts.filter(p =>
-        /-[A-Z]$/.test(p.productCode)
+      // 字母系列：基于当前货号生成，查找当前货号的最大字母
+      // 查找所有以 baseCode 开头，且以 -[A-Z] 结尾的产品
+      const sameCodeProducts = existingProducts.filter(p =>
+        p.productCode.startsWith(baseCode)
       );
+
+      // 查找当前货号的所有字母副号
+      const letterProducts = sameCodeProducts.filter(p => {
+        const suffix = p.productCode.slice(baseCode.length);
+        // 匹配以 -[A-Z] 结尾的情况
+        // 但要排除 -DU\d+[A-Z] 这种情况（虽然不应该存在）
+        return /^-[A-Z]$/.test(suffix);
+      });
 
       let nextLetter = 'A';
       if (letterProducts.length > 0) {
@@ -1330,11 +1338,18 @@ export default function QuotePage() {
       modificationType = detectModificationType(latestProduct, currentProduct);
 
       // 根据修改类型生成副号
-      if (modificationType === 'coefficient' || modificationType === 'specification') {
-        // 修改特殊系数或规格：基于基础货号生成新副号
+      if (modificationType === 'coefficient') {
+        // 修改特殊系数：基于基础货号生成 DU 副号
         const baseCode = extractBaseCode(currentProduct.productCode!);
         finalProductCode = generateSubCode(
           baseCode,
+          products,
+          modificationType
+        );
+      } else if (modificationType === 'specification') {
+        // 修改规格：基于当前货号生成字母副号（不提取基础货号）
+        finalProductCode = generateSubCode(
+          currentProduct.productCode!,
           products,
           modificationType
         );
