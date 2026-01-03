@@ -351,6 +351,12 @@ export default function QuotePage() {
     return new Date(timestamp).toLocaleDateString("zh-CN");
   };
 
+  // 判断产品是否被修改过（通过历史记录数量判断）
+  const isProductModified = (productId: string): boolean => {
+    const historyCount = priceHistory.filter(h => h.productId === productId).length;
+    return historyCount > 1;
+  };
+
   // 从货号智能识别K金材质类型
   const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" } => {
     const code = productCode.toUpperCase();
@@ -1376,6 +1382,8 @@ export default function QuotePage() {
       // 动态添加每次修改的数据（最新版本在前）
       records.forEach((record, index) => {
         const version = index + 1;
+        const isModified = index < records.length - 1; // 不是最后一条（最早的）就是修改过的
+
         row[`第${version}次更新时间`] = formatDate(record.timestamp);
         row[`第${version}次重量`] = record.weight;
         row[`第${version}次金价`] = `¥${record.goldPrice.toFixed(2)}`;
@@ -1386,8 +1394,10 @@ export default function QuotePage() {
         row[`第${version}次模具`] = `¥${(record.moldCost || 0).toFixed(2)}\n${formatDate(record.moldCostDate || record.timestamp)}`;
         row[`第${version}次佣金`] = `${(record.commission || 0).toFixed(2)}%\n${formatDate(record.commissionDate || record.timestamp)}`;
         row[`第${version}次下单口`] = record.orderChannel ? (ORDER_CHANNELS.find(d => d.code === record.orderChannel)?.code || record.orderChannel) : "";
-        row[`第${version}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
-        row[`第${version}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
+
+        // 价格：修改过的用★标记，未修改的不标记
+        row[`第${version}次零售价`] = isModified ? `★ CAD$${record.retailPrice.toFixed(2)}` : `CAD$${record.retailPrice.toFixed(2)}`;
+        row[`第${version}次批发价`] = isModified ? `★ CAD$${record.wholesalePrice.toFixed(2)}` : `CAD$${record.wholesalePrice.toFixed(2)}`;
       });
 
       rows.push(row);
@@ -3400,7 +3410,8 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-red-600">
+                        <div className={`font-medium ${isProductModified(product.id) ? 'text-red-600' : 'text-green-600'}`}>
+                          {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
@@ -3408,7 +3419,8 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-red-600">
+                        <div className={`font-medium ${isProductModified(product.id) ? 'text-red-600' : 'text-blue-600'}`}>
+                          {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
