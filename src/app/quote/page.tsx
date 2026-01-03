@@ -1450,21 +1450,14 @@ export default function QuotePage() {
         minWidth = 12;
         maxWidth = 16;
       } else if (header === "工费" || header === "配件" || header === "石头" || header === "电镀" || header === "模具" || header === "佣金") {
-        // 成本列：价格 + 日期，需要两行显示
-        minWidth = 10;
-        maxWidth = 18;
+        // 成本列：价格（约8字符）+ 日期（约8-10字符），两行显示
+        minWidth = 8;
+        maxWidth = 12;
       }
 
       // 计算最终宽度：在最小和最大之间，取内容需要的宽度
       // 添加一点余量（1-2个字符），避免太紧
       let width = Math.min(Math.max(maxLineLength + 1, minWidth), maxWidth);
-
-      // 对于包含日期的列，确保能显示完整的日期时间格式
-      if (["工费", "配件", "石头", "电镀", "模具", "佣金"].includes(header)) {
-        // 日期格式类似 "2025/1/15 14:30:45" 约19个字符
-        const dateLength = 19;
-        width = Math.min(Math.max(Math.max(maxLineLength + 1, dateLength), minWidth), maxWidth);
-      }
 
       return width;
     };
