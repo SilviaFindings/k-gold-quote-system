@@ -150,6 +150,48 @@ interface Product {
   supplierCode: string;         // 供应商代码
   orderChannel: OrderChannel | "";  // 下单口
   shape: ProductShape;          // 形状
+  // 特殊系数（可选，如果设置则优先使用）
+  specialMaterialLoss?: number;      // 特殊材料损耗系数
+  specialMaterialCost?: number;      // 特殊材料浮动系数
+  specialProfitMargin?: number;     // 特殊关税系数
+  // 成本时间戳
+  laborCostDate: string;        // 工费更新时间
+  accessoryCostDate: string;    // 配件成本更新时间
+  stoneCostDate: string;        // 石头成本更新时间
+  platingCostDate: string;      // 电镀成本更新时间
+  moldCostDate: string;         // 模具成本更新时间
+  commissionDate: string;       // 佣金更新时间
+  timestamp: string;
+}
+
+// 历史记录类型
+interface PriceHistory {
+  id: string;
+  productId: string;
+  category: ProductCategory | "";  // 允许空字符串（兼容旧数据）
+  subCategory: string;  // 子分类
+  productCode: string;
+  productName: string;
+  specification: string;
+  weight: number;
+  laborCost: number;
+  karat: "10K" | "14K" | "18K";
+  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  goldPrice: number;
+  wholesalePrice: number;
+  retailPrice: number;
+  accessoryCost: number;        // 配件成本
+  stoneCost: number;            // 石头成本
+  platingCost: number;          // 电镀成本
+  moldCost: number;             // 模具成本
+  commission: number;            // 佣金
+  supplierCode: string;         // 供应商代码
+  orderChannel: OrderChannel | "";  // 下单口
+  shape: ProductShape;          // 形状
+  // 特殊系数（可选，如果设置则优先使用）
+  specialMaterialLoss?: number;      // 特殊材料损耗系数
+  specialMaterialCost?: number;      // 特殊材料浮动系数
+  specialProfitMargin?: number;     // 特殊关税系数
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -276,6 +318,10 @@ export default function QuotePage() {
     supplierCode: "K14",
     orderChannel: "Van",
     shape: "",
+    // 特殊系数（可选，默认为空表示使用全局固定系数）
+    specialMaterialLoss: undefined,
+    specialMaterialCost: undefined,
+    specialProfitMargin: undefined,
   });
 
   // 导入Excel相关状态
@@ -380,6 +426,10 @@ export default function QuotePage() {
     materialCost: number;
     profitMargin: number;
     exchangeRate: number;
+    // 系数模式：fixed（固定）或 special（特殊）
+    materialLossMode: "fixed" | "special";
+    materialCostMode: "fixed" | "special";
+    profitMarginMode: "fixed" | "special";
   }>(() => {
     if (typeof window === 'undefined') {
       return {
@@ -392,6 +442,9 @@ export default function QuotePage() {
         materialCost: 1.1,
         profitMargin: 1.25,
         exchangeRate: 5,
+        materialLossMode: "fixed",
+        materialCostMode: "fixed",
+        profitMarginMode: "fixed",
       };
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
@@ -408,6 +461,9 @@ export default function QuotePage() {
         materialCost: parsed.materialCost ?? 1.1,
         profitMargin: parsed.profitMargin ?? 1.25,
         exchangeRate: parsed.exchangeRate ?? 5,
+        materialLossMode: parsed.materialLossMode ?? "fixed",
+        materialCostMode: parsed.materialCostMode ?? "fixed",
+        profitMarginMode: parsed.profitMarginMode ?? "fixed",
       };
     }
     return {
@@ -420,6 +476,9 @@ export default function QuotePage() {
       materialCost: 1.1,
       profitMargin: 1.25,
       exchangeRate: 5,
+      materialLossMode: "fixed",
+      materialCostMode: "fixed",
+      profitMarginMode: "fixed",
     };
   });
 
@@ -734,6 +793,9 @@ export default function QuotePage() {
           materialCost: coeff.materialCost ?? 1.1,
           profitMargin: coeff.profitMargin ?? 1.25,
           exchangeRate: coeff.exchangeRate ?? 5,
+          materialLossMode: coeff.materialLossMode ?? "fixed",
+          materialCostMode: coeff.materialCostMode ?? "fixed",
+          profitMarginMode: coeff.profitMarginMode ?? "fixed",
         };
         console.log("设置系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -932,6 +994,9 @@ export default function QuotePage() {
           materialCost: coeff.materialCost ?? 1.1,
           profitMargin: coeff.profitMargin ?? 1.25,
           exchangeRate: coeff.exchangeRate ?? 5,
+          materialLossMode: coeff.materialLossMode ?? "fixed",
+          materialCostMode: coeff.materialCostMode ?? "fixed",
+          profitMarginMode: coeff.profitMarginMode ?? "fixed",
         };
         console.log("✅ 加载系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1024,7 +1089,11 @@ export default function QuotePage() {
     stoneCost: number = 0,
     platingCost: number = 0,
     moldCost: number = 0,
-    commission: number = 0
+    commission: number = 0,
+    // 特殊系数（可选，如果提供则优先使用）
+    specialMaterialLoss?: number,
+    specialMaterialCost?: number,
+    specialProfitMargin?: number
   ): number => {
     let goldFactor: number;
     if (karat === "10K") {
@@ -1037,9 +1106,14 @@ export default function QuotePage() {
 
     const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
 
+    // 确定使用的系数：优先使用特殊系数，否则使用全局固定系数
+    const materialLoss = specialMaterialLoss !== undefined ? specialMaterialLoss : coefficients.materialLoss;
+    const materialCost = specialMaterialCost !== undefined ? specialMaterialCost : coefficients.materialCost;
+    const profitMargin = specialProfitMargin !== undefined ? specialProfitMargin : coefficients.profitMargin;
+
     // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料浮动系数 / 汇率
     const materialPrice =
-      marketGoldPrice * goldFactor * weight * coefficients.materialLoss * coefficients.materialCost / coefficients.exchangeRate;
+      marketGoldPrice * goldFactor * weight * materialLoss * materialCost / coefficients.exchangeRate;
 
     // 工费 = 人工成本 x 系数 / 汇率
     const laborPrice = laborCost * laborFactor / coefficients.exchangeRate;
@@ -1049,7 +1123,7 @@ export default function QuotePage() {
 
     // 总价 = (材料价 + 工费 + 其它成本) x (1 + 佣金率/100) x 国际运输和关税系数
     const basePrice = materialPrice + laborPrice + otherCosts;
-    const totalPrice = basePrice * (1 + commission / 100) * coefficients.profitMargin;
+    const totalPrice = basePrice * (1 + commission / 100) * profitMargin;
 
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
@@ -1071,7 +1145,10 @@ export default function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
-      currentProduct.commission || 0
+      currentProduct.commission || 0,
+      currentProduct.specialMaterialLoss,
+      currentProduct.specialMaterialCost,
+      currentProduct.specialProfitMargin
     );
 
     const retailPrice = calculatePrice(
@@ -1084,7 +1161,10 @@ export default function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
-      currentProduct.commission || 0
+      currentProduct.commission || 0,
+      currentProduct.specialMaterialLoss,
+      currentProduct.specialMaterialCost,
+      currentProduct.specialProfitMargin
     );
 
     const newProduct: Product = {
@@ -1109,6 +1189,10 @@ export default function QuotePage() {
       supplierCode: currentProduct.supplierCode || "K14",
       orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
+      // 特殊系数（可选）
+      specialMaterialLoss: currentProduct.specialMaterialLoss,
+      specialMaterialCost: currentProduct.specialMaterialCost,
+      specialProfitMargin: currentProduct.specialProfitMargin,
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -1204,7 +1288,10 @@ export default function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
-        product.commission || 0
+        product.commission || 0,
+        product.specialMaterialLoss,
+        product.specialMaterialCost,
+        product.specialProfitMargin
       );
 
       const newRetailPrice = calculatePrice(
@@ -1217,7 +1304,10 @@ export default function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
-        product.commission || 0
+        product.commission || 0,
+        product.specialMaterialLoss,
+        product.specialMaterialCost,
+        product.specialProfitMargin
       );
 
       // 创建新的产品记录
@@ -1243,6 +1333,10 @@ export default function QuotePage() {
         supplierCode: product.supplierCode || "",
         orderChannel: product.orderChannel || "",
         shape: product.shape || "",
+        // 特殊系数（继承旧记录）
+        specialMaterialLoss: product.specialMaterialLoss,
+        specialMaterialCost: product.specialMaterialCost,
+        specialProfitMargin: product.specialProfitMargin,
         // 成本时间戳（从旧记录继承或使用当前时间）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -1499,7 +1593,10 @@ export default function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
-        updatedProduct.commission
+        updatedProduct.commission,
+        updatedProduct.specialMaterialLoss,
+        updatedProduct.specialMaterialCost,
+        updatedProduct.specialProfitMargin
       );
 
       updatedProduct.retailPrice = calculatePrice(
@@ -1512,7 +1609,10 @@ export default function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
-        updatedProduct.commission
+        updatedProduct.commission,
+        updatedProduct.specialMaterialLoss,
+        updatedProduct.specialMaterialCost,
+        updatedProduct.specialProfitMargin
       );
 
       updatedProduct.timestamp = new Date().toLocaleString("zh-CN");
@@ -1541,6 +1641,10 @@ export default function QuotePage() {
         supplierCode: updatedProduct.supplierCode,
         orderChannel: updatedProduct.orderChannel,
         shape: updatedProduct.shape,
+        // 特殊系数
+        specialMaterialLoss: updatedProduct.specialMaterialLoss,
+        specialMaterialCost: updatedProduct.specialMaterialCost,
+        specialProfitMargin: updatedProduct.specialProfitMargin,
         laborCostDate: updatedProduct.laborCostDate,
         accessoryCostDate: updatedProduct.accessoryCostDate,
         stoneCostDate: updatedProduct.stoneCostDate,
@@ -3259,9 +3363,20 @@ export default function QuotePage() {
 
             {/* 材料系数 */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                材料损耗系数
-              </label>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-900">
+                  材料损耗系数
+                </label>
+                <select
+                  value={coefficients.materialLossMode}
+                  onChange={(e) => setCoefficients({...coefficients, materialLossMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
               <input
                 type="number"
                 value={coefficients.materialLoss}
@@ -3270,12 +3385,23 @@ export default function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.15</div>
+              <div className="mt-1 text-xs text-gray-500">默认: 1.15 {coefficients.materialLossMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                材料浮动系数
-              </label>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="mb-2 block text-sm font-medium text-gray-900">
+                  材料浮动系数
+                </label>
+                <select
+                  value={coefficients.materialCostMode}
+                  onChange={(e) => setCoefficients({...coefficients, materialCostMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
               <input
                 type="number"
                 value={coefficients.materialCost}
@@ -3284,14 +3410,25 @@ export default function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.1</div>
+              <div className="mt-1 text-xs text-gray-500">默认: 1.1 {coefficients.materialCostMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
 
             {/* 利润和汇率 */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                国际运输及关税系数
-              </label>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="mb-2 block text-sm font-medium text-gray-900">
+                  国际运输及关税系数
+                </label>
+                <select
+                  value={coefficients.profitMarginMode}
+                  onChange={(e) => setCoefficients({...coefficients, profitMarginMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
               <input
                 type="number"
                 value={coefficients.profitMargin}
@@ -3300,7 +3437,7 @@ export default function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 1.25</div>
+              <div className="mt-1 text-xs text-gray-500">默认: 1.25 {coefficients.profitMarginMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-900">
@@ -3429,6 +3566,77 @@ export default function QuotePage() {
                     className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
                     suppressHydrationWarning
                   />
+                </div>
+              </div>
+
+              {/* 特殊系数设置（可选） */}
+              <div className="rounded-lg border-2 border-gray-200 p-4">
+                <div className="mb-3">
+                  <label className="block text-sm font-semibold text-gray-900">
+                    特殊系数设置（可选，留空则使用全局固定系数）
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    为此产品单独设置不同的系数，覆盖全局固定系数
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                      特殊材料损耗系数
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialMaterialLoss ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialMaterialLoss: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      step="0.01"
+                      placeholder={`默认: ${coefficients.materialLoss}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                      特殊材料浮动系数
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialMaterialCost ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialMaterialCost: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      step="0.01"
+                      placeholder={`默认: ${coefficients.materialCost}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-900">
+                      特殊关税系数
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialProfitMargin ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialProfitMargin: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                      step="0.01"
+                      placeholder={`默认: ${coefficients.profitMargin}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
                 </div>
               </div>
 
