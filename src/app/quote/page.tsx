@@ -1154,6 +1154,85 @@ export default function QuotePage() {
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
 
+  // 副号生成函数
+  const generateSubCode = (
+    baseCode: string,
+    existingProducts: Product[],
+    modificationType: 'coefficient' | 'specification'
+  ): string => {
+    // 获取同一基础货号的所有产品（包括已有副号的产品）
+    const sameCodeProducts = existingProducts.filter(p =>
+      p.productCode === baseCode || p.productCode.startsWith(baseCode + '-')
+    );
+
+    if (modificationType === 'coefficient') {
+      // DU系列：查找最大的DU编号
+      const duProducts = sameCodeProducts.filter(p =>
+        /-DU\d+$/.test(p.productCode)
+      );
+
+      let nextDuNumber = 1;
+      if (duProducts.length > 0) {
+        const duNumbers = duProducts.map(p => {
+          const match = p.productCode.match(/-DU(\d+)$/);
+          return match ? parseInt(match[1]) : 0;
+        });
+        nextDuNumber = Math.max(...duNumbers) + 1;
+      }
+
+      return `${baseCode}-DU${nextDuNumber}`;
+    } else {
+      // 字母系列：查找最大的字母
+      const letterProducts = sameCodeProducts.filter(p =>
+        /-[A-Z]$/.test(p.productCode)
+      );
+
+      let nextLetter = 'A';
+      if (letterProducts.length > 0) {
+        const letters = letterProducts.map(p => {
+          const match = p.productCode.match(/-([A-Z])$/);
+          return match ? match[1].charCodeAt(0) : 64; // 64 = '@'
+        });
+        const maxCharCode = Math.max(...letters);
+        nextLetter = String.fromCharCode(maxCharCode + 1);
+      }
+
+      return `${baseCode}-${nextLetter}`;
+    }
+  };
+
+  // 检测产品修改类型
+  const detectModificationType = (
+    oldProduct: Product,
+    newProduct: Partial<Product>
+  ): 'coefficient' | 'specification' | 'none' => {
+    // 检查系数是否被修改
+    const coefficientsChanged =
+      (newProduct.specialMaterialLoss !== undefined &&
+       newProduct.specialMaterialLoss !== oldProduct.specialMaterialLoss) ||
+      (newProduct.specialMaterialCost !== undefined &&
+       newProduct.specialMaterialCost !== oldProduct.specialMaterialCost) ||
+      (newProduct.specialProfitMargin !== undefined &&
+       newProduct.specialProfitMargin !== oldProduct.specialProfitMargin) ||
+      (newProduct.specialLaborFactorRetail !== undefined &&
+       newProduct.specialLaborFactorRetail !== oldProduct.specialLaborFactorRetail) ||
+      (newProduct.specialLaborFactorWholesale !== undefined &&
+       newProduct.specialLaborFactorWholesale !== oldProduct.specialLaborFactorWholesale);
+
+    // 检查规格是否被修改
+    const specificationChanged =
+      newProduct.specification !== undefined &&
+      newProduct.specification !== oldProduct.specification;
+
+    if (coefficientsChanged) {
+      return 'coefficient';
+    } else if (specificationChanged) {
+      return 'specification';
+    } else {
+      return 'none';
+    }
+  };
+
   // 添加/更新产品（覆盖模式：每个货号只保留最新一条记录）
   const addProduct = () => {
     if (!currentProduct.productCode || !currentProduct.productName) {
@@ -1193,11 +1272,33 @@ export default function QuotePage() {
       currentProduct.specialProfitMargin
     );
 
+    // 判断是否为更新操作
+    const existingRecords = products.filter((p) => p.productCode === currentProduct.productCode);
+    const isUpdate = existingRecords.length > 0;
+
+    // 检测修改类型和生成副号
+    let finalProductCode = currentProduct.productCode!;
+    let modificationType: 'coefficient' | 'specification' | 'none' = 'none';
+
+    if (isUpdate) {
+      const latestProduct = existingRecords[existingRecords.length - 1];
+      modificationType = detectModificationType(latestProduct, currentProduct);
+
+      // 根据修改类型生成副号
+      if (modificationType === 'coefficient' || modificationType === 'specification') {
+        finalProductCode = generateSubCode(
+          currentProduct.productCode!,
+          products,
+          modificationType
+        );
+      }
+    }
+
     const newProduct: Product = {
       id: Date.now().toString(),
       category: currentCategory,
       subCategory: currentSubCategory, // 使用当前选中的子分类
-      productCode: currentProduct.productCode!,
+      productCode: finalProductCode, // 使用可能包含副号的货号
       productName: currentProduct.productName!,
       specification: currentProduct.specification || "",
       weight: currentProduct.weight || 0,
@@ -1229,12 +1330,9 @@ export default function QuotePage() {
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
-    // 判断是否为更新操作
-    const existingRecords = products.filter((p) => p.productCode === currentProduct.productCode);
-    const isUpdate = existingRecords.length > 0;
-
     // 删除该货号的所有旧记录，只保留新的
-    const filteredProducts = products.filter((p) => p.productCode !== currentProduct.productCode);
+    // 注意：如果生成了副号，不要删除原始货号的记录，而是添加新的副号记录
+    const filteredProducts = products.filter((p) => p.productCode !== currentProduct.productCode || modificationType === 'none');
     setProducts([...filteredProducts, newProduct]);
 
     // 添加到历史记录（保留所有历史）
@@ -1243,7 +1341,7 @@ export default function QuotePage() {
       productId: newProduct.id,
       category: currentCategory,
       subCategory: currentSubCategory,
-      productCode: newProduct.productCode,
+      productCode: finalProductCode, // 使用可能包含副号的货号
       productName: newProduct.productName,
       specification: newProduct.specification,
       weight: newProduct.weight,
@@ -1285,8 +1383,12 @@ export default function QuotePage() {
     });
 
     // 提示用户
-    if (isUpdate) {
-      alert(`产品 ${currentProduct.productCode} 更新成功！`);
+    if (modificationType === 'coefficient') {
+      alert(`系数已修改，生成副号：${finalProductCode}`);
+    } else if (modificationType === 'specification') {
+      alert(`规格已修改，生成副号：${finalProductCode}`);
+    } else if (isUpdate) {
+      alert(`产品 ${finalProductCode} 更新成功！`);
     } else {
       alert("新产品添加成功！");
     }
