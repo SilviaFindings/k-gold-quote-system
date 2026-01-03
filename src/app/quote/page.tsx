@@ -2394,17 +2394,17 @@ export default function QuotePage() {
                               }`}
                             >
                               {subCat}
-                              {subCount > 0 && (
-                                <span
-                                  className={`inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full ${
-                                    currentSubCategory === subCat
-                                      ? "bg-white text-blue-600"
-                                      : "bg-blue-600 text-white"
-                                  }`}
-                                >
-                                  {subCount}
-                                </span>
-                              )}
+                              <span
+                                className={`inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full ${
+                                  currentSubCategory === subCat
+                                    ? "bg-white text-blue-600"
+                                    : subCount > 0
+                                      ? "bg-blue-600 text-white"
+                                      : "bg-gray-300 text-gray-600"
+                                }`}
+                              >
+                                {subCount}
+                              </span>
                             </button>
                           );
                         })}
