@@ -1440,11 +1440,12 @@ export default function QuotePage() {
     for (let col = 0; col < headerRow.length; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
       if (ws[cellAddress]) {
-        ws[cellAddress].s = {
-          font: { bold: true, color: { rgb: "000000" } },
-          fill: { fgColor: { rgb: "E0E0E0" } },
+        // @ts-ignore
+        XLSXStyle.cellStyle(ws[cellAddress], {
+          font: { bold: true, color: { rgb: "FF000000" } },
+          fill: { fgColor: { rgb: "FFE0E0E0" } },
           alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        };
+        });
       }
     }
 
@@ -1453,9 +1454,10 @@ export default function QuotePage() {
       for (let col = 0; col < allColumns.length; col++) {
         const cellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: col });
         if (ws[cellAddress]) {
-          ws[cellAddress].s = {
+          // @ts-ignore
+          XLSXStyle.cellStyle(ws[cellAddress], {
             alignment: { horizontal: "left", vertical: "center", wrapText: true },
-          };
+          });
         }
       }
     });
@@ -1470,25 +1472,23 @@ export default function QuotePage() {
       // 零售价颜色
       const retailCellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: retailPriceColIndex });
       if (ws[retailCellAddress]) {
-        ws[retailCellAddress].s = {
-          font: {
-            bold: true,
-            color: { rgb: modified ? "FF0000" : "008000" }  // 修改过的红色，否则绿色
-          },
-          alignment: { horizontal: "right", vertical: "center" },
-        };
+        const retailColor = modified ? "FFFF0000" : "FF008000";  // 修改过的红色，否则绿色
+        // @ts-ignore
+        XLSXStyle.cellStyle(ws[retailCellAddress], {
+          font: { bold: true, color: { rgb: retailColor } },
+          alignment: { horizontal: "right", vertical: "center" }
+        });
       }
 
       // 批发价颜色
       const wholesaleCellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: wholesalePriceColIndex });
       if (ws[wholesaleCellAddress]) {
-        ws[wholesaleCellAddress].s = {
-          font: {
-            bold: true,
-            color: { rgb: modified ? "FF0000" : "0000FF" }  // 修改过的红色，否则蓝色
-          },
-          alignment: { horizontal: "right", vertical: "center" },
-        };
+        const wholesaleColor = modified ? "FFFF0000" : "FF0000FF";  // 修改过的红色，否则蓝色
+        // @ts-ignore
+        XLSXStyle.cellStyle(ws[wholesaleCellAddress], {
+          font: { bold: true, color: { rgb: wholesaleColor } },
+          alignment: { horizontal: "right", vertical: "center" }
+        });
       }
     });
 
