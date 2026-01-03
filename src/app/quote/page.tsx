@@ -138,7 +138,7 @@ export default function QuotePage() {
       target.scrollLeft = source.scrollLeft;
     }
   };
-  
+
   // 更新滚动条宽度以匹配表格
   const updateScrollBarWidth = () => {
     const table = tableContainerRef.current?.querySelector('table');
@@ -146,8 +146,8 @@ export default function QuotePage() {
     if (table && scrollBarContent && tableContainerRef.current) {
       const tableWidth = table.scrollWidth;
       const containerWidth = tableContainerRef.current.clientWidth;
-      // 确保滚动条宽度至少为表格宽度
-      const scrollBarWidth = Math.max(tableWidth + 500, containerWidth + 2000);
+      // 设置足够大的滚动条宽度，确保能滚动到所有列（至少20000px）
+      const scrollBarWidth = Math.max(tableWidth + 5000, containerWidth + 10000, 20000);
       (scrollBarContent as HTMLElement).style.width = `${scrollBarWidth}px`;
       console.log('更新滚动条宽度: tableWidth=', tableWidth, 'containerWidth=', containerWidth, 'scrollBarWidth=', scrollBarWidth);
     }
@@ -157,13 +157,13 @@ export default function QuotePage() {
   const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     syncScroll(target, scrollBarRef.current!);
-    
+
     // 动态更新滚动条宽度
     const table = target.querySelector('table');
     const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
     if (table && scrollBarContent) {
       const tableWidth = table.scrollWidth;
-      const scrollBarWidth = Math.max(tableWidth, target.clientWidth + 1000);
+      const scrollBarWidth = Math.max(tableWidth + 5000, target.clientWidth + 10000, 20000);
       (scrollBarContent as HTMLElement).style.width = `${scrollBarWidth}px`;
     }
   };
@@ -3144,7 +3144,7 @@ export default function QuotePage() {
                 style={{ overflowX: 'auto', overflowY: 'hidden', width: '100%' }}
                 onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
               >
-                <div id="scrollBarContent" style={{ width: '8000px', height: '20px' }}></div>
+                <div id="scrollBarContent" style={{ width: '20000px', height: '20px' }}></div>
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 表格宽度: <span id="tableWidthInfo">--</span> px | 滚动条宽度: <span id="scrollBarWidthInfo">--</span> px
