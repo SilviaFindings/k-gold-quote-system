@@ -1281,7 +1281,7 @@ export default function QuotePage() {
         // 添加下单口
         if (record.orderChannel) {
           const channel = ORDER_CHANNELS.find(d => d.code === record.orderChannel);
-          row[`第${suffix}次下单口`] = channel ? channel.name : record.orderChannel;
+          row[`第${suffix}次下单口`] = channel ? channel.code : record.orderChannel;
         } else {
           row[`第${suffix}次下单口`] = "";
         }
@@ -1877,16 +1877,15 @@ export default function QuotePage() {
                       suppressHydrationWarning
                     >
                       {ORDER_CHANNELS.map(channel => (
-                        <option key={channel.code} value={channel.code} style={{ color: "black" }}>{channel.name}</option>
+                        <option key={channel.code} value={channel.code} style={{ color: "black" }}>{channel.code}</option>
                       ))}
                     </select>
                     <button
                       onClick={() => {
                         const select = document.getElementById("batchOrderChannelSelect") as HTMLSelectElement;
                         const channelCode = select?.value || "Van";
-                        const channelName = ORDER_CHANNELS.find(c => c.code === channelCode)?.name || channelCode;
 
-                        if (!confirm(`确定将这 ${emptyOrderChannelCount} 个没有下单口的产品批量设置为 "${channelName}" 吗？`)) return;
+                        if (!confirm(`确定将这 ${emptyOrderChannelCount} 个没有下单口的产品批量设置为 "${channelCode}" 吗？`)) return;
 
                         const updatedProducts = products.map(p => {
                           if (!p.orderChannel || p.orderChannel === "") {
@@ -1904,7 +1903,7 @@ export default function QuotePage() {
 
                         setProducts(updatedProducts);
                         setPriceHistory(updatedHistory);
-                        alert(`✅ 成功将 ${emptyOrderChannelCount} 个产品和对应的历史记录设置为 "${channelName}" 下单口！`);
+                        alert(`✅ 成功将 ${emptyOrderChannelCount} 个产品和对应的历史记录设置为 "${channelCode}" 下单口！`);
                       }}
                       className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
                       suppressHydrationWarning
