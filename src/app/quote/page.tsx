@@ -540,19 +540,26 @@ export default function QuotePage() {
 
         // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
         const migratedProducts = parsedProducts.map((p: Product) => {
+          // 保存旧分类名称，用于后续映射子分类
+          const oldCategory = p.category as string;
+
           // 旧分类迁移逻辑
           let newCategory = p.category as any;
-          if ((p.category as any) === "水滴扣") {
+          if (oldCategory === "水滴扣") {
             newCategory = "扣子";  // 旧的迁移
-          } else if (CATEGORY_MAPPING[p.category as string]) {
-            newCategory = CATEGORY_MAPPING[p.category as string];  // 新的迁移（21分类 -> 3大类）
+          } else if (CATEGORY_MAPPING[oldCategory]) {
+            newCategory = CATEGORY_MAPPING[oldCategory];  // 新的迁移（21分类 -> 3大类）
           }
 
           return {
             ...p,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
-            subCategory: (p as any).subCategory || "",  // 添加子分类字段
+            // 如果产品没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
+            subCategory: (p as any).subCategory ||
+              (oldCategory && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(oldCategory)
+                ? oldCategory
+                : ""),
             accessoryCost: p.accessoryCost || 0,
             stoneCost: p.stoneCost || 0,
             platingCost: p.platingCost || 0,
@@ -586,18 +593,26 @@ export default function QuotePage() {
 
         // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
         const migratedHistory = parsedHistory.map((h: PriceHistory) => {
+          // 保存旧分类名称，用于后续映射子分类
+          const oldCategory = h.category as string;
+
           // 旧分类迁移逻辑
           let newCategory = h.category as any;
-          if ((h.category as any) === "水滴扣") {
+          if (oldCategory === "水滴扣") {
             newCategory = "扣子";  // 旧的迁移
-          } else if (CATEGORY_MAPPING[h.category as string]) {
-            newCategory = CATEGORY_MAPPING[h.category as string];  // 新的迁移（21分类 -> 3大类）
+          } else if (CATEGORY_MAPPING[oldCategory]) {
+            newCategory = CATEGORY_MAPPING[oldCategory];  // 新的迁移（21分类 -> 3大类）
           }
 
           return {
             ...h,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
+            // 如果历史记录没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
+            subCategory: (h as any).subCategory ||
+              (oldCategory && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(oldCategory)
+                ? oldCategory
+                : ""),
             accessoryCost: h.accessoryCost || 0,
             stoneCost: h.stoneCost || 0,
             platingCost: h.platingCost || 0,
@@ -720,7 +735,11 @@ export default function QuotePage() {
             ...p,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
-            subCategory: (p as any).subCategory || "",  // 添加子分类字段
+            // 如果产品没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
+            subCategory: (p as any).subCategory ||
+              (p.category as string && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(p.category as string)
+                ? p.category as string
+                : ""),
             accessoryCost: p.accessoryCost || 0,
             stoneCost: p.stoneCost || 0,
             platingCost: p.platingCost || 0,
@@ -767,6 +786,11 @@ export default function QuotePage() {
             ...h,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
+            // 如果历史记录没有subCategory，且旧分类名称在SUB_CATEGORIES中，则自动映射
+            subCategory: (h as any).subCategory ||
+              (h.category as string && SUB_CATEGORIES[newCategory as ProductCategory]?.includes(h.category as string)
+                ? h.category as string
+                : ""),
             accessoryCost: h.accessoryCost || 0,
             stoneCost: h.stoneCost || 0,
             platingCost: h.platingCost || 0,
