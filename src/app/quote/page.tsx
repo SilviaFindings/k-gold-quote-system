@@ -159,22 +159,22 @@ export default function QuotePage() {
     specification: "",
     weight: 0,
     laborCost: 0,
-    karat: "18K",
+    karat: "14K",
     goldColor: "黄金",
     accessoryCost: 0,
     stoneCost: 0,
     platingCost: 0,
     moldCost: 0,
     commission: 0,
-    supplierCode: "",
-    orderChannel: "",
+    supplierCode: "K14",
+    orderChannel: "Van",
     shape: "",
   });
 
   // 导入Excel相关状态
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
-  const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K">("18K");
+  const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K">("14K");
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
@@ -358,8 +358,8 @@ export default function QuotePage() {
       }
     }
 
-    // 默认返回 18K
-    return { karat: "18K", goldColor: "黄金" };
+    // 默认返回 14K
+    return { karat: "14K", goldColor: "黄金" };
   };
 
   // 根据货号查找产品（获取当前分类的最新记录）
@@ -766,7 +766,7 @@ export default function QuotePage() {
       goldPrice,
       currentProduct.weight || 0,
       currentProduct.laborCost || 0,
-      currentProduct.karat || "18K",
+      currentProduct.karat || "14K",
       false,
       currentProduct.accessoryCost || 0,
       currentProduct.stoneCost || 0,
@@ -779,7 +779,7 @@ export default function QuotePage() {
       goldPrice,
       currentProduct.weight || 0,
       currentProduct.laborCost || 0,
-      currentProduct.karat || "18K",
+      currentProduct.karat || "14K",
       true,
       currentProduct.accessoryCost || 0,
       currentProduct.stoneCost || 0,
@@ -796,7 +796,7 @@ export default function QuotePage() {
       specification: currentProduct.specification || "",
       weight: currentProduct.weight || 0,
       laborCost: currentProduct.laborCost || 0,
-      karat: currentProduct.karat || "18K",
+      karat: currentProduct.karat || "14K",
       goldColor: currentProduct.goldColor || "黄金",
       wholesalePrice,
       retailPrice,
@@ -806,8 +806,8 @@ export default function QuotePage() {
       platingCost: currentProduct.platingCost || 0,
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
-      supplierCode: currentProduct.supplierCode || "",
-      orderChannel: currentProduct.orderChannel || "",
+      supplierCode: currentProduct.supplierCode || "K14",
+      orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
@@ -847,8 +847,8 @@ export default function QuotePage() {
       platingCost: currentProduct.platingCost || 0,
       moldCost: currentProduct.moldCost || 0,
       commission: currentProduct.commission || 0,
-      supplierCode: currentProduct.supplierCode || "",
-      orderChannel: currentProduct.orderChannel || "",
+      supplierCode: currentProduct.supplierCode || "K14",
+      orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
@@ -869,7 +869,7 @@ export default function QuotePage() {
       specification: "",
       weight: 0,
       laborCost: 0,
-      karat: "18K",
+      karat: "14K",
       goldColor: "黄金",
     });
 
@@ -1484,8 +1484,15 @@ export default function QuotePage() {
           const platingCost = platingCostIndex !== -1 ? Number(row[platingCostIndex]) || 0 : 0;
           const moldCost = moldCostIndex !== -1 ? Number(row[moldCostIndex]) || 0 : 0;
           const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
-          const supplierCode = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) || "" : "";
-          const orderChannel = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) || "" : "";
+
+          // 供应商代码：Excel中有值就用Excel的，没有值就用默认值"K14"
+          const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) : "";
+          const supplierCode = supplierCodeRaw ? supplierCodeRaw : "K14";
+
+          // 下单口：Excel中有值就用Excel的，没有值就用默认值"Van"
+          const orderChannelRaw = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) : "";
+          const orderChannel = orderChannelRaw ? orderChannelRaw : "Van";
+
           const shape = shapeIndex !== -1 ? String(row[shapeIndex]) || "" : "";
 
           // 尝试将下单口映射到有效的代码
