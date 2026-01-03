@@ -1154,6 +1154,12 @@ export default function QuotePage() {
     return Math.round(totalPrice * 100) / 100; // 保留两位小数
   };
 
+  // 从货号中提取基础货号（去掉副号）
+  const extractBaseCode = (productCode: string): string => {
+    // 匹配 -DU\d+ 或 -[A-Z]$ 格式的副号，去掉这部分
+    return productCode.replace(/-DU\d+$|-[A-Z]$/, '');
+  };
+
   // 副号生成函数
   const generateSubCode = (
     baseCode: string,
@@ -1201,35 +1207,54 @@ export default function QuotePage() {
     }
   };
 
-  // 检测产品修改类型
+    // 检测产品修改类型
   const detectModificationType = (
     oldProduct: Product,
     newProduct: Partial<Product>
-  ): 'coefficient' | 'specification' | 'none' => {
-    // 检查系数是否被修改
+  ): 'coefficient' | 'specification' | 'none' | 'clear-coefficients' => {
+    // 旧产品的特殊系数集合
+    const oldSpecialCoefficients = {
+      specialMaterialLoss: oldProduct.specialMaterialLoss,
+      specialMaterialCost: oldProduct.specialMaterialCost,
+      specialProfitMargin: oldProduct.specialProfitMargin,
+      specialLaborFactorRetail: oldProduct.specialLaborFactorRetail,
+      specialLaborFactorWholesale: oldProduct.specialLaborFactorWholesale,
+    };
+
+    // 新产品的特殊系数集合（未提供则保持原值）
+    const newSpecialCoefficients = {
+      specialMaterialLoss: newProduct.specialMaterialLoss !== undefined ? newProduct.specialMaterialLoss : oldProduct.specialMaterialLoss,
+      specialMaterialCost: newProduct.specialMaterialCost !== undefined ? newProduct.specialMaterialCost : oldProduct.specialMaterialCost,
+      specialProfitMargin: newProduct.specialProfitMargin !== undefined ? newProduct.specialProfitMargin : oldProduct.specialProfitMargin,
+      specialLaborFactorRetail: newProduct.specialLaborFactorRetail !== undefined ? newProduct.specialLaborFactorRetail : oldProduct.specialLaborFactorRetail,
+      specialLaborFactorWholesale: newProduct.specialLaborFactorWholesale !== undefined ? newProduct.specialLaborFactorWholesale : oldProduct.specialLaborFactorWholesale,
+    };
+
+    // 检查旧产品是否有任何特殊系数
+    const hasOldSpecialCoefficients = Object.values(oldSpecialCoefficients).some(v => v !== undefined);
+    // 检查新产品是否有任何特殊系数
+    const hasNewSpecialCoefficients = Object.values(newSpecialCoefficients).some(v => v !== undefined);
+
+    // 检查特殊系数是否发生变化
     const coefficientsChanged =
-      (newProduct.specialMaterialLoss !== undefined &&
-       newProduct.specialMaterialLoss !== oldProduct.specialMaterialLoss) ||
-      (newProduct.specialMaterialCost !== undefined &&
-       newProduct.specialMaterialCost !== oldProduct.specialMaterialCost) ||
-      (newProduct.specialProfitMargin !== undefined &&
-       newProduct.specialProfitMargin !== oldProduct.specialProfitMargin) ||
-      (newProduct.specialLaborFactorRetail !== undefined &&
-       newProduct.specialLaborFactorRetail !== oldProduct.specialLaborFactorRetail) ||
-      (newProduct.specialLaborFactorWholesale !== undefined &&
-       newProduct.specialLaborFactorWholesale !== oldProduct.specialLaborFactorWholesale);
+      JSON.stringify(oldSpecialCoefficients) !== JSON.stringify(newSpecialCoefficients);
 
     // 检查规格是否被修改
     const specificationChanged =
       newProduct.specification !== undefined &&
       newProduct.specification !== oldProduct.specification;
 
-    if (coefficientsChanged) {
-      return 'coefficient';
-    } else if (specificationChanged) {
+    // 判断修改类型
+    if (specificationChanged) {
       return 'specification';
-    } else {
+    } else if (!coefficientsChanged) {
       return 'none';
+    } else if (hasOldSpecialCoefficients && !hasNewSpecialCoefficients) {
+      // 清空所有特殊系数：回到固定系数模式
+      return 'clear-coefficients';
+    } else {
+      // 修改或新增特殊系数
+      return 'coefficient';
     }
   };
 
@@ -1278,7 +1303,7 @@ export default function QuotePage() {
 
     // 检测修改类型和生成副号
     let finalProductCode = currentProduct.productCode!;
-    let modificationType: 'coefficient' | 'specification' | 'none' = 'none';
+    let modificationType: 'coefficient' | 'specification' | 'none' | 'clear-coefficients' = 'none';
 
     if (isUpdate) {
       const latestProduct = existingRecords[existingRecords.length - 1];
@@ -1286,12 +1311,19 @@ export default function QuotePage() {
 
       // 根据修改类型生成副号
       if (modificationType === 'coefficient' || modificationType === 'specification') {
+        // 修改特殊系数或规格：基于基础货号生成新副号
+        const baseCode = extractBaseCode(currentProduct.productCode!);
         finalProductCode = generateSubCode(
-          currentProduct.productCode!,
+          baseCode,
           products,
           modificationType
         );
+      } else if (modificationType === 'clear-coefficients') {
+        // 清空特殊系数：回到基础货号
+        const baseCode = extractBaseCode(currentProduct.productCode!);
+        finalProductCode = baseCode;
       }
+      // modificationType === 'none'：不生成副号，直接覆盖
     }
 
     const newProduct: Product = {
@@ -1330,10 +1362,26 @@ export default function QuotePage() {
       timestamp: new Date().toLocaleString("zh-CN"),
     };
 
-    // 删除该货号的所有旧记录，只保留新的
-    // 注意：如果生成了副号，不要删除原始货号的记录，而是添加新的副号记录
-    const filteredProducts = products.filter((p) => p.productCode !== currentProduct.productCode || modificationType === 'none');
-    setProducts([...filteredProducts, newProduct]);
+    // 处理产品记录的更新逻辑
+    let finalProducts: Product[];
+    if (modificationType === 'coefficient' || modificationType === 'specification') {
+      // 生成了副号：保留所有记录，添加新的副号记录
+      finalProducts = [...products, newProduct];
+    } else if (modificationType === 'clear-coefficients') {
+      // 清空特殊系数回到基础货号：更新基础货号记录，保留所有副号记录
+      const baseCode = extractBaseCode(currentProduct.productCode!);
+      finalProducts = products.map(p => {
+        if (p.productCode === baseCode) {
+          return newProduct; // 替换基础货号记录
+        }
+        return p; // 保留所有副号记录
+      });
+    } else {
+      // 没有生成副号（modificationType === 'none'）：删除当前货号的所有旧记录，只保留新的
+      finalProducts = products.filter((p) => p.productCode !== currentProduct.productCode);
+      finalProducts.push(newProduct);
+    }
+    setProducts(finalProducts);
 
     // 添加到历史记录（保留所有历史）
     const historyRecord: PriceHistory = {
@@ -1387,6 +1435,8 @@ export default function QuotePage() {
       alert(`系数已修改，生成副号：${finalProductCode}`);
     } else if (modificationType === 'specification') {
       alert(`规格已修改，生成副号：${finalProductCode}`);
+    } else if (modificationType === 'clear-coefficients') {
+      alert(`已清空特殊系数，回到原货号：${finalProductCode}（保留所有副号记录）`);
     } else if (isUpdate) {
       alert(`产品 ${finalProductCode} 更新成功！`);
     } else {
