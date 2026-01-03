@@ -2455,7 +2455,6 @@ export default function QuotePage() {
                 </span>
               )}
             </div>
-            </div>
             <button
               onClick={() => {
                 console.log("当前 products state:", products);
