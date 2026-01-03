@@ -207,6 +207,7 @@ export default function QuotePage() {
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
+  const [exportVersionMode, setExportVersionMode] = useState<"latest" | "all">("latest");
 
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
@@ -1328,12 +1329,16 @@ export default function QuotePage() {
     setShowBatchModifyModal(false);
   };
 
-  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
+  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行
   const exportToExcel = () => {
+    // 只导出当前产品列表中的历史记录（不包括已删除的）
+    const currentProductIds = new Set(products.map(p => p.id));
+    const validHistory = priceHistory.filter(h => currentProductIds.has(h.productId));
+
     // 根据选择的范围过滤历史记录
     const filteredHistory = exportScope === "current"
-      ? priceHistory.filter(h => h.category === currentCategory)
-      : priceHistory;
+      ? validHistory.filter(h => h.category === currentCategory)
+      : validHistory;
 
     // 按货号分组
     const productGroups: { [key: string]: PriceHistory[] } = {};
@@ -1344,12 +1349,17 @@ export default function QuotePage() {
       productGroups[history.productCode].push(history);
     });
 
-    // 为每个货号构建一行数据（按时间正序）
+    // 为每个货号构建一行数据（按时间倒序：最新在最前）
     const rows: any[] = [];
     Object.keys(productGroups).forEach((productCode) => {
-      const records = productGroups[productCode].sort((a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      let records = productGroups[productCode].sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
+
+      // 如果选择只导最新版本，只保留第一条记录
+      if (exportVersionMode === "latest") {
+        records = records.slice(0, 1);
+      }
 
       // 基础信息
       const row: any = {
@@ -1363,44 +1373,68 @@ export default function QuotePage() {
         供应商代码: records[0].supplierCode || "",
       };
 
-      // 动态添加每次修改的数据
+      // 动态添加每次修改的数据（最新版本在前）
       records.forEach((record, index) => {
-        const suffix = index + 1;
-        row[`第${suffix}次时间`] = formatDate(record.timestamp);
-        row[`第${suffix}次重量`] = record.weight;
-        row[`第${suffix}次金价`] = record.goldPrice ? `¥${record.goldPrice.toFixed(2)}` : "";
-        row[`第${suffix}次工费`] = `¥${record.laborCost.toFixed(2)}`;
-        row[`第${suffix}次配件成本`] = `¥${(record.accessoryCost || 0).toFixed(2)}`;
-        row[`第${suffix}次配件时间`] = formatDate(record.accessoryCostDate || record.timestamp);
-        row[`第${suffix}次石头成本`] = `¥${(record.stoneCost || 0).toFixed(2)}`;
-        row[`第${suffix}次石头时间`] = formatDate(record.stoneCostDate || record.timestamp);
-        row[`第${suffix}次电镀成本`] = `¥${(record.platingCost || 0).toFixed(2)}`;
-        row[`第${suffix}次电镀时间`] = formatDate(record.platingCostDate || record.timestamp);
-        row[`第${suffix}次模具成本`] = `¥${(record.moldCost || 0).toFixed(2)}`;
-        row[`第${suffix}次模具时间`] = formatDate(record.moldCostDate || record.timestamp);
-        row[`第${suffix}次佣金率`] = `${(record.commission || 0).toFixed(2)}%`;
-        row[`第${suffix}次佣金时间`] = formatDate(record.commissionDate || record.timestamp);
-        row[`第${suffix}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
-        row[`第${suffix}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
-        // 添加下单口
-        if (record.orderChannel) {
-          const channel = ORDER_CHANNELS.find(d => d.code === record.orderChannel);
-          row[`第${suffix}次下单口`] = channel ? channel.code : record.orderChannel;
-        } else {
-          row[`第${suffix}次下单口`] = "";
-        }
+        const version = index + 1;
+        row[`第${version}次更新时间`] = formatDate(record.timestamp);
+        row[`第${version}次重量`] = record.weight;
+        row[`第${version}次金价`] = `¥${record.goldPrice.toFixed(2)}`;
+        row[`第${version}次工费`] = `¥${record.laborCost.toFixed(2)}`;
+        row[`第${version}次配件`] = `¥${(record.accessoryCost || 0).toFixed(2)}\n${formatDate(record.accessoryCostDate || record.timestamp)}`;
+        row[`第${version}次石头`] = `¥${(record.stoneCost || 0).toFixed(2)}\n${formatDate(record.stoneCostDate || record.timestamp)}`;
+        row[`第${version}次电镀`] = `¥${(record.platingCost || 0).toFixed(2)}\n${formatDate(record.platingCostDate || record.timestamp)}`;
+        row[`第${version}次模具`] = `¥${(record.moldCost || 0).toFixed(2)}\n${formatDate(record.moldCostDate || record.timestamp)}`;
+        row[`第${version}次佣金`] = `${(record.commission || 0).toFixed(2)}%\n${formatDate(record.commissionDate || record.timestamp)}`;
+        row[`第${version}次下单口`] = record.orderChannel ? (ORDER_CHANNELS.find(d => d.code === record.orderChannel)?.code || record.orderChannel) : "";
+        row[`第${version}次零售价`] = `CAD$${record.retailPrice.toFixed(2)}`;
+        row[`第${version}次批发价`] = `CAD$${record.wholesalePrice.toFixed(2)}`;
       });
 
       rows.push(row);
     });
 
-    // 生成表头和行
-    const allColumns = new Set<string>();
-    rows.forEach((row) => Object.keys(row).forEach((key) => allColumns.add(key)));
+    // 定义固定的表头顺序
+    const baseColumns = [
+      "货号", "分类", "名称", "成色", "金子颜色", "规格", "形状", "供应商代码"
+    ];
 
-    const headers = Array.from(allColumns).join(",");
+    // 确定最大的版本号
+    const maxVersion = Math.max(...rows.map(row => {
+      const keys = Object.keys(row);
+      let max = 0;
+      keys.forEach(key => {
+        const match = key.match(/第(\d+)次/);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > max) max = num;
+        }
+      });
+      return max;
+    }), 0);
+
+    // 构建完整的列顺序
+    const allColumns: string[] = [...baseColumns];
+    for (let i = 1; i <= maxVersion; i++) {
+      allColumns.push(
+        `第${i}次更新时间`,
+        `第${i}次重量`,
+        `第${i}次金价`,
+        `第${i}次工费`,
+        `第${i}次配件`,
+        `第${i}次石头`,
+        `第${i}次电镀`,
+        `第${i}次模具`,
+        `第${i}次佣金`,
+        `第${i}次下单口`,
+        `第${i}次零售价`,
+        `第${i}次批发价`
+      );
+    }
+
+    // 生成表头和行数据
+    const headers = allColumns.join(",");
     const dataRows = rows.map((row) =>
-      Array.from(allColumns).map((col) => row[col] || "").join(",")
+      allColumns.map((col) => row[col] || "").join(",")
     );
     const csv = [headers, ...dataRows].join("\n");
 
@@ -3056,6 +3090,16 @@ export default function QuotePage() {
                   >
                     <option value="current">当前分类</option>
                     <option value="all">所有分类</option>
+                  </select>
+                  <label className="text-sm text-gray-900 font-medium">导出版本:</label>
+                  <select
+                    value={exportVersionMode}
+                    onChange={(e) => setExportVersionMode(e.target.value as "latest" | "all")}
+                    className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
+                    suppressHydrationWarning
+                  >
+                    <option value="latest">仅最新版本</option>
+                    <option value="all">所有版本</option>
                   </select>
                   <button
                     onClick={() => exportToExcel()}
