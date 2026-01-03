@@ -1407,7 +1407,7 @@ export default function QuotePage() {
     const dataRows = rows.map((row) =>
       allColumns.map((col) => {
         // 处理包含换行符的字段，用引号包裹
-        const value = row[col] || "";
+        const value = String(row[col] || "");
         return value.includes("\n") ? `"${value.replace(/"/g, '""')}"` : value;
       }).join(",")
     );
