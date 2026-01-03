@@ -3037,7 +3037,7 @@ export default function QuotePage() {
                 </label>
                 <input
                   type="text"
-                  value={currentCategory}
+                  value={currentSubCategory ? `${currentCategory} / ${currentSubCategory}` : currentCategory}
                   readOnly
                   className="w-full rounded border border-gray-300 px-4 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"
                   suppressHydrationWarning
