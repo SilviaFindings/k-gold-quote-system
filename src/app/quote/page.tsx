@@ -725,17 +725,20 @@ export default function QuotePage() {
     localStorage.setItem("dataVersion", DATA_VERSION.toString());
     console.log("更新数据版本号到:", DATA_VERSION);
 
-    // 检查是否需要自动修复子分类数据
-    const emptySubCategoryCount = fixedProducts.filter(p => !p.subCategory).length;
-    if (emptySubCategoryCount > 0) {
-      console.log(`检测到 ${emptySubCategoryCount} 个产品缺少子分类，准备自动修复...`);
-      // 延迟修复，确保数据已完全加载
-      setTimeout(() => {
-        console.log("开始自动修复子分类数据...");
-        // 这里可以调用修复函数，但为了避免用户困惑，暂时不自动修复
-        // 让用户手动点击"修复子分类"按钮
-        console.log("提示：请点击\"修复子分类\"按钮来自动修复数据");
-      }, 1000);
+    // 检查是否需要自动修复子分类数据（在产品数据加载后）
+    if (savedProducts) {
+      const parsedProducts = JSON.parse(savedProducts);
+      const emptySubCategoryCount = parsedProducts.filter((p: any) => !p.subCategory).length;
+      if (emptySubCategoryCount > 0) {
+        console.log(`检测到 ${emptySubCategoryCount} 个产品缺少子分类，准备自动修复...`);
+        // 延迟修复，确保数据已完全加载
+        setTimeout(() => {
+          console.log("开始自动修复子分类数据...");
+          // 这里可以调用修复函数，但为了避免用户困惑，暂时不自动修复
+          // 让用户手动点击"修复子分类"按钮
+          console.log("提示：请点击\"修复子分类\"按钮来自动修复数据");
+        }, 1000);
+      }
     }
 
     console.log("========== 数据加载完成 ==========");
