@@ -132,10 +132,20 @@ export default function QuotePage() {
   const scrollBarRef = React.useRef<HTMLDivElement>(null);
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // 同步滚动
+  // 同步滚动（双向同步）
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (target) {
       target.scrollLeft = source.scrollLeft;
+    }
+  };
+  
+  // 更新滚动条宽度以匹配表格
+  const updateScrollBarWidth = () => {
+    const table = tableContainerRef.current?.querySelector('table');
+    const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
+    if (table && scrollBarContent) {
+      const tableWidth = table.scrollWidth;
+      (scrollBarContent as HTMLElement).style.width = `${tableWidth}px`;
     }
   };
   const [goldPriceTimestamp, setGoldPriceTimestamp] = useState<string>(() => {
@@ -529,6 +539,11 @@ export default function QuotePage() {
 
     console.log("========== 数据加载完成 ==========");
   }, []);
+
+  // 更新滚动条宽度
+  useEffect(() => {
+    updateScrollBarWidth();
+  }, [products, currentCategory, searchQuery]);
 
   // 手动重新加载数据的函数
   const reloadFromLocalStorage = () => {
@@ -3062,16 +3077,35 @@ export default function QuotePage() {
               )}
             </div>
 
-            {/* 独立的横向滚动条 */}
-            <div className="mb-2 bg-gray-50 border border-gray-200 rounded p-1">
-              <div className="text-xs text-gray-500 mb-1">↔️ 横向滚动条</div>
+            {/* 悬浮横向滚动条 */}
+            <div 
+              className="fixed bottom-4 right-4 z-50 bg-white shadow-xl rounded-lg border border-gray-300 p-3 hover:opacity-100 opacity-70 transition-all duration-200"
+              style={{ maxWidth: '70%' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-700">↔️ 横向滚动</span>
+                <button 
+                  onClick={() => {
+                    const scrollBar = scrollBarRef.current;
+                    const tableContainer = tableContainerRef.current;
+                    if (scrollBar && tableContainer) {
+                      updateScrollBarWidth();
+                      scrollBar.scrollLeft = tableContainer.scrollLeft;
+                    }
+                  }}
+                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                  suppressHydrationWarning
+                >
+                  🔄 同步
+                </button>
+              </div>
               <div
                 ref={scrollBarRef}
-                className="h-8 bg-white border border-gray-300 rounded"
+                className="h-5 bg-gray-100 border border-gray-200 rounded cursor-grab active:cursor-grabbing"
                 style={{ overflowX: 'auto', overflowY: 'hidden', width: '100%' }}
                 onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
               >
-                <div style={{ width: '2000px', height: '32px' }}></div>
+                <div style={{ width: '3000px', height: '20px' }}></div>
               </div>
             </div>
 
