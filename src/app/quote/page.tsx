@@ -2353,22 +2353,36 @@ export default function QuotePage() {
                   {isExpanded && (
                     <div className="px-4 py-3 bg-white border-t border-gray-200">
                       <div className="flex flex-wrap gap-2">
-                        {subCategories.map((subCat) => (
-                          <button
-                            key={subCat}
-                            onClick={() => {
-                              setCurrentSubCategory(subCat);
-                              // 清除大类选择，显示子分类产品
-                            }}
-                            className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                              currentSubCategory === subCat
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                            }`}
-                          >
-                            {subCat}
-                          </button>
-                        ))}
+                        {subCategories.map((subCat) => {
+                          const subCount = products.filter(p => p.category === category && p.subCategory === subCat).length;
+                          return (
+                            <button
+                              key={subCat}
+                              onClick={() => {
+                                setCurrentSubCategory(subCat);
+                                // 清除大类选择，显示子分类产品
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                currentSubCategory === subCat
+                                  ? "bg-blue-600 text-white border-blue-600"
+                                  : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                              }`}
+                            >
+                              {subCat}
+                              {subCount > 0 && (
+                                <span
+                                  className={`inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full ${
+                                    currentSubCategory === subCat
+                                      ? "bg-white text-blue-600"
+                                      : "bg-blue-600 text-white"
+                                  }`}
+                                >
+                                  {subCount}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
