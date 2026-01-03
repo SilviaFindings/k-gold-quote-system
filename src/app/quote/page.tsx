@@ -1603,8 +1603,8 @@ export default function QuotePage() {
           // 确定最终使用的成色：优先使用Excel中的成色，如果没有则从货号智能识别
           const finalKarat = validKarat || "14K";
           const detectedMaterial = detectMaterialFromCode(String(productCode));
-          // 如果Excel中有成色就用Excel的，否则使用智能识别的结果
-          const karat = karatRaw ? finalKarat : detectedMaterial.karat;
+          // 如果Excel中有成色内容（非空）就用Excel的，否则使用智能识别的结果
+          const karat = (karatRaw && karatRaw.trim() !== "") ? finalKarat : detectedMaterial.karat;
 
           // 调试日志：输出成色识别结果
           console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}"`);
@@ -2405,7 +2405,7 @@ export default function QuotePage() {
                 <div className="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center text-white">
                   ✅
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">选择与管理</h3>
+                <h3 className="text-lg font-semibold text-gray-900">导出管理</h3>
               </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
