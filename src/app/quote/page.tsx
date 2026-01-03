@@ -4355,38 +4355,38 @@ export default function QuotePage() {
                         />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 font-semibold text-black">{product.productCode}</td>
-                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-800">{product.productName}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.goldColor}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.shape || "-"}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
+                      <td className="border border-gray-200 px-3 py-2 font-medium text-black">{product.productName}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{product.karat}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{product.goldColor}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black text-xs">{product.specification}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{product.shape || "-"}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">¥{product.laborCost.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.laborCostDate)}</div>
+                        <div className="font-medium text-black">¥{product.laborCost.toFixed(2)}</div>
+                        <div className="text-xs text-black">{formatDate(product.laborCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">¥{product.accessoryCost.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.accessoryCostDate)}</div>
+                        <div className="font-medium text-black">¥{product.accessoryCost.toFixed(2)}</div>
+                        <div className="text-xs text-black">{formatDate(product.accessoryCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">¥{product.stoneCost.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.stoneCostDate)}</div>
+                        <div className="font-medium text-black">¥{product.stoneCost.toFixed(2)}</div>
+                        <div className="text-xs text-black">{formatDate(product.stoneCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">¥{product.platingCost.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.platingCostDate)}</div>
+                        <div className="font-medium text-black">¥{product.platingCost.toFixed(2)}</div>
+                        <div className="text-xs text-black">{formatDate(product.platingCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">¥{product.moldCost.toFixed(2)}</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.moldCostDate)}</div>
+                        <div className="font-medium text-black">¥{product.moldCost.toFixed(2)}</div>
+                        <div className="text-xs text-black">{formatDate(product.moldCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-gray-900">{product.commission}%</div>
-                        <div className="text-xs text-gray-500">{formatDate(product.commissionDate)}</div>
+                        <div className="font-medium text-black">{product.commission}%</div>
+                        <div className="text-xs text-black">{formatDate(product.commissionDate)}</div>
                       </td>
-                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-gray-900">{product.supplierCode || "-"}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-gray-900">
+                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-black">{product.supplierCode || "-"}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-black">
                         {product.orderChannel ? (
                           (() => {
                             const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
@@ -4398,7 +4398,7 @@ export default function QuotePage() {
                         <div className="font-semibold text-black">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
                         </div>
-                        <div className="mt-1 text-xs text-gray-900">
+                        <div className="mt-1 text-xs text-black">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
@@ -4471,16 +4471,16 @@ export default function QuotePage() {
               <tbody>
                 {priceHistory.filter(h => h.category === currentCategory).map((history) => (
                   <tr key={history.id}>
-                    <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">
+                    <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-black">
                       {formatDate(history.timestamp)}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productCode}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.productName}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.karat}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.goldColor}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-gray-900">{history.shape || "-"}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{history.weight}</td>
-                    <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">
+                    <td className="border border-gray-200 px-3 py-2 text-black">{history.productCode}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-black">{history.productName}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-black">{history.karat}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-black">{history.goldColor}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-black">{history.shape || "-"}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.weight}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-right text-black">
                       ¥{history.goldPrice.toFixed(2)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-right text-green-600">
@@ -4489,7 +4489,7 @@ export default function QuotePage() {
                     <td className="border border-gray-200 px-3 py-2 text-right text-blue-600">
                       CAD${history.wholesalePrice.toFixed(2)}
                     </td>
-                    <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
+                    <td className="border border-gray-200 px-3 py-2 text-left text-black">
                       {history.orderChannel ? (
                         (() => {
                           const channel = ORDER_CHANNELS.find(d => d.code === history.orderChannel);
