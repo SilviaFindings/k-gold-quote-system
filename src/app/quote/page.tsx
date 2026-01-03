@@ -3047,11 +3047,11 @@ export default function QuotePage() {
               </h2>
               {products.filter(p => p.category === currentCategory).length > 0 && (
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">导出范围:</label>
+                  <label className="text-sm text-gray-900 font-medium">导出范围:</label>
                   <select
                     value={exportScope}
                     onChange={(e) => setExportScope(e.target.value as "current" | "all")}
-                    className="px-3 py-2 border border-gray-300 rounded text-sm"
+                    className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
                     suppressHydrationWarning
                   >
                     <option value="current">当前分类</option>
@@ -3082,7 +3082,7 @@ export default function QuotePage() {
                 <select
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value as "name" | "specification" | "supplierCode" | "karat" | "shape" | "all")}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
                   suppressHydrationWarning
                 >
                   <option value="all">全部</option>
@@ -3095,7 +3095,7 @@ export default function QuotePage() {
                 <select
                   value={searchScope}
                   onChange={(e) => setSearchScope(e.target.value as "current" | "all")}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
                   suppressHydrationWarning
                 >
                   <option value="current">当前分类</option>
