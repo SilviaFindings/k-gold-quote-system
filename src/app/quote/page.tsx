@@ -2325,6 +2325,74 @@ export default function QuotePage() {
     console.log("========== 子分类数据修复结束 ==========");
   };
 
+  // 显示分类详情
+  const showCategoryDetails = () => {
+    console.log("========== 开始显示分类详情 ==========");
+
+    let message = "📂 产品分类详情\n";
+    message += "=".repeat(50) + "\n\n";
+
+    // 按大类统计
+    PRODUCT_CATEGORIES.forEach((category) => {
+      message += `【${category}】\n`;
+
+      // 统计该大类下的产品总数
+      const categoryProducts = products.filter(p => p.category === category);
+      message += `  总产品数: ${categoryProducts.length}\n\n`;
+
+      // 统计各子分类
+      const subCats = SUB_CATEGORIES[category];
+      const subCategoryStats: Record<string, number> = {};
+
+      subCats.forEach((subCat) => {
+        const count = categoryProducts.filter(p => p.subCategory === subCat).length;
+        if (count > 0) {
+          subCategoryStats[subCat] = count;
+        }
+      });
+
+      // 显示有产品的子分类
+      const sortedSubCats = Object.entries(subCategoryStats).sort((a, b) => b[1] - a[1]);
+      if (sortedSubCats.length > 0) {
+        message += "  子分类分布:\n";
+        sortedSubCats.forEach(([subCat, count]) => {
+          message += `    • ${subCat}: ${count}\n`;
+        });
+      } else {
+        message += "  ⚠️ 所有子分类都没有产品\n";
+      }
+
+      // 显示缺少子分类的产品
+      const missingSubCategoryProducts = categoryProducts.filter(p => !p.subCategory);
+      if (missingSubCategoryProducts.length > 0) {
+        message += `\n  ⚠️ 缺少子分类的产品 (${missingSubCategoryProducts.length}个):\n`;
+        missingSubCategoryProducts.slice(0, 5).forEach((p) => {
+          message += `    • ${p.productCode}: ${p.productName}\n`;
+        });
+        if (missingSubCategoryProducts.length > 5) {
+          message += `    ... 还有 ${missingSubCategoryProducts.length - 5} 个\n`;
+        }
+      }
+
+      message += "\n";
+    });
+
+    // 示例产品（用于调试）
+    message += "【示例产品】\n";
+    const sampleProducts = products.slice(0, 5);
+    sampleProducts.forEach((p, index) => {
+      message += `${index + 1}. ${p.productCode}\n`;
+      message += `   大类: ${p.category}\n`;
+      message += `   子分类: ${p.subCategory || "❌ 无"}\n`;
+      message += `   名称: ${p.productName}\n`;
+      message += `   规格: ${p.specification || "无"}\n\n`;
+    });
+
+    alert(message);
+
+    console.log("========== 分类详情显示结束 ==========");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -2784,6 +2852,13 @@ export default function QuotePage() {
               suppressHydrationWarning
             >
               修复子分类
+            </button>
+            <button
+              onClick={showCategoryDetails}
+              className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+              suppressHydrationWarning
+            >
+              查看分类详情
             </button>
             <button
               onClick={() => {
