@@ -2825,7 +2825,7 @@ export default function QuotePage() {
                     <option value="">请选择下单口</option>
                     {ORDER_CHANNELS.map((channel) => (
                       <option key={channel.code} value={channel.code}>
-                        {channel.name}
+                        {channel.code}
                       </option>
                     ))}
                   </select>
@@ -3112,7 +3112,7 @@ export default function QuotePage() {
                         {product.orderChannel ? (
                           (() => {
                             const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
-                            return channel ? channel.name : product.orderChannel;
+                            return channel ? channel.code : product.orderChannel;
                           })()
                         ) : "-"}
                       </td>
@@ -3213,7 +3213,7 @@ export default function QuotePage() {
                       {history.orderChannel ? (
                         (() => {
                           const channel = ORDER_CHANNELS.find(d => d.code === history.orderChannel);
-                          return channel ? channel.name : history.orderChannel;
+                          return channel ? channel.code : history.orderChannel;
                         })()
                       ) : "-"}
                     </td>
