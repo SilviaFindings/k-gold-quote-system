@@ -1473,7 +1473,7 @@ export default function QuotePage() {
         ws[retailCellAddress].s = {
           font: {
             bold: true,
-            color: { rgb: modified ? "FFFF0000" : "FF008000" }  // 修改过的红色，否则绿色（添加FF前缀表示ARGB格式）
+            color: { rgb: modified ? "FF0000" : "008000" }  // 修改过的红色，否则绿色
           },
           alignment: { horizontal: "right", vertical: "center" },
         };
@@ -1485,7 +1485,7 @@ export default function QuotePage() {
         ws[wholesaleCellAddress].s = {
           font: {
             bold: true,
-            color: { rgb: modified ? "FFFF0000" : "FF0000FF" }  // 修改过的红色，否则蓝色（添加FF前缀表示ARGB格式）
+            color: { rgb: modified ? "FF0000" : "0000FF" }  // 修改过的红色，否则蓝色
           },
           alignment: { horizontal: "right", vertical: "center" },
         };
