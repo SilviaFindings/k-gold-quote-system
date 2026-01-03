@@ -3787,6 +3787,44 @@ export default function QuotePage() {
                       suppressHydrationWarning
                     />
                   </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black">
+                      特殊零售价工费系数
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialLaborFactorRetail ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialLaborFactorRetail: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                      step="0.1"
+                      placeholder={`默认: ${coefficients.laborFactorRetail}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black">
+                      特殊批发价工费系数
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialLaborFactorWholesale ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialLaborFactorWholesale: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                      step="0.1"
+                      placeholder={`默认: ${coefficients.laborFactorWholesale}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
                 </div>
               </div>
 
