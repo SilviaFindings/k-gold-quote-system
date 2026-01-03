@@ -3,8 +3,17 @@
 import React, { useState, useEffect } from "react";
 import XLSX from "xlsx-js-style";
 
-// 产品分类列表
+// 产品分类列表（新的三大类）
 export const PRODUCT_CATEGORIES = [
+  "配件",
+  "宝石托",
+  "链条",
+] as const;
+
+export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
+
+// 旧的产品分类列表（用于数据迁移）
+export const OLD_PRODUCT_CATEGORIES = [
   "耳环/耳逼",
   "扣子",
   "开口圈/闭口圈",
@@ -28,7 +37,35 @@ export const PRODUCT_CATEGORIES = [
   "金链",
 ] as const;
 
-export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
+// 旧分类到新分类的映射
+const CATEGORY_MAPPING: Record<string, ProductCategory> = {
+  // 链条类
+  "金链": "链条",
+  "延长链": "链条",
+
+  // 宝石托类
+  "戒子托": "宝石托",
+  "耳环托": "宝石托",
+  "耳钉托": "宝石托",
+  "吊坠托": "宝石托",
+
+  // 配件类（其他所有分类）
+  "耳环/耳逼": "配件",
+  "扣子": "配件",
+  "开口圈/闭口圈": "配件",
+  "圆珠": "配件",
+  "车花珠": "配件",
+  "定位珠/短管": "配件",
+  "包扣": "配件",
+  "字印片/吊牌": "配件",
+  "珠针": "配件",
+  "空心管": "配件",
+  "珠托": "配件",
+  "吊坠夹": "配件",
+  "镶嵌配件": "配件",
+  "珍珠配件": "配件",
+  "金线": "配件",
+};
 
 // 下单口列表
 export const ORDER_CHANNELS = [
@@ -175,14 +212,14 @@ export default function QuotePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [currentCategory, setCurrentCategory] = useState<ProductCategory>("耳环/耳逼");
+  const [currentCategory, setCurrentCategory] = useState<ProductCategory>("配件");
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchType, setSearchType] = useState<"name" | "specification" | "supplierCode" | "karat" | "shape" | "all">("all");
   const [searchScope, setSearchScope] = useState<"current" | "all">("current"); // 搜索范围：当前分类/全部分类
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
-    category: "耳环/耳逼",
+    category: "配件",
     productCode: "",
     productName: "",
     specification: "",
@@ -463,26 +500,36 @@ export default function QuotePage() {
         console.log("解析后的产品数量:", parsedProducts.length);
         console.log("产品列表样例:", parsedProducts.slice(0, 2));
 
-        // 数据迁移：将"水滴扣"改为"扣子"，并添加新字段的默认值（兼容旧数据）
-        const migratedProducts = parsedProducts.map((p: Product) => ({
-          ...p,
-          category: (p.category as any) === "水滴扣" ? "扣子" : p.category,
-          // 确保新字段有默认值（兼容旧数据）
-          accessoryCost: p.accessoryCost || 0,
-          stoneCost: p.stoneCost || 0,
-          platingCost: p.platingCost || 0,
-          moldCost: p.moldCost || 0,
-          commission: p.commission || 0,
-          supplierCode: p.supplierCode || "",
-          goldColor: (p as any).goldColor || "黄金",
-          // 添加成本时间戳（兼容旧数据）
-          laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-        }));
+        // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
+        const migratedProducts = parsedProducts.map((p: Product) => {
+          // 旧分类迁移逻辑
+          let newCategory = p.category as any;
+          if ((p.category as any) === "水滴扣") {
+            newCategory = "扣子";  // 旧的迁移
+          } else if (CATEGORY_MAPPING[p.category as string]) {
+            newCategory = CATEGORY_MAPPING[p.category as string];  // 新的迁移（21分类 -> 3大类）
+          }
+
+          return {
+            ...p,
+            category: newCategory,
+            // 确保新字段有默认值（兼容旧数据）
+            accessoryCost: p.accessoryCost || 0,
+            stoneCost: p.stoneCost || 0,
+            platingCost: p.platingCost || 0,
+            moldCost: p.moldCost || 0,
+            commission: p.commission || 0,
+            supplierCode: p.supplierCode || "",
+            goldColor: (p as any).goldColor || "黄金",
+            // 添加成本时间戳（兼容旧数据）
+            laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          };
+        });
 
         console.log("设置 products state，数量:", migratedProducts.length);
         setProducts(migratedProducts);
@@ -498,26 +545,36 @@ export default function QuotePage() {
         const parsedHistory = JSON.parse(savedHistory);
         console.log("解析后的历史记录数量:", parsedHistory.length);
 
-        // 数据迁移：将"水滴扣"改为"扣子"，并添加新字段的默认值（兼容旧数据）
-        const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
-          ...h,
-          category: (h.category as any) === "水滴扣" ? "扣子" : h.category,
-          // 确保新字段有默认值（兼容旧数据）
-          accessoryCost: h.accessoryCost || 0,
-          stoneCost: h.stoneCost || 0,
-          platingCost: h.platingCost || 0,
-          moldCost: h.moldCost || 0,
-          commission: h.commission || 0,
-          supplierCode: h.supplierCode || "",
-          goldColor: (h as any).goldColor || "黄金",
-          // 添加成本时间戳（兼容旧数据）
-          laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-        }));
+        // 数据迁移：将旧分类映射到新分类，并添加新字段的默认值（兼容旧数据）
+        const migratedHistory = parsedHistory.map((h: PriceHistory) => {
+          // 旧分类迁移逻辑
+          let newCategory = h.category as any;
+          if ((h.category as any) === "水滴扣") {
+            newCategory = "扣子";  // 旧的迁移
+          } else if (CATEGORY_MAPPING[h.category as string]) {
+            newCategory = CATEGORY_MAPPING[h.category as string];  // 新的迁移（21分类 -> 3大类）
+          }
+
+          return {
+            ...h,
+            category: newCategory,
+            // 确保新字段有默认值（兼容旧数据）
+            accessoryCost: h.accessoryCost || 0,
+            stoneCost: h.stoneCost || 0,
+            platingCost: h.platingCost || 0,
+            moldCost: h.moldCost || 0,
+            commission: h.commission || 0,
+            supplierCode: h.supplierCode || "",
+            goldColor: (h as any).goldColor || "黄金",
+            // 添加成本时间戳（兼容旧数据）
+            laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          };
+        });
 
         console.log("设置 priceHistory state，数量:", migratedHistory.length);
         setPriceHistory(migratedHistory);
@@ -611,25 +668,35 @@ export default function QuotePage() {
         console.log("✅ 解析产品数据成功:", parsedProducts.length, "条");
 
         // 数据迁移
-        const migratedProducts = parsedProducts.map((p: Product) => ({
-          ...p,
-          category: (p.category as any) === "水滴扣" ? "扣子" : p.category,
-          // 确保新字段有默认值（兼容旧数据）
-          accessoryCost: p.accessoryCost || 0,
-          stoneCost: p.stoneCost || 0,
-          platingCost: p.platingCost || 0,
-          moldCost: p.moldCost || 0,
-          commission: p.commission || 0,
-          supplierCode: p.supplierCode || "",
-          goldColor: (p as any).goldColor || "黄金",
-          // 添加成本时间戳（兼容旧数据）
-          laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-          commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
-        }));
+        const migratedProducts = parsedProducts.map((p: Product) => {
+          // 旧分类迁移逻辑
+          let newCategory = p.category as any;
+          if ((p.category as any) === "水滴扣") {
+            newCategory = "扣子";  // 旧的迁移
+          } else if (CATEGORY_MAPPING[p.category as string]) {
+            newCategory = CATEGORY_MAPPING[p.category as string];  // 新的迁移（21分类 -> 3大类）
+          }
+
+          return {
+            ...p,
+            category: newCategory,
+            // 确保新字段有默认值（兼容旧数据）
+            accessoryCost: p.accessoryCost || 0,
+            stoneCost: p.stoneCost || 0,
+            platingCost: p.platingCost || 0,
+            moldCost: p.moldCost || 0,
+            commission: p.commission || 0,
+            supplierCode: p.supplierCode || "",
+            goldColor: (p as any).goldColor || "黄金",
+            // 添加成本时间戳（兼容旧数据）
+            laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            stoneCostDate: (p as any).stoneCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            platingCostDate: (p as any).platingCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            moldCostDate: (p as any).moldCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+            commissionDate: (p as any).commissionDate || p.timestamp || new Date().toLocaleString("zh-CN"),
+          };
+        });
 
         console.log("设置 products state...");
         setProducts(migratedProducts);
@@ -647,25 +714,35 @@ export default function QuotePage() {
         const parsedHistory = JSON.parse(savedHistory);
         console.log("✅ 解析历史记录成功:", parsedHistory.length, "条");
 
-        const migratedHistory = parsedHistory.map((h: PriceHistory) => ({
-          ...h,
-          category: (h.category as any) === "水滴扣" ? "扣子" : h.category,
-          // 确保新字段有默认值（兼容旧数据）
-          accessoryCost: h.accessoryCost || 0,
-          stoneCost: h.stoneCost || 0,
-          platingCost: h.platingCost || 0,
-          moldCost: h.moldCost || 0,
-          commission: h.commission || 0,
-          supplierCode: h.supplierCode || "",
-          goldColor: (h as any).goldColor || "黄金",
-          // 添加成本时间戳（兼容旧数据）
-          laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-          commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
-        }));
+        const migratedHistory = parsedHistory.map((h: PriceHistory) => {
+          // 旧分类迁移逻辑
+          let newCategory = h.category as any;
+          if ((h.category as any) === "水滴扣") {
+            newCategory = "扣子";  // 旧的迁移
+          } else if (CATEGORY_MAPPING[h.category as string]) {
+            newCategory = CATEGORY_MAPPING[h.category as string];  // 新的迁移（21分类 -> 3大类）
+          }
+
+          return {
+            ...h,
+            category: newCategory,
+            // 确保新字段有默认值（兼容旧数据）
+            accessoryCost: h.accessoryCost || 0,
+            stoneCost: h.stoneCost || 0,
+            platingCost: h.platingCost || 0,
+            moldCost: h.moldCost || 0,
+            commission: h.commission || 0,
+            supplierCode: h.supplierCode || "",
+            goldColor: (h as any).goldColor || "黄金",
+            // 添加成本时间戳（兼容旧数据）
+            laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            stoneCostDate: (h as any).stoneCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            platingCostDate: (h as any).platingCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            moldCostDate: (h as any).moldCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+            commissionDate: (h as any).commissionDate || h.timestamp || new Date().toLocaleString("zh-CN"),
+          };
+        });
 
         console.log("设置 priceHistory state...");
         setPriceHistory(migratedHistory);
