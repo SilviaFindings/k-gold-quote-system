@@ -1450,7 +1450,19 @@ export default function QuotePage() {
       }
     }
 
-    // 设置价格列的颜色
+    // 设置数据行样式（左对齐）
+    rows.forEach((row, rowIndex) => {
+      for (let col = 0; col < allColumns.length; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: col });
+        if (ws[cellAddress] && !ws[cellAddress].s) {
+          ws[cellAddress].s = {
+            alignment: { horizontal: "left", vertical: "center", wrapText: true },
+          };
+        }
+      }
+    });
+
+    // 设置价格列的颜色和右对齐
     const retailPriceColIndex = allColumns.indexOf("零售价");
     const wholesalePriceColIndex = allColumns.indexOf("批发价");
 
@@ -1465,7 +1477,7 @@ export default function QuotePage() {
             bold: true,
             color: { rgb: modified ? "FF0000" : "008000" }  // 修改过的红色，否则绿色
           },
-          alignment: { horizontal: "right" },
+          alignment: { horizontal: "right", vertical: "center" },
         };
       }
 
