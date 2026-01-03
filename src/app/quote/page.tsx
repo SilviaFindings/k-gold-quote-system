@@ -1335,116 +1335,81 @@ export default function QuotePage() {
     setShowBatchModifyModal(false);
   };
 
-  // 导出 Excel（CSV 格式）- 横向展开，一个货号一行
+  // 导出 Excel（CSV 格式）- 导出当前产品的最新数据，一个货号一行
   const exportToExcel = () => {
-    // 只导出当前产品列表中的历史记录（不包括已删除的）
-    const currentProductIds = new Set(products.map(p => p.id));
-    const validHistory = priceHistory.filter(h => currentProductIds.has(h.productId));
+    // 根据选择的范围过滤产品
+    const filteredProducts = exportScope === "current"
+      ? products.filter(p => p.category === currentCategory)
+      : products;
 
-    // 根据选择的范围过滤历史记录
-    const filteredHistory = exportScope === "current"
-      ? validHistory.filter(h => h.category === currentCategory)
-      : validHistory;
-
-    // 按货号分组
-    const productGroups: { [key: string]: PriceHistory[] } = {};
-    filteredHistory.forEach((history) => {
-      if (!productGroups[history.productCode]) {
-        productGroups[history.productCode] = [];
+    // 按货号分组，每个货号只保留最新的记录
+    const productMap: { [key: string]: Product } = {};
+    filteredProducts.forEach((product) => {
+      const code = product.productCode;
+      // 如果该货号还没有记录，或者当前记录更新，则保存当前记录
+      if (!productMap[code] || new Date(product.timestamp) > new Date(productMap[code].timestamp)) {
+        productMap[code] = product;
       }
-      productGroups[history.productCode].push(history);
     });
 
-    // 为每个货号构建一行数据（按时间倒序：最新在最前）
+    // 转换为数组并按货号排序
+    const productsToExport = Object.values(productMap).sort((a, b) =>
+      a.productCode.localeCompare(b.productCode)
+    );
+
+    // 判断产品是否被修改过（通过历史记录数量判断）
+    const isProductModified = (productId: string): boolean => {
+      const historyCount = priceHistory.filter(h => h.productId === productId).length;
+      return historyCount > 1;
+    };
+
+    // 为每个产品构建一行数据
     const rows: any[] = [];
-    Object.keys(productGroups).forEach((productCode) => {
-      let records = productGroups[productCode].sort((a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+    productsToExport.forEach((product) => {
+      const modified = isProductModified(product.id);
 
-      // 如果选择只导最新版本，只保留第一条记录
-      if (exportVersionMode === "latest") {
-        records = records.slice(0, 1);
-      }
-
-      // 基础信息
       const row: any = {
-        货号: productCode,
-        分类: records[0].category,
-        名称: records[0].productName,
-        成色: records[0].karat,
-        金子颜色: records[0].goldColor || "黄金",
-        规格: records[0].specification || "",
-        形状: records[0].shape || "",
-        供应商代码: records[0].supplierCode || "",
-      };
-
-      // 动态添加每次修改的数据（最新版本在前）
-      records.forEach((record, index) => {
-        const version = index + 1;
-        const isModified = index < records.length - 1; // 不是最后一条（最早的）就是修改过的
-
-        row[`第${version}次更新时间`] = formatDate(record.timestamp);
-        row[`第${version}次重量`] = record.weight;
-        row[`第${version}次金价`] = `¥${record.goldPrice.toFixed(2)}`;
-        row[`第${version}次工费`] = `¥${record.laborCost.toFixed(2)}`;
-        row[`第${version}次配件`] = `¥${(record.accessoryCost || 0).toFixed(2)}\n${formatDate(record.accessoryCostDate || record.timestamp)}`;
-        row[`第${version}次石头`] = `¥${(record.stoneCost || 0).toFixed(2)}\n${formatDate(record.stoneCostDate || record.timestamp)}`;
-        row[`第${version}次电镀`] = `¥${(record.platingCost || 0).toFixed(2)}\n${formatDate(record.platingCostDate || record.timestamp)}`;
-        row[`第${version}次模具`] = `¥${(record.moldCost || 0).toFixed(2)}\n${formatDate(record.moldCostDate || record.timestamp)}`;
-        row[`第${version}次佣金`] = `${(record.commission || 0).toFixed(2)}%\n${formatDate(record.commissionDate || record.timestamp)}`;
-        row[`第${version}次下单口`] = record.orderChannel ? (ORDER_CHANNELS.find(d => d.code === record.orderChannel)?.code || record.orderChannel) : "";
-
+        货号: product.productCode,
+        分类: product.category,
+        名称: product.productName,
+        成色: product.karat,
+        金子颜色: product.goldColor || "黄金",
+        规格: product.specification || "",
+        形状: product.shape || "",
+        供应商代码: product.supplierCode || "",
+        重量: product.weight,
+        金价: `¥${product.goldPrice.toFixed(2)}`,
+        工费: `¥${product.laborCost.toFixed(2)}`,
+        配件: `¥${(product.accessoryCost || 0).toFixed(2)}\n${formatDate(product.accessoryCostDate || product.timestamp)}`,
+        石头: `¥${(product.stoneCost || 0).toFixed(2)}\n${formatDate(product.stoneCostDate || product.timestamp)}`,
+        电镀: `¥${(product.platingCost || 0).toFixed(2)}\n${formatDate(product.platingCostDate || product.timestamp)}`,
+        模具: `¥${(product.moldCost || 0).toFixed(2)}\n${formatDate(product.moldCostDate || product.timestamp)}`,
+        佣金: `${(product.commission || 0).toFixed(2)}%\n${formatDate(product.commissionDate || product.timestamp)}`,
+        下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
         // 价格：修改过的用★标记，未修改的不标记
-        row[`第${version}次零售价`] = isModified ? `★ CAD$${record.retailPrice.toFixed(2)}` : `CAD$${record.retailPrice.toFixed(2)}`;
-        row[`第${version}次批发价`] = isModified ? `★ CAD$${record.wholesalePrice.toFixed(2)}` : `CAD$${record.wholesalePrice.toFixed(2)}`;
-      });
+        零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
+        批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
+        更新时间: formatDate(product.timestamp),
+      };
 
       rows.push(row);
     });
 
     // 定义固定的表头顺序
-    const baseColumns = [
-      "货号", "分类", "名称", "成色", "金子颜色", "规格", "形状", "供应商代码"
+    const allColumns = [
+      "货号", "分类", "名称", "成色", "金子颜色", "规格", "形状", "供应商代码",
+      "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金", "下单口",
+      "零售价", "批发价", "更新时间"
     ];
-
-    // 确定最大的版本号
-    const maxVersion = Math.max(...rows.map(row => {
-      const keys = Object.keys(row);
-      let max = 0;
-      keys.forEach(key => {
-        const match = key.match(/第(\d+)次/);
-        if (match) {
-          const num = parseInt(match[1]);
-          if (num > max) max = num;
-        }
-      });
-      return max;
-    }), 0);
-
-    // 构建完整的列顺序
-    const allColumns: string[] = [...baseColumns];
-    for (let i = 1; i <= maxVersion; i++) {
-      allColumns.push(
-        `第${i}次更新时间`,
-        `第${i}次重量`,
-        `第${i}次金价`,
-        `第${i}次工费`,
-        `第${i}次配件`,
-        `第${i}次石头`,
-        `第${i}次电镀`,
-        `第${i}次模具`,
-        `第${i}次佣金`,
-        `第${i}次下单口`,
-        `第${i}次零售价`,
-        `第${i}次批发价`
-      );
-    }
 
     // 生成表头和行数据
     const headers = allColumns.join(",");
     const dataRows = rows.map((row) =>
-      allColumns.map((col) => row[col] || "").join(",")
+      allColumns.map((col) => {
+        // 处理包含换行符的字段，用引号包裹
+        const value = row[col] || "";
+        return value.includes("\n") ? `"${value.replace(/"/g, '""')}"` : value;
+      }).join(",")
     );
     const csv = [headers, ...dataRows].join("\n");
 
