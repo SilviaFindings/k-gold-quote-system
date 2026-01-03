@@ -339,6 +339,10 @@ function QuotePage() {
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
 
+  // 导出备份相关状态
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportBackupFormat, setExportBackupFormat] = useState<"excel" | "json">("excel");
+
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
@@ -2095,6 +2099,50 @@ function QuotePage() {
     XLSX.writeFile(wb, fileName);
   };
 
+  // 导出数据备份（包括产品、历史记录、配置）
+  const exportDataBackup = async () => {
+    if (!confirm(`确定要导出${exportBackupFormat === 'excel' ? 'Excel' : 'JSON'}格式备份吗？这将包含所有产品、价格历史和配置数据。`)) {
+      return;
+    }
+
+    setIsExporting(true);
+
+    try {
+      // 调用后端API导出数据
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/export?format=${exportBackupFormat}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('导出失败');
+      }
+
+      // 下载文件
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const fileName = exportBackupFormat === 'excel'
+        ? `珠宝报价单备份_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.xlsx`
+        : `珠宝报价单备份_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.json`;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('导出成功！');
+    } catch (error) {
+      console.error('导出备份失败:', error);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // 删除产品（同时删除相关的历史记录）
   const deleteProduct = (id: string) => {
     // 从产品列表中删除
@@ -3516,6 +3564,32 @@ function QuotePage() {
                       suppressHydrationWarning
                     >
                       🔄 刷新数据
+                    </button>
+                  </div>
+                </div>
+
+                {/* 导出数据备份 */}
+                <div className="pt-2 border-t border-gray-200 mt-2">
+                  <div className="flex items-center justify-between text-xs text-black mb-2">
+                    <span>导出数据备份（含产品、历史、配置）</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={exportBackupFormat}
+                      onChange={(e) => setExportBackupFormat(e.target.value as "excel" | "json")}
+                      className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm font-medium text-black hover:border-gray-400 transition-colors"
+                      suppressHydrationWarning
+                    >
+                      <option value="excel">Excel格式</option>
+                      <option value="json">JSON格式</option>
+                    </select>
+                    <button
+                      onClick={exportDataBackup}
+                      disabled={isExporting}
+                      className="flex-1 rounded-lg bg-purple-600 px-3 py-2 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      suppressHydrationWarning
+                    >
+                      {isExporting ? '导出中...' : '📦 导出备份'}
                     </button>
                   </div>
                 </div>
