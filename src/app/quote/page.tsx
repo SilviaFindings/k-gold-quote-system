@@ -3064,7 +3064,80 @@ export default function QuotePage() {
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12">选择</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12">
+                      <input
+                        type="checkbox"
+                        checked={(() => {
+                          const displayedProducts = products
+                            .filter(p => searchScope === "current" ? p.category === currentCategory : true)
+                            .filter(p => {
+                              if (!searchQuery) return true;
+                              const query = searchQuery.toLowerCase();
+                              if (searchType === "name") {
+                                return p.productName.toLowerCase().includes(query);
+                              } else if (searchType === "specification") {
+                                return p.specification.toLowerCase().includes(query);
+                              } else if (searchType === "supplierCode") {
+                                return p.supplierCode.toLowerCase().includes(query);
+                              } else if (searchType === "karat") {
+                                return p.karat.toLowerCase().includes(query);
+                              } else if (searchType === "shape") {
+                                return (p.shape || "").toLowerCase().includes(query);
+                              } else {
+                                return (
+                                  p.productName.toLowerCase().includes(query) ||
+                                  p.specification.toLowerCase().includes(query) ||
+                                  p.productCode.toLowerCase().includes(query) ||
+                                  p.supplierCode.toLowerCase().includes(query) ||
+                                  p.karat.toLowerCase().includes(query) ||
+                                  (p.shape || "").toLowerCase().includes(query)
+                                );
+                              }
+                            });
+                          const displayedIds = displayedProducts.map(p => p.id);
+                          if (displayedIds.length === 0) return false;
+                          return displayedIds.every(id => selectedProducts.has(id));
+                        })()}
+                        onChange={(e) => {
+                          const displayedProducts = products
+                            .filter(p => searchScope === "current" ? p.category === currentCategory : true)
+                            .filter(p => {
+                              if (!searchQuery) return true;
+                              const query = searchQuery.toLowerCase();
+                              if (searchType === "name") {
+                                return p.productName.toLowerCase().includes(query);
+                              } else if (searchType === "specification") {
+                                return p.specification.toLowerCase().includes(query);
+                              } else if (searchType === "supplierCode") {
+                                return p.supplierCode.toLowerCase().includes(query);
+                              } else if (searchType === "karat") {
+                                return p.karat.toLowerCase().includes(query);
+                              } else if (searchType === "shape") {
+                                return (p.shape || "").toLowerCase().includes(query);
+                              } else {
+                                return (
+                                  p.productName.toLowerCase().includes(query) ||
+                                  p.specification.toLowerCase().includes(query) ||
+                                  p.productCode.toLowerCase().includes(query) ||
+                                  p.supplierCode.toLowerCase().includes(query) ||
+                                  p.karat.toLowerCase().includes(query) ||
+                                  (p.shape || "").toLowerCase().includes(query)
+                                );
+                              }
+                            });
+                          const displayedIds = displayedProducts.map(p => p.id);
+                          const newSelected = new Set(selectedProducts);
+                          if (e.target.checked) {
+                            displayedIds.forEach(id => newSelected.add(id));
+                          } else {
+                            displayedIds.forEach(id => newSelected.delete(id));
+                          }
+                          setSelectedProducts(newSelected);
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        suppressHydrationWarning
+                      />
+                    </th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
