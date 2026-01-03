@@ -3461,9 +3461,20 @@ export default function QuotePage() {
 
             {/* 工费系数 */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                零售价工费系数
-              </label>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-900">
+                  零售价工费系数
+                </label>
+                <select
+                  value={coefficients.laborFactorRetailMode}
+                  onChange={(e) => setCoefficients({...coefficients, laborFactorRetailMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
               <input
                 type="number"
                 value={coefficients.laborFactorRetail}
@@ -3472,12 +3483,23 @@ export default function QuotePage() {
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 5</div>
+              <div className="mt-1 text-xs text-gray-500">默认: 5 {coefficients.laborFactorRetailMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                批发价工费系数
-              </label>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-900">
+                  批发价工费系数
+                </label>
+                <select
+                  value={coefficients.laborFactorWholesaleMode}
+                  onChange={(e) => setCoefficients({...coefficients, laborFactorWholesaleMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
               <input
                 type="number"
                 value={coefficients.laborFactorWholesale}
@@ -3486,7 +3508,7 @@ export default function QuotePage() {
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-gray-500">默认: 3</div>
+              <div className="mt-1 text-xs text-gray-500">默认: 3 {coefficients.laborFactorWholesaleMode === "special" && "(可被产品特殊系数覆盖)"}</div>
             </div>
 
             {/* 材料系数 */}
@@ -4332,39 +4354,39 @@ export default function QuotePage() {
                           suppressHydrationWarning
                         />
                       </td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productCode}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.productName}</td>
+                      <td className="border border-gray-200 px-3 py-2 font-semibold text-black">{product.productCode}</td>
+                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-800">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.karat}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.goldColor}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900 text-xs">{product.specification}</td>
                       <td className="border border-gray-200 px-3 py-2 text-gray-900">{product.shape || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-gray-900">{product.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">¥{product.laborCost.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">¥{product.laborCost.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">{formatDate(product.laborCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">¥{product.accessoryCost.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">¥{product.accessoryCost.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">{formatDate(product.accessoryCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">¥{product.stoneCost.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">¥{product.stoneCost.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">{formatDate(product.stoneCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">¥{product.platingCost.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">¥{product.platingCost.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">{formatDate(product.platingCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">¥{product.moldCost.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">¥{product.moldCost.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">{formatDate(product.moldCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">{product.commission}%</div>
+                        <div className="font-medium text-gray-900">{product.commission}%</div>
                         <div className="text-xs text-gray-500">{formatDate(product.commissionDate)}</div>
                       </td>
-                      <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">{product.supplierCode || "-"}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-left text-gray-900">
+                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-gray-900">{product.supplierCode || "-"}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-gray-900">
                         {product.orderChannel ? (
                           (() => {
                             const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
@@ -4373,7 +4395,7 @@ export default function QuotePage() {
                         ) : "-"}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="text-gray-900">
+                        <div className="font-semibold text-black">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
                         </div>
                         <div className="mt-1 text-xs text-gray-900">
@@ -4381,7 +4403,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className={`font-medium ${isProductModified(product.id) ? 'text-red-600' : 'text-green-600'}`}>
+                        <div className={`font-bold ${isProductModified(product.id) ? 'text-red-700' : 'text-green-700'}`}>
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
@@ -4390,7 +4412,7 @@ export default function QuotePage() {
                         </div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className={`font-medium ${isProductModified(product.id) ? 'text-red-600' : 'text-blue-600'}`}>
+                        <div className={`font-bold ${isProductModified(product.id) ? 'text-red-700' : 'text-blue-700'}`}>
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
