@@ -143,9 +143,13 @@ export default function QuotePage() {
   const updateScrollBarWidth = () => {
     const table = tableContainerRef.current?.querySelector('table');
     const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
-    if (table && scrollBarContent) {
-      const tableWidth = Math.max(table.scrollWidth, tableContainerRef.current!.clientWidth);
-      (scrollBarContent as HTMLElement).style.width = `${tableWidth}px`;
+    if (table && scrollBarContent && tableContainerRef.current) {
+      const tableWidth = table.scrollWidth;
+      const containerWidth = tableContainerRef.current.clientWidth;
+      // 确保滚动条宽度至少为表格宽度
+      const scrollBarWidth = Math.max(tableWidth + 500, containerWidth + 2000);
+      (scrollBarContent as HTMLElement).style.width = `${scrollBarWidth}px`;
+      console.log('更新滚动条宽度: tableWidth=', tableWidth, 'containerWidth=', containerWidth, 'scrollBarWidth=', scrollBarWidth);
     }
   };
 
@@ -158,8 +162,9 @@ export default function QuotePage() {
     const table = target.querySelector('table');
     const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
     if (table && scrollBarContent) {
-      const tableWidth = Math.max(table.scrollWidth, target.clientWidth);
-      (scrollBarContent as HTMLElement).style.width = `${tableWidth}px`;
+      const tableWidth = table.scrollWidth;
+      const scrollBarWidth = Math.max(tableWidth, target.clientWidth + 1000);
+      (scrollBarContent as HTMLElement).style.width = `${scrollBarWidth}px`;
     }
   };
   const [goldPriceTimestamp, setGoldPriceTimestamp] = useState<string>(() => {
@@ -559,8 +564,25 @@ export default function QuotePage() {
     // 延迟更新，确保表格渲染完成
     setTimeout(() => {
       updateScrollBarWidth();
+      updateWidthInfo();
     }, 100);
   }, [products, currentCategory, searchQuery]);
+
+  // 更新宽度信息显示
+  const updateWidthInfo = () => {
+    const table = tableContainerRef.current?.querySelector('table');
+    const scrollBarContent = document.getElementById('scrollBarContent');
+    const tableWidthInfo = document.getElementById('tableWidthInfo');
+    const scrollBarWidthInfo = document.getElementById('scrollBarWidthInfo');
+    
+    if (table && scrollBarContent && tableWidthInfo && scrollBarWidthInfo) {
+      const tableWidth = table.scrollWidth;
+      const scrollBarWidth = (scrollBarContent as HTMLElement).style.width;
+      tableWidthInfo.textContent = tableWidth.toString();
+      scrollBarWidthInfo.textContent = scrollBarWidth;
+      console.log('表格宽度:', tableWidth, '滚动条宽度:', scrollBarWidth);
+    }
+  };
 
   // 手动重新加载数据的函数
   const reloadFromLocalStorage = () => {
@@ -3122,7 +3144,10 @@ export default function QuotePage() {
                 style={{ overflowX: 'auto', overflowY: 'hidden', width: '100%' }}
                 onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
               >
-                <div style={{ width: '5000px', height: '20px' }}></div>
+                <div id="scrollBarContent" style={{ width: '8000px', height: '20px' }}></div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                表格宽度: <span id="tableWidthInfo">--</span> px | 滚动条宽度: <span id="scrollBarWidthInfo">--</span> px
               </div>
             </div>
 
@@ -3132,7 +3157,10 @@ export default function QuotePage() {
               style={{ maxHeight: '70vh' }}
               onScroll={handleTableScroll}
             >
-              <table className="w-full border-collapse border border-gray-200 text-sm sticky-header-table">
+              <table 
+                className="border-collapse border border-gray-200 text-sm sticky-header-table"
+                style={{ minWidth: '100%', tableLayout: 'auto' }}
+              >
                 <thead className="bg-gray-100 sticky top-0 z-10" style={{ position: 'sticky' }}>
                   <tr>
                     <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12 bg-gray-100">
