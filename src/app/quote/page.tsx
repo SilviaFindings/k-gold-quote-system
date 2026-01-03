@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
+import * as XLSXStyle from "xlsx-js-style";
 
 // 产品分类列表
 export const PRODUCT_CATEGORIES = [
@@ -207,7 +208,6 @@ export default function QuotePage() {
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
-  const [exportVersionMode, setExportVersionMode] = useState<"latest" | "all">("latest");
 
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
@@ -1335,7 +1335,7 @@ export default function QuotePage() {
     setShowBatchModifyModal(false);
   };
 
-  // 导出 Excel（CSV 格式）- 导出当前产品的最新数据，一个货号一行
+  // 导出 Excel（xlsx 格式）- 导出当前产品的最新数据，支持冻结表头和颜色标记
   const exportToExcel = () => {
     // 根据选择的范围过滤产品
     const filteredProducts = exportScope === "current"
@@ -1386,10 +1386,11 @@ export default function QuotePage() {
         模具: `¥${(product.moldCost || 0).toFixed(2)}\n${formatDate(product.moldCostDate || product.timestamp)}`,
         佣金: `${(product.commission || 0).toFixed(2)}%\n${formatDate(product.commissionDate || product.timestamp)}`,
         下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
-        // 价格：修改过的用★标记，未修改的不标记
+        // 价格：修改过的用★标记
         零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
         更新时间: formatDate(product.timestamp),
+        _modified: modified,  // 内部字段，用于标记是否修改过
       };
 
       rows.push(row);
@@ -1402,27 +1403,97 @@ export default function QuotePage() {
       "零售价", "批发价", "更新时间"
     ];
 
-    // 生成表头和行数据
-    const headers = allColumns.join(",");
+    // 生成表头和数据数组
+    const headerRow = [...allColumns];
     const dataRows = rows.map((row) =>
-      allColumns.map((col) => {
-        // 处理包含换行符的字段，将换行符替换为空格，确保CSV格式正确
-        const value = String(row[col] || "").replace(/\n/g, " ");
-        // 处理包含逗号的字段，用引号包裹
-        return value.includes(",") ? `"${value.replace(/"/g, '""')}"` : value;
-      }).join(",")
+      allColumns.map((col) => row[col] || "")
     );
-    const csv = [headers, ...dataRows].join("\n");
 
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    // 根据导出范围设置文件名
+    // 创建工作簿和工作表
+    const wb = XLSX.utils.book_new();
+    const wsData = [headerRow, ...dataRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // 设置列宽
+    ws['!cols'] = [
+      { wch: 18 },  // 货号
+      { wch: 12 },  // 分类
+      { wch: 20 },  // 名称
+      { wch: 6 },   // 成色
+      { wch: 8 },   // 金子颜色
+      { wch: 25 },  // 规格
+      { wch: 8 },   // 形状
+      { wch: 12 },  // 供应商代码
+      { wch: 10 },  // 重量
+      { wch: 12 },  // 金价
+      { wch: 12 },  // 工费
+      { wch: 20 },  // 配件
+      { wch: 20 },  // 石头
+      { wch: 20 },  // 电镀
+      { wch: 20 },  // 模具
+      { wch: 20 },  // 佣金
+      { wch: 10 },  // 下单口
+      { wch: 18 },  // 零售价
+      { wch: 18 },  // 批发价
+      { wch: 12 },  // 更新时间
+    ];
+
+    // 设置表头样式
+    for (let col = 0; col < headerRow.length; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (ws[cellAddress]) {
+        ws[cellAddress].s = {
+          font: { bold: true, color: { rgb: "000000" } },
+          fill: { fgColor: { rgb: "E0E0E0" } },
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        };
+      }
+    }
+
+    // 设置价格列的颜色
+    const retailPriceColIndex = allColumns.indexOf("零售价");
+    const wholesalePriceColIndex = allColumns.indexOf("批发价");
+
+    rows.forEach((row, rowIndex) => {
+      const modified = row._modified;
+
+      // 零售价颜色
+      const retailCellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: retailPriceColIndex });
+      if (ws[retailCellAddress]) {
+        ws[retailCellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: modified ? "FF0000" : "008000" }  // 修改过的红色，否则绿色
+          },
+          alignment: { horizontal: "right" },
+        };
+      }
+
+      // 批发价颜色
+      const wholesaleCellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: wholesalePriceColIndex });
+      if (ws[wholesaleCellAddress]) {
+        ws[wholesaleCellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: modified ? "FF0000" : "0000FF" }  // 修改过的红色，否则蓝色
+          },
+          alignment: { horizontal: "right" },
+        };
+      }
+    });
+
+    // 冻结表头
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, "产品报价");
+
+    // 导出文件
     const fileName = exportScope === "current"
-      ? `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv"
-      : `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".csv";
-    link.download = fileName;
-    link.click();
+      ? `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx"
+      : `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
+
+    XLSX.writeFile(wb, fileName);
   };
 
   // 删除产品（同时删除相关的历史记录）
@@ -3066,16 +3137,6 @@ export default function QuotePage() {
                   >
                     <option value="current">当前分类</option>
                     <option value="all">所有分类</option>
-                  </select>
-                  <label className="text-sm text-gray-900 font-medium">导出版本:</label>
-                  <select
-                    value={exportVersionMode}
-                    onChange={(e) => setExportVersionMode(e.target.value as "latest" | "all")}
-                    className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900"
-                    suppressHydrationWarning
-                  >
-                    <option value="latest">仅最新版本</option>
-                    <option value="all">所有版本</option>
                   </select>
                   <button
                     onClick={() => exportToExcel()}
