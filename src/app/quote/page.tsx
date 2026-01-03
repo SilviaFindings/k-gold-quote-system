@@ -1492,8 +1492,8 @@ export default function QuotePage() {
       }
     });
 
-    // 冻结表头
-    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+    // 冻结表头（使用 !views 属性）
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
 
     // 添加工作表到工作簿
     XLSX.utils.book_append_sheet(wb, ws, "产品报价");
