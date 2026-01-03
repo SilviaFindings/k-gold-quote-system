@@ -2455,6 +2455,7 @@ export default function QuotePage() {
                 </span>
               )}
             </div>
+            </div>
             <button
               onClick={() => {
                 console.log("当前 products state:", products);
@@ -2474,6 +2475,22 @@ export default function QuotePage() {
         {/* 分类导航区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">产品分类</h2>
+
+          {/* 调试面板：显示产品分类信息 */}
+          {products.length > 0 && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm font-semibold text-gray-900 mb-3">🔍 前5个产品的分类信息（调试）</p>
+              <div className="space-y-2">
+                {products.slice(0, 5).map((p, index) => (
+                  <div key={p.id} className="text-xs font-mono bg-white p-2 rounded border">
+                    <div><strong>{index + 1}. {p.productCode}</strong></div>
+                    <div>category: <span className={p.category ? "text-green-700" : "text-red-700"}>"{p.category}"</span></div>
+                    <div>subCategory: <span className={p.subCategory ? "text-green-700" : "text-red-700"}>"{p.subCategory || '❌ 无'}"</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 显示没有分类的产品修复工具 */}
           {products.length > 0 && (() => {
