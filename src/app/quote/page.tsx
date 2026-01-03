@@ -49,8 +49,8 @@ export const PRODUCT_SHAPES = [
   "马蹄形",
   "水滴形",
   "菱形",
-  "星形",
-  "花形",
+  "肥方",
+  "肥三角",
   "其他",
 ] as const;
 
@@ -151,6 +151,7 @@ export default function QuotePage() {
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchType, setSearchType] = useState<"name" | "specification" | "supplierCode" | "karat" | "shape" | "all">("all");
+  const [searchScope, setSearchScope] = useState<"current" | "all">("current"); // 搜索范围：当前分类/全部分类
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     category: "耳环/耳逼",
     productCode: "",
@@ -189,6 +190,68 @@ export default function QuotePage() {
     { productCodes: "KEW031/14k,KEW032/18k,KEW033/10k", supplierCode: "K15" },
     { productCodes: "K14KEW027/K14", supplierCode: "K14" },
   ]);
+
+  // 批量修改价格系数相关状态
+  const [showBatchModifyModal, setShowBatchModifyModal] = useState<boolean>(false);
+  const [batchModifyConfig, setBatchModifyConfig] = useState<{
+    scope: "current" | "all";
+    fields: {
+      laborCost: boolean;
+      accessoryCost: boolean;
+      stoneCost: boolean;
+      platingCost: boolean;
+      moldCost: boolean;
+      commission: boolean;
+      weight: boolean;
+      goldPrice: boolean;
+    };
+    filters: {
+      productName: string;
+      productCode: string;
+      supplierCode: string;
+      shape: string;
+      karat: string;
+    };
+    newValues: {
+      laborCost: number;
+      accessoryCost: number;
+      stoneCost: number;
+      platingCost: number;
+      moldCost: number;
+      commission: number;
+      weight: number;
+      goldPrice: number;
+    };
+  }>({
+    scope: "current",
+    fields: {
+      laborCost: false,
+      accessoryCost: false,
+      stoneCost: false,
+      platingCost: false,
+      moldCost: false,
+      commission: false,
+      weight: false,
+      goldPrice: false,
+    },
+    filters: {
+      productName: "",
+      productCode: "",
+      supplierCode: "",
+      shape: "",
+      karat: "",
+    },
+    newValues: {
+      laborCost: 0,
+      accessoryCost: 0,
+      stoneCost: 0,
+      platingCost: 0,
+      moldCost: 0,
+      commission: 0,
+      weight: 0,
+      goldPrice: goldPrice,
+    },
+  });
 
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
@@ -979,6 +1042,186 @@ export default function QuotePage() {
 
     alert(`已批量更新 ${updatedCount} 个产品的供应商代码！`);
     setShowBatchUpdateModal(false);
+  };
+
+  // 批量修改价格系数
+  const handleBatchModify = () => {
+    const { scope, fields, filters, newValues } = batchModifyConfig;
+
+    // 检查是否至少选择了一个字段
+    const selectedFields = Object.entries(fields).filter(([_, selected]) => selected);
+    if (selectedFields.length === 0) {
+      alert("请至少选择一个要修改的字段！");
+      return;
+    }
+
+    // 过滤产品
+    let filteredProducts = [...products];
+
+    // 应用范围筛选
+    if (scope === "current") {
+      filteredProducts = filteredProducts.filter(p => p.category === currentCategory);
+    }
+
+    // 应用筛选条件
+    if (filters.productName) {
+      filteredProducts = filteredProducts.filter(p =>
+        p.productName.toLowerCase().includes(filters.productName.toLowerCase())
+      );
+    }
+    if (filters.productCode) {
+      filteredProducts = filteredProducts.filter(p =>
+        p.productCode.toLowerCase().includes(filters.productCode.toLowerCase())
+      );
+    }
+    if (filters.supplierCode) {
+      filteredProducts = filteredProducts.filter(p =>
+        p.supplierCode.toLowerCase().includes(filters.supplierCode.toLowerCase())
+      );
+    }
+    if (filters.shape) {
+      filteredProducts = filteredProducts.filter(p => p.shape === filters.shape);
+    }
+    if (filters.karat) {
+      filteredProducts = filteredProducts.filter(p => p.karat === filters.karat);
+    }
+
+    if (filteredProducts.length === 0) {
+      alert("没有找到符合条件的产品！");
+      return;
+    }
+
+    if (!confirm(`找到 ${filteredProducts.length} 个符合条件的产品，确定要修改吗？`)) {
+      return;
+    }
+
+    console.log("========== 批量修改价格系数 ==========");
+    console.log("修改范围:", scope === "current" ? "当前分类" : "全部分类");
+    console.log("要修改的字段:", selectedFields.map(([name]) => name).join(", "));
+    console.log("筛选条件:", filters);
+    console.log("找到产品数量:", filteredProducts.length);
+
+    // 更新产品
+    const updatedProducts: Product[] = [];
+    const updatedHistory: PriceHistory[] = [];
+
+    filteredProducts.forEach((product) => {
+      // 创建更新后的产品
+      const updatedProduct: Product = {
+        ...product,
+        id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
+      };
+
+      // 更新字段
+      if (fields.laborCost) {
+        updatedProduct.laborCost = newValues.laborCost;
+        updatedProduct.laborCostDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.accessoryCost) {
+        updatedProduct.accessoryCost = newValues.accessoryCost;
+        updatedProduct.accessoryCostDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.stoneCost) {
+        updatedProduct.stoneCost = newValues.stoneCost;
+        updatedProduct.stoneCostDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.platingCost) {
+        updatedProduct.platingCost = newValues.platingCost;
+        updatedProduct.platingCostDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.moldCost) {
+        updatedProduct.moldCost = newValues.moldCost;
+        updatedProduct.moldCostDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.commission) {
+        updatedProduct.commission = newValues.commission;
+        updatedProduct.commissionDate = new Date().toLocaleString("zh-CN");
+      }
+      if (fields.weight) {
+        updatedProduct.weight = newValues.weight;
+      }
+      if (fields.goldPrice) {
+        updatedProduct.goldPrice = newValues.goldPrice;
+      }
+
+      // 重新计算价格
+      updatedProduct.wholesalePrice = calculatePrice(
+        updatedProduct.goldPrice,
+        updatedProduct.weight,
+        updatedProduct.laborCost,
+        updatedProduct.karat,
+        false,
+        updatedProduct.accessoryCost,
+        updatedProduct.stoneCost,
+        updatedProduct.platingCost,
+        updatedProduct.moldCost,
+        updatedProduct.commission
+      );
+
+      updatedProduct.retailPrice = calculatePrice(
+        updatedProduct.goldPrice,
+        updatedProduct.weight,
+        updatedProduct.laborCost,
+        updatedProduct.karat,
+        true,
+        updatedProduct.accessoryCost,
+        updatedProduct.stoneCost,
+        updatedProduct.platingCost,
+        updatedProduct.moldCost,
+        updatedProduct.commission
+      );
+
+      updatedProduct.timestamp = new Date().toLocaleString("zh-CN");
+
+      // 创建历史记录
+      const historyRecord: PriceHistory = {
+        id: updatedProduct.id + "_hist",
+        productId: updatedProduct.id,
+        category: updatedProduct.category,
+        productCode: updatedProduct.productCode,
+        productName: updatedProduct.productName,
+        specification: updatedProduct.specification,
+        weight: updatedProduct.weight,
+        laborCost: updatedProduct.laborCost,
+        karat: updatedProduct.karat,
+        goldColor: updatedProduct.goldColor,
+        goldPrice: updatedProduct.goldPrice,
+        wholesalePrice: updatedProduct.wholesalePrice,
+        retailPrice: updatedProduct.retailPrice,
+        accessoryCost: updatedProduct.accessoryCost,
+        stoneCost: updatedProduct.stoneCost,
+        platingCost: updatedProduct.platingCost,
+        moldCost: updatedProduct.moldCost,
+        commission: updatedProduct.commission,
+        supplierCode: updatedProduct.supplierCode,
+        orderChannel: updatedProduct.orderChannel,
+        shape: updatedProduct.shape,
+        laborCostDate: updatedProduct.laborCostDate,
+        accessoryCostDate: updatedProduct.accessoryCostDate,
+        stoneCostDate: updatedProduct.stoneCostDate,
+        platingCostDate: updatedProduct.platingCostDate,
+        moldCostDate: updatedProduct.moldCostDate,
+        commissionDate: updatedProduct.commissionDate,
+        timestamp: updatedProduct.timestamp,
+      };
+
+      updatedProducts.push(updatedProduct);
+      updatedHistory.push(historyRecord);
+
+      console.log(`✓ ${updatedProduct.productCode}: 已更新`);
+    });
+
+    // 删除旧记录，只保留更新后的记录
+    const productCodesToUpdate = new Set(updatedProducts.map(p => p.productCode));
+    const otherProducts = products.filter(p => !productCodesToUpdate.has(p.productCode));
+    setProducts([...otherProducts, ...updatedProducts]);
+    setPriceHistory([...priceHistory, ...updatedHistory]);
+
+    console.log(`总计更新 ${updatedProducts.length} 个产品`);
+    console.log("=========================================");
+
+    alert(`已批量修改 ${updatedProducts.length} 个产品的价格系数！`);
+    setShowBatchModifyModal(false);
   };
 
   // 导出 Excel（CSV 格式）- 横向展开，一个货号一行，包含所有历史记录
@@ -2006,6 +2249,13 @@ export default function QuotePage() {
                 >
                   🗑️ 批量删除选中产品
                 </button>
+                <button
+                  onClick={() => setShowBatchModifyModal(true)}
+                  className="w-full rounded-lg bg-orange-600 px-4 py-2.5 text-white font-medium hover:bg-orange-700 transition-colors shadow-sm"
+                  suppressHydrationWarning
+                >
+                  ✏️ 批量修改价格系数
+                </button>
               </div>
             </div>
 
@@ -2648,6 +2898,15 @@ export default function QuotePage() {
                   <option value="karat">K金含量</option>
                   <option value="shape">形状</option>
                 </select>
+                <select
+                  value={searchScope}
+                  onChange={(e) => setSearchScope(e.target.value as "current" | "all")}
+                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  suppressHydrationWarning
+                >
+                  <option value="current">当前分类</option>
+                  <option value="all">全部分类</option>
+                </select>
               </div>
               {searchQuery && (
                 <button
@@ -2708,7 +2967,7 @@ export default function QuotePage() {
                 </thead>
                 <tbody>
                   {products
-                    .filter(p => p.category === currentCategory)
+                    .filter(p => searchScope === "current" ? p.category === currentCategory : true)
                     .filter(p => {
                       if (!searchQuery) return true;
                       const query = searchQuery.toLowerCase();
@@ -2995,6 +3254,333 @@ export default function QuotePage() {
                 suppressHydrationWarning
               >
                 确认批量更新
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 批量修改价格系数对话框 */}
+      {showBatchModifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">批量修改价格系数</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              批量修改符合条件的产品的价格系数和成本。修改后将自动重新计算价格。
+            </p>
+
+            {/* 修改范围 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">修改范围</label>
+              <div className="flex gap-4">
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="radio"
+                    name="scope"
+                    checked={batchModifyConfig.scope === "current"}
+                    onChange={() => setBatchModifyConfig({...batchModifyConfig, scope: "current"})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  当前分类（{currentCategory}）
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="radio"
+                    name="scope"
+                    checked={batchModifyConfig.scope === "all"}
+                    onChange={() => setBatchModifyConfig({...batchModifyConfig, scope: "all"})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  全部分类
+                </label>
+              </div>
+            </div>
+
+            {/* 选择要修改的字段 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">选择要修改的字段</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.laborCost}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, laborCost: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  工费
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.accessoryCost}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, accessoryCost: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  配件成本
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.stoneCost}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, stoneCost: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  石头成本
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.platingCost}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, platingCost: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  电镀成本
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.moldCost}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, moldCost: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  模具成本
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.commission}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, commission: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  佣金率
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.weight}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, weight: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  重量
+                </label>
+                <label className="flex items-center text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={batchModifyConfig.fields.goldPrice}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, fields: {...batchModifyConfig.fields, goldPrice: e.target.checked}})}
+                    className="mr-2"
+                    suppressHydrationWarning
+                  />
+                  市场金价
+                </label>
+              </div>
+            </div>
+
+            {/* 新值输入 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">输入新值（人民币）</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {batchModifyConfig.fields.laborCost && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">工费</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.laborCost}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, laborCost: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.accessoryCost && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">配件成本</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.accessoryCost}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, accessoryCost: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.stoneCost && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">石头成本</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.stoneCost}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, stoneCost: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.platingCost && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">电镀成本</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.platingCost}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, platingCost: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.moldCost && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">模具成本</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.moldCost}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, moldCost: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.commission && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">佣金率（%）</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.commission}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, commission: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.weight && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">重量（克）</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.weight}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, weight: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+                {batchModifyConfig.fields.goldPrice && (
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">市场金价（元/克）</label>
+                    <input
+                      type="number"
+                      value={batchModifyConfig.newValues.goldPrice}
+                      onChange={(e) => setBatchModifyConfig({...batchModifyConfig, newValues: {...batchModifyConfig.newValues, goldPrice: Number(e.target.value)}})}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      step="0.01"
+                      suppressHydrationWarning
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 筛选条件 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">筛选条件（留空表示不筛选）</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">产品名称</label>
+                  <input
+                    type="text"
+                    value={batchModifyConfig.filters.productName}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, productName: e.target.value}})}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="产品名称关键词"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">货号</label>
+                  <input
+                    type="text"
+                    value={batchModifyConfig.filters.productCode}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, productCode: e.target.value}})}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="货号关键词"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">供应商代码</label>
+                  <input
+                    type="text"
+                    value={batchModifyConfig.filters.supplierCode}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, supplierCode: e.target.value}})}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="供应商代码"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">形状</label>
+                  <select
+                    value={batchModifyConfig.filters.shape}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, shape: e.target.value}})}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    suppressHydrationWarning
+                  >
+                    <option value="">不限</option>
+                    {PRODUCT_SHAPES.map((shape) => (
+                      <option key={shape} value={shape}>{shape}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">K金含量</label>
+                  <select
+                    value={batchModifyConfig.filters.karat}
+                    onChange={(e) => setBatchModifyConfig({...batchModifyConfig, filters: {...batchModifyConfig.filters, karat: e.target.value}})}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    suppressHydrationWarning
+                  >
+                    <option value="">不限</option>
+                    <option value="10K">10K金</option>
+                    <option value="14K">14K金</option>
+                    <option value="18K">18K金</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => setShowBatchModifyModal(false)}
+                className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+                suppressHydrationWarning
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  // 实现批量修改逻辑
+                  handleBatchModify();
+                }}
+                className="rounded bg-orange-600 px-6 py-2 text-white hover:bg-orange-700"
+                suppressHydrationWarning
+              >
+                确认修改
               </button>
             </div>
           </div>
