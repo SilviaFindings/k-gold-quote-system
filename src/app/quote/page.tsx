@@ -3511,9 +3511,9 @@ export default function QuotePage() {
                           const displayedProducts = products
                             .filter(p => searchScope === "current" ? p.category === currentCategory : true)
                             .filter(p => {
-                              // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
-                              if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
-                                return false;
+                              // 子分类筛选：如果选中了子分类，只显示匹配的子分类产品
+                              if (currentSubCategory) {
+                                return p.subCategory === currentSubCategory;
                               }
                               return true;
                             })
@@ -3549,9 +3549,9 @@ export default function QuotePage() {
                           const displayedProducts = products
                             .filter(p => searchScope === "current" ? p.category === currentCategory : true)
                             .filter(p => {
-                              // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
-                              if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
-                                return false;
+                              // 子分类筛选：如果选中了子分类，只显示匹配的子分类产品
+                              if (currentSubCategory) {
+                                return p.subCategory === currentSubCategory;
                               }
                               return true;
                             })
@@ -3617,9 +3617,9 @@ export default function QuotePage() {
                   {products
                     .filter(p => searchScope === "current" ? p.category === currentCategory : true)
                     .filter(p => {
-                      // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
-                      if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
-                        return false;
+                      // 子分类筛选：如果选中了子分类，只显示匹配的子分类产品
+                      if (currentSubCategory) {
+                        return p.subCategory === currentSubCategory;
                       }
                       return true;
                     })
