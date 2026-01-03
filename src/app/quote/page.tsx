@@ -128,6 +128,7 @@ export type ProductShape = typeof PRODUCT_SHAPES[number] | "";
 interface Product {
   id: string;
   category: ProductCategory | "";  // 允许空字符串（兼容旧数据）
+  subCategory: string;  // 子分类
   productCode: string;
   productName: string;
   specification: string;
@@ -161,6 +162,7 @@ interface PriceHistory {
   id: string;
   productId: string;
   category: ProductCategory | "";  // 允许空字符串（兼容旧数据）
+  subCategory: string;  // 子分类
   productCode: string;
   productName: string;
   specification: string;
@@ -244,6 +246,7 @@ export default function QuotePage() {
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [currentCategory, setCurrentCategory] = useState<ProductCategory>("配件");
+  const [currentSubCategory, setCurrentSubCategory] = useState<string>(""); // 当前选中的子分类
 
   // 分类展开/折叠状态
   const [expandedCategories, setExpandedCategories] = useState<Set<ProductCategory>>(new Set(["配件"]));
@@ -254,6 +257,7 @@ export default function QuotePage() {
   const [searchScope, setSearchScope] = useState<"current" | "all">("current"); // 搜索范围：当前分类/全部分类
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({
     category: "配件",
+    subCategory: "",
     productCode: "",
     productName: "",
     specification: "",
@@ -548,6 +552,7 @@ export default function QuotePage() {
             ...p,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
+            subCategory: (p as any).subCategory || "",  // 添加子分类字段
             accessoryCost: p.accessoryCost || 0,
             stoneCost: p.stoneCost || 0,
             platingCost: p.platingCost || 0,
@@ -715,6 +720,7 @@ export default function QuotePage() {
             ...p,
             category: newCategory,
             // 确保新字段有默认值（兼容旧数据）
+            subCategory: (p as any).subCategory || "",  // 添加子分类字段
             accessoryCost: p.accessoryCost || 0,
             stoneCost: p.stoneCost || 0,
             platingCost: p.platingCost || 0,
@@ -971,6 +977,7 @@ export default function QuotePage() {
     const newProduct: Product = {
       id: Date.now().toString(),
       category: currentCategory,
+      subCategory: currentSubCategory, // 使用当前选中的子分类
       productCode: currentProduct.productCode!,
       productName: currentProduct.productName!,
       specification: currentProduct.specification || "",
@@ -1012,6 +1019,7 @@ export default function QuotePage() {
       id: Date.now().toString() + "_hist",
       productId: newProduct.id,
       category: currentCategory,
+      subCategory: currentSubCategory,
       productCode: newProduct.productCode,
       productName: newProduct.productName,
       specification: newProduct.specification,
@@ -1103,6 +1111,7 @@ export default function QuotePage() {
       const newProduct: Product = {
         id: Date.now().toString() + "_" + productId,
         category: product.category,
+        subCategory: product.subCategory || "",
         productCode: product.productCode,
         productName: product.productName,
         specification: product.specification,
@@ -1136,6 +1145,7 @@ export default function QuotePage() {
         id: newProduct.id + "_hist",
         productId: newProduct.id,
         category: product.category,
+        subCategory: product.subCategory || "",
         productCode: newProduct.productCode,
         productName: newProduct.productName,
         specification: newProduct.specification,
@@ -1399,6 +1409,7 @@ export default function QuotePage() {
         id: updatedProduct.id + "_hist",
         productId: updatedProduct.id,
         category: updatedProduct.category,
+        subCategory: updatedProduct.subCategory,
         productCode: updatedProduct.productCode,
         productName: updatedProduct.productName,
         specification: updatedProduct.specification,
@@ -1931,6 +1942,7 @@ export default function QuotePage() {
           const newProduct: Product = {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
             category: currentCategory,
+            subCategory: currentSubCategory, // Excel导入时使用当前选中的子分类
             productCode: String(productCode),
             productName: String(productName),
             specification: String(specification || ""),
@@ -1965,6 +1977,7 @@ export default function QuotePage() {
             id: newProduct.id + "_hist",
             productId: newProduct.id,
             category: currentCategory,
+            subCategory: newProduct.subCategory,
             productCode: newProduct.productCode,
             productName: newProduct.productName,
             specification: newProduct.specification,
@@ -2171,7 +2184,7 @@ export default function QuotePage() {
 
           {/* 显示没有分类的产品修复工具 */}
           {products.length > 0 && (() => {
-            const emptyCategoryCount = products.filter(p => !p.category || p.category === "").length;
+            const emptyCategoryCount = products.filter(p => !p.category).length;
             if (emptyCategoryCount > 0) {
               return (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -2193,14 +2206,14 @@ export default function QuotePage() {
                         if (!confirm(`确定将这 ${emptyCategoryCount} 个没有分类的产品批量设置为 "${currentCategory}" 吗？`)) return;
 
                         const updatedProducts = products.map(p => {
-                          if (!p.category || p.category === "") {
+                          if (!p.category) {
                             return { ...p, category: currentCategory };
                           }
                           return p;
                         });
 
                         const updatedHistory = priceHistory.map(h => {
-                          if (!h.category || h.category === "") {
+                          if (!h.category) {
                             return { ...h, category: currentCategory };
                           }
                           return h;
@@ -2224,7 +2237,7 @@ export default function QuotePage() {
 
           {/* 显示没有下单口的产品修复工具 */}
           {products.length > 0 && (() => {
-            const emptyOrderChannelCount = products.filter(p => !p.orderChannel || p.orderChannel === "").length;
+            const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
             if (emptyOrderChannelCount > 0) {
               return (
                 <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -2250,14 +2263,14 @@ export default function QuotePage() {
                         if (!confirm(`确定将这 ${emptyOrderChannelCount} 个没有下单口的产品批量设置为 "${channelCode}" 吗？`)) return;
 
                         const updatedProducts = products.map(p => {
-                          if (!p.orderChannel || p.orderChannel === "") {
+                          if (!p.orderChannel) {
                             return { ...p, orderChannel: channelCode as OrderChannel };
                           }
                           return p;
                         });
 
                         const updatedHistory = priceHistory.map(h => {
-                          if (!h.orderChannel || h.orderChannel === "") {
+                          if (!h.orderChannel) {
                             return { ...h, orderChannel: channelCode as OrderChannel };
                           }
                           return h;
@@ -2292,6 +2305,7 @@ export default function QuotePage() {
                   <button
                     onClick={() => {
                       setCurrentCategory(category);
+                      setCurrentSubCategory(""); // 清除子分类选择
                       setCurrentProduct({ ...currentProduct, category });
                       // 展开/折叠子分类
                       setExpandedCategories(prev => {
@@ -2340,12 +2354,20 @@ export default function QuotePage() {
                     <div className="px-4 py-3 bg-white border-t border-gray-200">
                       <div className="flex flex-wrap gap-2">
                         {subCategories.map((subCat) => (
-                          <span
+                          <button
                             key={subCat}
-                            className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-gray-50 text-gray-700 border border-gray-200"
+                            onClick={() => {
+                              setCurrentSubCategory(subCat);
+                              // 清除大类选择，显示子分类产品
+                            }}
+                            className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                              currentSubCategory === subCat
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                            }`}
                           >
                             {subCat}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -3323,7 +3345,7 @@ export default function QuotePage() {
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">
-                当前产品列表 - {currentCategory}
+                当前产品列表 - {currentCategory}{currentSubCategory ? ` / ${currentSubCategory}` : ''}
               </h2>
               {products.filter(p => p.category === currentCategory).length > 0 && (
                 <div className="flex items-center gap-2">
@@ -3450,6 +3472,13 @@ export default function QuotePage() {
                           const displayedProducts = products
                             .filter(p => searchScope === "current" ? p.category === currentCategory : true)
                             .filter(p => {
+                              // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
+                              if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
+                                return false;
+                              }
+                              return true;
+                            })
+                            .filter(p => {
                               if (!searchQuery) return true;
                               const query = searchQuery.toLowerCase();
                               if (searchType === "name") {
@@ -3480,6 +3509,13 @@ export default function QuotePage() {
                         onChange={(e) => {
                           const displayedProducts = products
                             .filter(p => searchScope === "current" ? p.category === currentCategory : true)
+                            .filter(p => {
+                              // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
+                              if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
+                                return false;
+                              }
+                              return true;
+                            })
                             .filter(p => {
                               if (!searchQuery) return true;
                               const query = searchQuery.toLowerCase();
@@ -3541,6 +3577,13 @@ export default function QuotePage() {
                 <tbody>
                   {products
                     .filter(p => searchScope === "current" ? p.category === currentCategory : true)
+                    .filter(p => {
+                      // 子分类筛选：如果选中了子分类且产品有子分类信息，则只显示匹配的产品
+                      if (currentSubCategory && p.subCategory && p.subCategory !== currentSubCategory) {
+                        return false;
+                      }
+                      return true;
+                    })
                     .filter(p => {
                       if (!searchQuery) return true;
                       const query = searchQuery.toLowerCase();
