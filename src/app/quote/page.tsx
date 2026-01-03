@@ -1156,8 +1156,8 @@ export default function QuotePage() {
 
   // 从货号中提取基础货号（去掉副号）
   const extractBaseCode = (productCode: string): string => {
-    // 匹配 -DU\d+ 或 -[A-Z]$ 格式的副号，去掉这部分
-    return productCode.replace(/-DU\d+$|-[A-Z]$/, '');
+    // 匹配 DU\d+ 或 [A-Z]$ 格式的副号，去掉这部分
+    return productCode.replace(/DU\d+$|[A-Z]$/, '');
   };
 
   // 副号生成函数
@@ -1169,23 +1169,23 @@ export default function QuotePage() {
     if (modificationType === 'coefficient') {
       // DU系列：基于基础货号生成，查找最大的DU编号
       const sameCodeProducts = existingProducts.filter(p =>
-        p.productCode === baseCode || p.productCode.startsWith(baseCode + '-')
+        p.productCode === baseCode || p.productCode.startsWith(baseCode)
       );
 
       const duProducts = sameCodeProducts.filter(p =>
-        /-DU\d+$/.test(p.productCode)
+        /DU\d+$/.test(p.productCode.slice(baseCode.length))
       );
 
       let nextDuNumber = 1;
       if (duProducts.length > 0) {
         const duNumbers = duProducts.map(p => {
-          const match = p.productCode.match(/-DU(\d+)$/);
+          const match = p.productCode.match(/DU(\d+)$/);
           return match ? parseInt(match[1]) : 0;
         });
         nextDuNumber = Math.max(...duNumbers) + 1;
       }
 
-      return `${baseCode}-DU${nextDuNumber}`;
+      return `${baseCode}DU${nextDuNumber}`;
     } else {
       // 字母系列：基于当前货号生成，查找当前货号的最大字母
       // 查找所有以 baseCode 开头，且以 -[A-Z] 结尾的产品
@@ -1196,22 +1196,21 @@ export default function QuotePage() {
       // 查找当前货号的所有字母副号
       const letterProducts = sameCodeProducts.filter(p => {
         const suffix = p.productCode.slice(baseCode.length);
-        // 匹配以 -[A-Z] 结尾的情况
-        // 但要排除 -DU\d+[A-Z] 这种情况（虽然不应该存在）
-        return /^-[A-Z]$/.test(suffix);
+        // 匹配以 [A-Z] 结尾的情况
+        return /^[A-Z]$/.test(suffix);
       });
 
       let nextLetter = 'A';
       if (letterProducts.length > 0) {
         const letters = letterProducts.map(p => {
-          const match = p.productCode.match(/-([A-Z])$/);
+          const match = p.productCode.match(/([A-Z])$/);
           return match ? match[1].charCodeAt(0) : 64; // 64 = '@'
         });
         const maxCharCode = Math.max(...letters);
         nextLetter = String.fromCharCode(maxCharCode + 1);
       }
 
-      return `${baseCode}-${nextLetter}`;
+      return `${baseCode}${nextLetter}`;
     }
   };
 
