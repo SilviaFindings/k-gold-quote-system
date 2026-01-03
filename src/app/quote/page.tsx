@@ -2413,8 +2413,8 @@ export default function QuotePage() {
 
         message += `\n总产品数: ${parsedProducts.length}\n`;
         message += `\n💡 提示：\n`;
-        message += "- 如果 category 是"配件"、"宝石托"、"链条"，说明数据已经迁移过\n`;
-        message += "- 如果 subCategory 为空，说明子分类没有被正确设置\n`;
+        message += '- 如果 category 是"配件"、"宝石托"、"链条"，说明数据已经迁移过\n';
+        message += "- 如果 subCategory 为空，说明子分类没有被正确设置\n";
 
         alert(message);
       } catch (e) {
