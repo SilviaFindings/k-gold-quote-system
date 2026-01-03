@@ -154,6 +154,8 @@ interface Product {
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
   specialProfitMargin?: number;     // 特殊关税系数
+  specialLaborFactorRetail?: number;   // 特殊零售价工费系数
+  specialLaborFactorWholesale?: number; // 特殊批发价工费系数
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -192,6 +194,8 @@ interface PriceHistory {
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
   specialProfitMargin?: number;     // 特殊关税系数
+  specialLaborFactorRetail?: number;   // 特殊零售价工费系数
+  specialLaborFactorWholesale?: number; // 特殊批发价工费系数
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -322,6 +326,8 @@ export default function QuotePage() {
     specialMaterialLoss: undefined,
     specialMaterialCost: undefined,
     specialProfitMargin: undefined,
+    specialLaborFactorRetail: undefined,
+    specialLaborFactorWholesale: undefined,
   });
 
   // 导入Excel相关状态
@@ -422,6 +428,8 @@ export default function QuotePage() {
     goldFactor18K: number;
     laborFactorRetail: number;
     laborFactorWholesale: number;
+    laborFactorRetailMode: "fixed" | "special";
+    laborFactorWholesaleMode: "fixed" | "special";
     materialLoss: number;
     materialCost: number;
     profitMargin: number;
@@ -438,6 +446,8 @@ export default function QuotePage() {
         goldFactor18K: 0.755,
         laborFactorRetail: 5,
         laborFactorWholesale: 3,
+        laborFactorRetailMode: "fixed",
+        laborFactorWholesaleMode: "fixed",
         materialLoss: 1.15,
         materialCost: 1.1,
         profitMargin: 1.25,
@@ -457,6 +467,8 @@ export default function QuotePage() {
         goldFactor18K: parsed.goldFactor18K ?? 0.755,
         laborFactorRetail: parsed.laborFactorRetail ?? 5,
         laborFactorWholesale: parsed.laborFactorWholesale ?? 3,
+        laborFactorRetailMode: parsed.laborFactorRetailMode ?? "fixed",
+        laborFactorWholesaleMode: parsed.laborFactorWholesaleMode ?? "fixed",
         materialLoss: parsed.materialLoss ?? 1.15,
         materialCost: parsed.materialCost ?? 1.1,
         profitMargin: parsed.profitMargin ?? 1.25,
@@ -472,6 +484,8 @@ export default function QuotePage() {
       goldFactor18K: 0.755,
       laborFactorRetail: 5,
       laborFactorWholesale: 3,
+      laborFactorRetailMode: "fixed",
+      laborFactorWholesaleMode: "fixed",
       materialLoss: 1.15,
       materialCost: 1.1,
       profitMargin: 1.25,
@@ -796,6 +810,8 @@ export default function QuotePage() {
           materialLossMode: coeff.materialLossMode ?? "fixed",
           materialCostMode: coeff.materialCostMode ?? "fixed",
           profitMarginMode: coeff.profitMarginMode ?? "fixed",
+          laborFactorRetailMode: coeff.laborFactorRetailMode ?? "fixed",
+          laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
         };
         console.log("设置系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -997,6 +1013,8 @@ export default function QuotePage() {
           materialLossMode: coeff.materialLossMode ?? "fixed",
           materialCostMode: coeff.materialCostMode ?? "fixed",
           profitMarginMode: coeff.profitMarginMode ?? "fixed",
+          laborFactorRetailMode: coeff.laborFactorRetailMode ?? "fixed",
+          laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
         };
         console.log("✅ 加载系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1093,7 +1111,9 @@ export default function QuotePage() {
     // 特殊系数（可选，如果提供则优先使用）
     specialMaterialLoss?: number,
     specialMaterialCost?: number,
-    specialProfitMargin?: number
+    specialProfitMargin?: number,
+    specialLaborFactorRetail?: number,
+    specialLaborFactorWholesale?: number
   ): number => {
     let goldFactor: number;
     if (karat === "10K") {
@@ -1104,9 +1124,15 @@ export default function QuotePage() {
       goldFactor = coefficients.goldFactor18K;
     }
 
-    const laborFactor = isRetail ? coefficients.laborFactorRetail : coefficients.laborFactorWholesale;
+    // 确定使用的工费系数：优先使用特殊系数，否则使用全局固定系数
+    let laborFactor: number;
+    if (isRetail) {
+      laborFactor = specialLaborFactorRetail !== undefined ? specialLaborFactorRetail : coefficients.laborFactorRetail;
+    } else {
+      laborFactor = specialLaborFactorWholesale !== undefined ? specialLaborFactorWholesale : coefficients.laborFactorWholesale;
+    }
 
-    // 确定使用的系数：优先使用特殊系数，否则使用全局固定系数
+    // 确定使用的其他系数：优先使用特殊系数，否则使用全局固定系数
     const materialLoss = specialMaterialLoss !== undefined ? specialMaterialLoss : coefficients.materialLoss;
     const materialCost = specialMaterialCost !== undefined ? specialMaterialCost : coefficients.materialCost;
     const profitMargin = specialProfitMargin !== undefined ? specialProfitMargin : coefficients.profitMargin;
@@ -4248,7 +4274,7 @@ export default function QuotePage() {
                         <div className="text-gray-900">
                           {product.goldPrice ? `¥${product.goldPrice.toFixed(2)}` : ""}
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="mt-1 text-xs text-gray-900">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
@@ -4257,7 +4283,7 @@ export default function QuotePage() {
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.retailPrice.toFixed(2)}
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="mt-1 text-xs text-gray-900">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
@@ -4266,7 +4292,7 @@ export default function QuotePage() {
                           {isProductModified(product.id) && <span className="mr-1">★</span>}
                           CAD${product.wholesalePrice.toFixed(2)}
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="mt-1 text-xs text-gray-900">
                           {formatDate(product.timestamp)}
                         </div>
                       </td>
