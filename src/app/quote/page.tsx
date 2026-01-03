@@ -144,7 +144,21 @@ export default function QuotePage() {
     const table = tableContainerRef.current?.querySelector('table');
     const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
     if (table && scrollBarContent) {
-      const tableWidth = table.scrollWidth;
+      const tableWidth = Math.max(table.scrollWidth, tableContainerRef.current!.clientWidth);
+      (scrollBarContent as HTMLElement).style.width = `${tableWidth}px`;
+    }
+  };
+
+  // 表格滚动监听
+  const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    syncScroll(target, scrollBarRef.current!);
+    
+    // 动态更新滚动条宽度
+    const table = target.querySelector('table');
+    const scrollBarContent = scrollBarRef.current?.querySelector('div[style*="width"]');
+    if (table && scrollBarContent) {
+      const tableWidth = Math.max(table.scrollWidth, target.clientWidth);
       (scrollBarContent as HTMLElement).style.width = `${tableWidth}px`;
     }
   };
@@ -542,7 +556,10 @@ export default function QuotePage() {
 
   // 更新滚动条宽度
   useEffect(() => {
-    updateScrollBarWidth();
+    // 延迟更新，确保表格渲染完成
+    setTimeout(() => {
+      updateScrollBarWidth();
+    }, 100);
   }, [products, currentCategory, searchQuery]);
 
   // 手动重新加载数据的函数
@@ -3105,19 +3122,20 @@ export default function QuotePage() {
                 style={{ overflowX: 'auto', overflowY: 'hidden', width: '100%' }}
                 onScroll={(e) => syncScroll(e.currentTarget, tableContainerRef.current!)}
               >
-                <div style={{ width: '3000px', height: '20px' }}></div>
+                <div style={{ width: '5000px', height: '20px' }}></div>
               </div>
             </div>
 
             <div
               ref={tableContainerRef}
               className="overflow-x-auto"
-              onScroll={(e) => syncScroll(e.currentTarget, scrollBarRef.current!)}
+              style={{ maxHeight: '70vh' }}
+              onScroll={handleTableScroll}
             >
-              <table className="w-full border-collapse border border-gray-200 text-sm">
-                <thead className="bg-gray-100">
+              <table className="w-full border-collapse border border-gray-200 text-sm sticky-header-table">
+                <thead className="bg-gray-100 sticky top-0 z-10" style={{ position: 'sticky' }}>
                   <tr>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12">
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 w-12 bg-gray-100">
                       <input
                         type="checkbox"
                         checked={(() => {
@@ -3191,25 +3209,25 @@ export default function QuotePage() {
                         suppressHydrationWarning
                       />
                     </th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">货号</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">名称</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">成色</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">颜色</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">规格</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">形状</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">重量</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">工费</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">配件</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">石头</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">电镀</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">模具</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">佣金</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">供应商</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900">下单口</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">金价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">零售价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900">批发价</th>
-                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900">操作</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">名称</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">成色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">颜色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">规格</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">形状</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">重量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">配件</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">石头</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">电镀</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">模具</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">佣金</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">供应商</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-gray-900 bg-gray-100">下单口</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">金价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">零售价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-gray-900 bg-gray-100">批发价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-center text-gray-900 bg-gray-100">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3240,7 +3258,10 @@ export default function QuotePage() {
                       }
                     })
                     .map((product) => (
-                    <tr key={product.id}>
+                    <tr 
+                      key={product.id}
+                      className={selectedProducts.has(product.id) ? "bg-blue-50" : product.id === currentProduct.id ? "bg-yellow-50" : ""}
+                    >
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <input
                           type="checkbox"
