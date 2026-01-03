@@ -1456,45 +1456,45 @@ export default function QuotePage() {
 
         // 查找列索引
         const productCodeIndex = headers.findIndex(h =>
-          h && h.includes("货号")
+          h && String(h).includes("货号")
         );
         const productNameIndex = headers.findIndex(h =>
-          h && h.includes("名称")
+          h && String(h).includes("名称")
         );
         const specificationIndex = headers.findIndex(h =>
-          h && h.includes("规格")
+          h && String(h).includes("规格")
         );
         const weightIndex = headers.findIndex(h =>
-          h && h.includes("重量")
+          h && String(h).includes("重量")
         );
         const laborCostIndex = headers.findIndex(h =>
-          h && h.includes("人工") || h && h.includes("工费")
+          h && String(h).includes("人工") || h && String(h).includes("工费")
         );
 
         // 新增的成本列
         const accessoryCostIndex = headers.findIndex(h =>
-          h && h.includes("配件") && h.includes("成本")
+          h && String(h).includes("配件") && String(h).includes("成本")
         );
         const stoneCostIndex = headers.findIndex(h =>
-          h && h.includes("石头") && h.includes("成本")
+          h && String(h).includes("石头") && String(h).includes("成本")
         );
         const platingCostIndex = headers.findIndex(h =>
-          h && h.includes("电镀") && h.includes("成本")
+          h && String(h).includes("电镀") && String(h).includes("成本")
         );
         const moldCostIndex = headers.findIndex(h =>
-          h && h.includes("模具") && h.includes("成本")
+          h && String(h).includes("模具") && String(h).includes("成本")
         );
         const commissionIndex = headers.findIndex(h =>
-          h && h.includes("佣金")
+          h && String(h).includes("佣金")
         );
         const supplierCodeIndex = headers.findIndex(h =>
-          h && h.includes("供应商")
+          h && String(h).includes("供应商")
         );
         const orderChannelIndex = headers.findIndex(h =>
-          h && h.includes("下单口")
+          h && String(h).includes("下单口")
         );
         const shapeIndex = headers.findIndex(h =>
-          h && h.includes("形状")
+          h && String(h).includes("形状")
         );
 
         console.log("列索引:", {
