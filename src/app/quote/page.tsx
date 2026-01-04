@@ -2075,8 +2075,9 @@ function QuotePage() {
         return p; // 保留所有副号记录
       });
     } else {
-      // 没有生成副号（modificationType === 'none'）：删除当前货号的所有旧记录，只保留新的
-      finalProducts = products.filter((p) => p.productCode !== currentProduct.productCode);
+      // 没有生成副号（modificationType === 'none'）：删除当前货号+供应商的所有旧记录，只保留新的
+      // 🔥 修复：允许相同货号存在不同供应商的产品，只删除相同货号+供应商的旧记录
+      finalProducts = products.filter((p) => p.productCode !== currentProduct.productCode || p.supplierCode !== (currentProduct.supplierCode || "K14"));
       finalProducts.push(newProduct);
     }
     setProducts(finalProducts);
@@ -2266,11 +2267,12 @@ function QuotePage() {
     });
 
     // 删除旧记录，只保留更新后的记录
+    // 🔥 修复：允许相同货号存在不同供应商的产品，只删除相同货号+供应商的旧记录
     const productCodesToUpdate = new Set(
-      updatedProducts.map((p) => p.productCode)
+      updatedProducts.map((p) => `${p.productCode}_${p.supplierCode}`)
     );
     const otherProducts = products.filter(
-      (p) => !productCodesToUpdate.has(p.productCode)
+      (p) => !productCodesToUpdate.has(`${p.productCode}_${p.supplierCode}`)
     );
     setProducts([...otherProducts, ...updatedProducts]);
 
@@ -2545,8 +2547,9 @@ function QuotePage() {
     });
 
     // 删除旧记录，只保留更新后的记录
-    const productCodesToUpdate = new Set(updatedProducts.map(p => p.productCode));
-    const otherProducts = products.filter(p => !productCodesToUpdate.has(p.productCode));
+    // 🔥 修复：允许相同货号存在不同供应商的产品，只删除相同货号+供应商的旧记录
+    const productCodesToUpdate = new Set(updatedProducts.map(p => `${p.productCode}_${p.supplierCode}`));
+    const otherProducts = products.filter(p => !productCodesToUpdate.has(`${p.productCode}_${p.supplierCode}`));
     setProducts([...otherProducts, ...updatedProducts]);
     setPriceHistory([...priceHistory, ...updatedHistory]);
 
@@ -2570,39 +2573,39 @@ function QuotePage() {
         })
       : products;
 
-    // 🔥 修复：严格按导入顺序导出，每个货号只保留最新记录
-    // 使用 Map 记录每个货号最新记录的索引，保持导入顺序
+    // 🔥 修复：允许相同货号存在不同供应商的产品，使用 货号+供应商 作为唯一键
+    // 使用 Map 记录每个 货号+供应商 最新记录的索引，保持导入顺序
     const latestProductIndices: { [key: string]: number } = {};
     
-    // 第一遍：找到每个货号最新记录的索引（保持原始顺序）
+    // 第一遍：找到每个 货号+供应商 最新记录的索引（保持原始顺序）
     filteredProducts.forEach((product, index) => {
-      const code = product.productCode;
+      const key = `${product.productCode}_${product.supplierCode}`;
       const timestamp = new Date(product.timestamp).getTime();
       
-      // 如果该货号还没有记录，或者当前记录更新，则更新索引
-      if (latestProductIndices[code] === undefined) {
-        latestProductIndices[code] = index;
+      // 如果该 货号+供应商 还没有记录，或者当前记录更新，则更新索引
+      if (latestProductIndices[key] === undefined) {
+        latestProductIndices[key] = index;
       } else {
-        const existingTimestamp = new Date(filteredProducts[latestProductIndices[code]].timestamp).getTime();
+        const existingTimestamp = new Date(filteredProducts[latestProductIndices[key]].timestamp).getTime();
         if (timestamp > existingTimestamp) {
-          latestProductIndices[code] = index;
+          latestProductIndices[key] = index;
         }
       }
     });
 
     // 第二遍：按索引顺序导出，严格保持导入顺序
     const productsToExport: Product[] = [];
-    const usedCodes = new Set<string>();
+    const usedKeys = new Set<string>();
     
     filteredProducts.forEach((product) => {
-      const code = product.productCode;
-      const expectedIndex = latestProductIndices[code];
+      const key = `${product.productCode}_${product.supplierCode}`;
+      const expectedIndex = latestProductIndices[key];
       
-      // 如果当前记录是该货号的最新记录，且未被处理过，则添加到导出列表
-      // 通过检查索引确保每个货号只添加一次，且顺序与原始导入顺序一致
-      if (expectedIndex !== undefined && filteredProducts[expectedIndex].id === product.id && !usedCodes.has(code)) {
+      // 如果当前记录是该 货号+供应商 的最新记录，且未被处理过，则添加到导出列表
+      // 通过检查索引确保每个 货号+供应商 只添加一次，且顺序与原始导入顺序一致
+      if (expectedIndex !== undefined && filteredProducts[expectedIndex].id === product.id && !usedKeys.has(key)) {
         productsToExport.push(product);
-        usedCodes.add(code);
+        usedKeys.add(key);
       }
     });
 
