@@ -720,9 +720,6 @@ function QuotePage() {
     let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认成色
     let colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
 
-    // 🔥 调试日志
-    console.log(`[detectMaterialFromCode] 输入货号: "${productCode}" -> 转换后: "${code}"`);
-
     // 检查成色（按优先级顺序：开头前缀 -> 斜杠后前缀 -> 数字格式）
     // 1. 检查开头的 K10/K14/K18
     const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
@@ -733,7 +730,6 @@ function QuotePage() {
         "K18": "18K"
       };
       detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
-      console.log(`[detectMaterialFromCode] 前缀匹配: "${karatPrefixMatch[1]}" -> 识别为: "${detectedKarat}"`);
     } else {
       // 2. 检查斜杠后的 K10/K14/K18（如 KEW001/K18）
       const karatSlashMatch = code.match(/\/(K10|K14|K18)(?=\/|$|[^A-Z])/i);
@@ -744,7 +740,6 @@ function QuotePage() {
           "K18": "18K"
         };
         detectedKarat = karatMap[karatSlashMatch[1].toUpperCase()];
-        console.log(`[detectMaterialFromCode] 斜杠后匹配: "${karatSlashMatch[1]}" -> 识别为: "${detectedKarat}"`);
       } else {
         // 3. 检查数字格式 10K/14K/18K（任意位置）
         const karatNumberMatch = code.match(/(10K|14K|18K)/i);
@@ -755,9 +750,6 @@ function QuotePage() {
             "18K": "18K"
           };
           detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
-          console.log(`[detectMaterialFromCode] 数字匹配: "${karatNumberMatch[1]}" -> 识别为: "${detectedKarat}"`);
-        } else {
-          console.log(`[detectMaterialFromCode] 未找到成色标记，使用默认值: "${detectedKarat}"`);
         }
       }
     }
@@ -809,15 +801,12 @@ function QuotePage() {
   // 当货号改变时，自动填充已存在产品的信息，并智能识别材质
   useEffect(() => {
     if (currentProduct.productCode) {
-      console.log(`[useEffect - 货号变化] 货号: "${currentProduct.productCode}"`);
-
       // 智能识别材质
       const detected = detectMaterialFromCode(currentProduct.productCode);
 
       const existingProduct = findLatestProductByCode(currentProduct.productCode);
       if (existingProduct) {
         // 自动填充已存在产品的信息
-        console.log(`[useEffect - 货号变化] 找到现有产品，成色从 "${existingProduct.karat}" 更新为 "${detected.karat}"`);
         setCurrentProduct({
           ...currentProduct,
           productName: existingProduct.productName,
@@ -829,7 +818,6 @@ function QuotePage() {
         });
       } else {
         // 没有找到现有产品，仅应用智能识别的材质
-        console.log(`[useEffect - 货号变化] 新产品，成色设置为 "${detected.karat}"`);
         setCurrentProduct({
           ...currentProduct,
           karat: detected.karat,
@@ -1778,32 +1766,6 @@ function QuotePage() {
     // 佣金 = 人民币工费 x (佣金率 / 100) / 5 = 加币
     const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
     const commissionAmount = laborCost * (commissionRate / 100) / 5;
-
-    // 🔥 详细计算日志
-    console.log(`========== 价格计算详情 ==========`);
-    console.log(`基本信息：`);
-    console.log(`  货号: ${marketGoldPrice ? '导入' : '手动'}`);
-    console.log(`  成色: ${karat}, 重量: ${weight}g`);
-    console.log(`  金价: ¥${marketGoldPrice}/g, 工费: ¥${laborCost}`);
-    console.log(`  价格类型: ${isRetail ? '零售' : '批发'}`);
-    console.log(`\n系数设置：`);
-    console.log(`  金含量(${karat}): ${goldFactor}`);
-    console.log(`  工费系数(${isRetail ? '零售' : '批发'}): ${laborFactor}`);
-    console.log(`  汇率: ${coefficients.exchangeRate}`);
-    console.log(`  材料损耗: ${materialLoss}`);
-    console.log(`  材料浮动: ${materialCost}`);
-    console.log(`  利润系数: ${profitMargin}`);
-    console.log(`  佣金率: ${commissionRate}%`);
-    console.log(`\n详细计算：`);
-    console.log(`  1. 工费(加币): ${laborCost} × ${laborFactor} ÷ ${coefficients.exchangeRate} = ${laborPriceCAD.toFixed(4)}`);
-    console.log(`  2. 材料价(加币): ${marketGoldPrice} × ${goldFactor} × ${weight} × ${materialLoss} × ${materialCost} ÷ ${coefficients.exchangeRate} = ${materialPrice.toFixed(4)}`);
-    console.log(`     = ${marketGoldPrice} × ${goldFactor} × ${weight} × ${materialLoss * materialCost} ÷ ${coefficients.exchangeRate}`);
-    console.log(`  3. 其他成本(加币): ${accessoryCost + stoneCost + platingCost} × ${laborFactor} ÷ ${coefficients.exchangeRate} = ${otherCosts.toFixed(4)}`);
-    console.log(`  4. 佣金(加币): ${laborCost} × (${commissionRate}% ÷ 100) ÷ 5 = ${commissionAmount.toFixed(4)}`);
-    console.log(`  5. 基础价: ${laborPriceCAD.toFixed(4)} + ${materialPrice.toFixed(4)} + ${otherCosts.toFixed(4)} + ${commissionAmount.toFixed(4)} = ${(laborPriceCAD + materialPrice + otherCosts + commissionAmount).toFixed(4)}`);
-    console.log(`  6. 最终价(×利润系数): ${(laborPriceCAD + materialPrice + otherCosts + commissionAmount).toFixed(4)} × ${profitMargin} = ${((laborPriceCAD + materialPrice + otherCosts + commissionAmount) * profitMargin).toFixed(4)}`);
-    console.log(`\n最终结果: CAD${Math.round(((laborPriceCAD + materialPrice + otherCosts + commissionAmount) * profitMargin) * 100) / 100}`);
-    console.log(`================================`);
 
     // 总价 = (材料价 + 工费 + 其它成本 + 佣金) x 国际运输和关税系数
     const basePrice = materialPrice + laborPriceCAD + otherCosts + commissionAmount;
@@ -3564,9 +3526,6 @@ function QuotePage() {
           const isExcelKaratValid = karatRaw && karatRaw.trim() !== "" &&
             (["10K", "14K", "18K", "K10", "K14", "K18"].includes(String(karatRaw).trim().toUpperCase()));
           const karat = isExcelKaratValid ? validKarat : detectedMaterial.karat;
-
-          // 调试日志：输出成色和金价识别结果
-          console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}", 导入金价="${goldPrice}", 工费="${laborCost}"`);
 
           const wholesalePrice = calculatePrice(
             goldPrice,
