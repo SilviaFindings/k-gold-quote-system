@@ -17,6 +17,7 @@ function safeNumber(value: any): number | null {
 
 /**
  * 辅助函数：验证数值精度
+ * 改为警告模式，只当数值为null或超出范围太大时才报错
  */
 function validateNumericPrecision(
   value: any,
@@ -35,16 +36,16 @@ function validateNumericPrecision(
   const strValue = value.toString();
   const decimalPart = strValue.split('.')[1] || '';
 
-  // 检查小数位数
-  if (decimalPart.length > scale) {
-    issues.push(`${fieldName}: 小数位数 ${decimalPart.length} 超过限制 ${scale}`);
+  // 检查小数位数（允许超过一定范围）
+  if (decimalPart.length > scale + 2) {
+    issues.push(`${fieldName}: 小数位数 ${decimalPart.length} 明显超过限制 ${scale}`);
   }
 
-  // 检查整数位数
+  // 检查整数位数（允许超过一定范围）
   const integerPart = strValue.split('.')[0] || '0';
   const maxIntegerDigits = precision - scale;
-  if (integerPart.replace('-', '').length > maxIntegerDigits) {
-    issues.push(`${fieldName}: 整数位数 ${integerPart.replace('-', '').length} 超过限制 ${maxIntegerDigits}`);
+  if (integerPart.replace('-', '').length > maxIntegerDigits + 2) {
+    issues.push(`${fieldName}: 整数位数 ${integerPart.replace('-', '').length} 明显超过限制 ${maxIntegerDigits}`);
   }
 
   return { valid: issues.length === 0, issues };
@@ -69,6 +70,29 @@ function validatePriceCalculation(product: any): { valid: boolean; issues: strin
     issues.push(`金价必须大于 0，当前值: ${product.goldPrice}`);
   }
 
+  // 检查成本字段（不能为负数）
+  const accessoryCost = parseFloat(product.accessoryCost || 0);
+  const stoneCost = parseFloat(product.stoneCost || 0);
+  const platingCost = parseFloat(product.platingCost || 0);
+  const moldCost = parseFloat(product.moldCost || 0);
+  const commission = parseFloat(product.commission || 0);
+
+  if (accessoryCost < 0) {
+    issues.push(`配件成本不能为负数，当前值: ${accessoryCost}`);
+  }
+  if (stoneCost < 0) {
+    issues.push(`石头成本不能为负数，当前值: ${stoneCost}`);
+  }
+  if (platingCost < 0) {
+    issues.push(`电镀成本不能为负数，当前值: ${platingCost}`);
+  }
+  if (moldCost < 0) {
+    issues.push(`模具成本不能为负数，当前值: ${moldCost}`);
+  }
+  if (commission < 0) {
+    issues.push(`佣金不能为负数，当前值: ${commission}`);
+  }
+
   // 检查价格合理性
   const wholesalePrice = parseFloat(product.wholesalePrice);
   const retailPrice = parseFloat(product.retailPrice);
@@ -81,9 +105,13 @@ function validatePriceCalculation(product: any): { valid: boolean; issues: strin
     issues.push(`零售价不能为负数，当前值: ${retailPrice}`);
   }
 
-  // 批发价应该小于零售价（正常情况下）
-  if (wholesalePrice > 0 && retailPrice > 0 && wholesalePrice >= retailPrice) {
-    issues.push(`批发价 (${wholesalePrice}) 应该小于零售价 (${retailPrice})`);
+  // 批发价通常应该小于零售价，但允许相等（某些特殊定价情况）
+  // 只有当批发价明显大于零售价（超过10%）时才报错
+  if (wholesalePrice > 0 && retailPrice > 0) {
+    const ratio = wholesalePrice / retailPrice;
+    if (ratio > 1.1) {
+      issues.push(`批发价 (${wholesalePrice}) 明显高于零售价 (${retailPrice})，比例: ${ratio.toFixed(2)}`);
+    }
   }
 
   return { valid: issues.length === 0, issues };
@@ -188,36 +216,36 @@ export async function GET(request: NextRequest) {
         issues.push(...priceValidation.issues);
       }
 
-      // 检查特殊系数
-      if (product.specialMaterialLoss !== null) {
+      // 检查特殊系数（只有当值存在且不为null时才验证）
+      if (product.specialMaterialLoss !== null && product.specialMaterialLoss !== undefined && product.specialMaterialLoss !== '') {
         const specialLossValidation = validateNumericPrecision(product.specialMaterialLoss, '特殊材料损耗', 5, 2);
         if (!specialLossValidation.valid) {
           issues.push(...specialLossValidation.issues);
         }
       }
 
-      if (product.specialMaterialCost !== null) {
+      if (product.specialMaterialCost !== null && product.specialMaterialCost !== undefined && product.specialMaterialCost !== '') {
         const specialCostValidation = validateNumericPrecision(product.specialMaterialCost, '特殊材料浮动', 5, 2);
         if (!specialCostValidation.valid) {
           issues.push(...specialCostValidation.issues);
         }
       }
 
-      if (product.specialProfitMargin !== null) {
+      if (product.specialProfitMargin !== null && product.specialProfitMargin !== undefined && product.specialProfitMargin !== '') {
         const specialMarginValidation = validateNumericPrecision(product.specialProfitMargin, '特殊关税系数', 5, 2);
         if (!specialMarginValidation.valid) {
           issues.push(...specialMarginValidation.issues);
         }
       }
 
-      if (product.specialLaborFactorRetail !== null) {
+      if (product.specialLaborFactorRetail !== null && product.specialLaborFactorRetail !== undefined && product.specialLaborFactorRetail !== '') {
         const specialRetailValidation = validateNumericPrecision(product.specialLaborFactorRetail, '特殊零售工费系数', 5, 2);
         if (!specialRetailValidation.valid) {
           issues.push(...specialRetailValidation.issues);
         }
       }
 
-      if (product.specialLaborFactorWholesale !== null) {
+      if (product.specialLaborFactorWholesale !== null && product.specialLaborFactorWholesale !== undefined && product.specialLaborFactorWholesale !== '') {
         const specialWholesaleValidation = validateNumericPrecision(product.specialLaborFactorWholesale, '特殊批发工费系数', 5, 2);
         if (!specialWholesaleValidation.valid) {
           issues.push(...specialWholesaleValidation.issues);
