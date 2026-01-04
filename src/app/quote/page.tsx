@@ -2185,26 +2185,40 @@ function QuotePage() {
 
   // 同步本地数据到数据库
   const syncToDatabase = async () => {
-    if (!confirm('确定要将本地数据同步到数据库吗？\n\n这将把浏览器中的产品、价格历史和配置上传到数据库，之后就可以使用"导出备份"功能了。')) {
+    // 统计本地数据
+    const localProducts = localStorage.getItem('goldProducts');
+    const localHistory = localStorage.getItem('goldPriceHistory');
+    const localGoldPrice = localStorage.getItem('goldPrice');
+    const localGoldPriceTimestamp = localStorage.getItem('goldPriceTimestamp');
+    const localCoefficients = localStorage.getItem('priceCoefficients');
+
+    const productCount = localProducts ? JSON.parse(localProducts).length : 0;
+    const historyCount = localHistory ? JSON.parse(localHistory).length : 0;
+    const hasGoldPrice = !!localGoldPrice;
+    const hasCoefficients = !!localCoefficients;
+
+    if (productCount === 0 && historyCount === 0 && !hasGoldPrice) {
+      alert('本地没有数据，无需同步。');
+      return;
+    }
+
+    // 显示同步确认
+    let confirmMsg = '确定要将本地数据同步到数据库吗？\n\n';
+    confirmMsg += '即将同步以下数据：\n';
+    confirmMsg += `📦 产品数据: ${productCount} 个\n`;
+    confirmMsg += `📈 价格历史: ${historyCount} 条\n`;
+    confirmMsg += `💰 金价配置: ${hasGoldPrice ? '✓' : '✗'}\n`;
+    confirmMsg += `⚙️  价格系数: ${hasCoefficients ? '✓' : '✗'}\n\n`;
+    confirmMsg += '同步后，所有数据将保存到数据库，并可以通过"导出备份"功能导出。\n\n';
+    confirmMsg += '是否继续？';
+
+    if (!confirm(confirmMsg)) {
       return;
     }
 
     setIsSyncing(true);
 
     try {
-      // 从 localStorage 获取数据
-      const localProducts = localStorage.getItem('goldProducts');
-      const localHistory = localStorage.getItem('goldPriceHistory');
-      const localGoldPrice = localStorage.getItem('goldPrice');
-      const localGoldPriceTimestamp = localStorage.getItem('goldPriceTimestamp');
-      const localCoefficients = localStorage.getItem('priceCoefficients');
-
-      if (!localProducts && !localHistory && !localGoldPrice) {
-        alert('本地没有数据，无需同步。');
-        setIsSyncing(false);
-        return;
-      }
-
       // 准备同步数据
       const syncData = {
         products: localProducts ? JSON.parse(localProducts) : [],
@@ -2215,6 +2229,13 @@ function QuotePage() {
           priceCoefficients: localCoefficients ? JSON.parse(localCoefficients) : null,
         },
       };
+
+      console.log('📤 开始同步数据:', {
+        productsCount: syncData.products.length,
+        historyCount: syncData.priceHistory.length,
+        hasGoldPrice: !!syncData.configs.goldPrice,
+        hasCoefficients: !!syncData.configs.priceCoefficients,
+      });
 
       // 调用同步 API
       const token = localStorage.getItem('auth_token');
@@ -2228,22 +2249,34 @@ function QuotePage() {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('同步失败:', errorText);
         throw new Error('同步失败');
       }
 
       const result = await response.json();
 
+      console.log('✅ 同步完成:', result);
+
       // 显示同步结果
       let message = '✅ 数据同步成功！\n\n';
-      message += `📦 同步产品: ${result.stats.syncedProducts} 个\n`;
-      message += `📈 同步历史记录: ${result.stats.syncedHistory} 条\n`;
-      message += `⚙️  同步配置: ${result.stats.syncedConfigs} 项\n\n`;
-      message += '现在可以使用"导出备份"功能了！';
+      message += '已同步到数据库：\n\n';
+      message += '📦 产品数据：\n';
+      message += `  - 新建: ${result.stats.newProducts || 0} 个\n`;
+      message += `  - 更新: ${result.stats.updatedProducts || 0} 个\n`;
+      message += `  - 总计: ${result.stats.syncedProducts} 个\n\n`;
+      message += '📈 价格历史：\n';
+      message += `  - 新建: ${result.stats.syncedHistory} 条\n`;
+      message += `  - 跳过（已存在）: ${result.stats.skippedHistory || 0} 条\n\n`;
+      message += '⚙️  系统配置：\n';
+      message += `  - 金价配置: ${result.stats.syncedConfigs > 0 ? '✓' : '-'}\n`;
+      message += `  - 价格系数: ${result.stats.syncedConfigs > 1 ? '✓' : '-'}\n\n`;
+      message += '🎉 现在可以使用"导出备份"功能了！';
 
       alert(message);
-    } catch (error) {
+    } catch (error: any) {
       console.error('同步失败:', error);
-      alert('同步失败，请重试。\n\n如果问题持续存在，请检查网络连接或联系管理员。');
+      alert('同步失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
     } finally {
       setIsSyncing(false);
     }
