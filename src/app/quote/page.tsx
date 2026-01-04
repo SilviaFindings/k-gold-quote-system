@@ -720,7 +720,7 @@ function QuotePage() {
     let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认成色
     let colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
 
-    // 检查成色（按优先级顺序：开头前缀 -> 斜杠后前缀 -> 数字格式）
+    // 检查成色（按优先级顺序：开头前缀 -> 斜杠后完整格式(10KR/14KR/18KR,10KW/14KW/18KW) -> 斜杠后前缀 -> 数字格式）
     // 1. 检查开头的 K10/K14/K18
     const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
     if (karatPrefixMatch) {
@@ -731,25 +731,49 @@ function QuotePage() {
       };
       detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
     } else {
-      // 2. 检查斜杠后的 K10/K14/K18（如 KEW001/K18）
-      const karatSlashMatch = code.match(/\/(K10|K14|K18)(?=\/|$|[^A-Z])/i);
-      if (karatSlashMatch) {
+      // 2. 优先检查斜杠后的 10KR/14KR/18KR（玫瑰金格式）
+      const karatKRMatch = code.match(/\/(10KR|14KR|18KR)(?=\/|$|[^A-Z])/i);
+      if (karatKRMatch) {
+        const karatKR = karatKRMatch[1].toUpperCase().replace("KR", "K");
         const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-          "K10": "10K",
-          "K14": "14K",
-          "K18": "18K"
+          "10K": "10K",
+          "14K": "14K",
+          "18K": "18K"
         };
-        detectedKarat = karatMap[karatSlashMatch[1].toUpperCase()];
+        detectedKarat = karatMap[karatKR];
       } else {
-        // 3. 检查数字格式 10K/14K/18K（任意位置）
-        const karatNumberMatch = code.match(/(10K|14K|18K)/i);
-        if (karatNumberMatch) {
+        // 3. 检查斜杠后的 10KW/14KW/18KW（白金格式）
+        const karatKWMatch = code.match(/\/(10KW|14KW|18KW)(?=\/|$|[^A-Z])/i);
+        if (karatKWMatch) {
+          const karatKW = karatKWMatch[1].toUpperCase().replace("KW", "K");
           const karatMap: Record<string, "10K" | "14K" | "18K"> = {
             "10K": "10K",
             "14K": "14K",
             "18K": "18K"
           };
-          detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+          detectedKarat = karatMap[karatKW];
+        } else {
+          // 4. 检查斜杠后的 K10/K14/K18（如 KEW001/K18）
+          const karatSlashMatch = code.match(/\/(K10|K14|K18)(?=\/|$|[^A-Z])/i);
+          if (karatSlashMatch) {
+            const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+              "K10": "10K",
+              "K14": "14K",
+              "K18": "18K"
+            };
+            detectedKarat = karatMap[karatSlashMatch[1].toUpperCase()];
+          } else {
+            // 5. 检查数字格式 10K/14K/18K（任意位置）
+            const karatNumberMatch = code.match(/(10K|14K|18K)/i);
+            if (karatNumberMatch) {
+              const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+                "10K": "10K",
+                "14K": "14K",
+                "18K": "18K"
+              };
+              detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+            }
+          }
         }
       }
     }
@@ -3632,9 +3656,10 @@ function QuotePage() {
           newHistory.push(historyRecord);
         });
 
-        // 删除已存在的重复货号
-        const newProductCodes = new Set(newProducts.map(p => p.productCode));
-        const filteredProducts = products.filter(p => !newProductCodes.has(p.productCode));
+        // 不再删除已存在的重复货号，直接合并所有产品
+        // 允许相同货号存在不同供应商的产品
+        // const newProductCodes = new Set(newProducts.map(p => p.productCode));
+        // const filteredProducts = products.filter(p => !newProductCodes.has(p.productCode));
 
         // 确保要设置的子分类不为空
         const targetSubCategory = importSubCategory || newProducts[0]?.subCategory || "";
@@ -3651,7 +3676,7 @@ function QuotePage() {
         // 使用回调函数确保状态更新
         setProducts(prev => {
           console.log("setProducts 被调用，当前产品数量:", prev.length);
-          return [...filteredProducts, ...newProducts];
+          return [...prev, ...newProducts];
         });
 
         setPriceHistory(prev => {
