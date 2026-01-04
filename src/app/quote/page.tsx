@@ -3086,6 +3086,7 @@ function QuotePage() {
   // 导入Excel文件
   const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log("importExcel 函数被调用");
+    console.log("选择的子分类:", importSubCategory);
     const file = e.target.files?.[0];
     console.log("选择的文件:", file);
 
@@ -3102,6 +3103,7 @@ function QuotePage() {
     }
 
     console.log("开始读取文件...");
+    console.log("将导入到子分类:", importSubCategory);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -3420,7 +3422,27 @@ function QuotePage() {
         setPriceHistory([...priceHistory, ...newHistory]);
 
         // 更新当前子分类，让列表显示刚导入的数据
+        console.log("导入成功，更新当前子分类为：", importSubCategory);
+        console.log("当前子分类值类型：", typeof importSubCategory);
+        console.log("当前子分类值长度：", importSubCategory?.length);
+        console.log("当前子分类值（JSON）：", JSON.stringify(importSubCategory));
+
+        // 验证导入的产品数据
+        const importedProducts = newProducts.slice(0, 3);
+        console.log("前3个导入的产品：", importedProducts.map(p => ({
+          code: p.productCode,
+          name: p.productName,
+          subCategory: p.subCategory,
+          category: p.category
+        })));
+
         setCurrentSubCategory(importSubCategory);
+        console.log("已调用 setCurrentSubCategory");
+
+        // 延迟验证一下状态是否更新
+        setTimeout(() => {
+          console.log("延迟检查 - 应该的子分类：", importSubCategory);
+        }, 500);
 
         alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 导入设置：\n  • 小类: ${importSubCategory}\n  • 大类: ${importCategory}\n\n💡 提示：产品已按照您选择的小类导入，系统不会进行自动分类识别。`);
 
@@ -5499,6 +5521,10 @@ function QuotePage() {
               <h2 className="text-xl font-semibold text-black">
                 当前产品列表-{currentCategory}{currentSubCategory ? `-${currentSubCategory}` : ''}
               </h2>
+              {/* 调试信息 */}
+              <div className="text-xs text-gray-500">
+                Debug: subCategory={currentSubCategory || '(empty)'}
+              </div>
               {products.filter(p => p.category === currentCategory).length > 0 && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-black font-medium">导出范围:</label>
