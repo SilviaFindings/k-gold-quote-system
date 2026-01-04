@@ -723,7 +723,8 @@ function QuotePage() {
     // 🔥 调试日志
     console.log(`[detectMaterialFromCode] 输入货号: "${productCode}" -> 转换后: "${code}"`);
 
-    // 检查成色（K10, K14, K18, 10K, 14K, 18K）
+    // 检查成色（按优先级顺序：开头前缀 -> 斜杠后前缀 -> 数字格式）
+    // 1. 检查开头的 K10/K14/K18
     const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
     if (karatPrefixMatch) {
       const karatMap: Record<string, "10K" | "14K" | "18K"> = {
@@ -734,17 +735,30 @@ function QuotePage() {
       detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
       console.log(`[detectMaterialFromCode] 前缀匹配: "${karatPrefixMatch[1]}" -> 识别为: "${detectedKarat}"`);
     } else {
-      const karatNumberMatch = code.match(/(10K|14K|18K)/i);
-      if (karatNumberMatch) {
+      // 2. 检查斜杠后的 K10/K14/K18（如 KEW001/K18）
+      const karatSlashMatch = code.match(/\/(K10|K14|K18)(?=\/|$|[^A-Z])/i);
+      if (karatSlashMatch) {
         const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-          "10K": "10K",
-          "14K": "14K",
-          "18K": "18K"
+          "K10": "10K",
+          "K14": "14K",
+          "K18": "18K"
         };
-        detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
-        console.log(`[detectMaterialFromCode] 数字匹配: "${karatNumberMatch[1]}" -> 识别为: "${detectedKarat}"`);
+        detectedKarat = karatMap[karatSlashMatch[1].toUpperCase()];
+        console.log(`[detectMaterialFromCode] 斜杠后匹配: "${karatSlashMatch[1]}" -> 识别为: "${detectedKarat}"`);
       } else {
-        console.log(`[detectMaterialFromCode] 未找到成色标记，使用默认值: "${detectedKarat}"`);
+        // 3. 检查数字格式 10K/14K/18K（任意位置）
+        const karatNumberMatch = code.match(/(10K|14K|18K)/i);
+        if (karatNumberMatch) {
+          const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+            "10K": "10K",
+            "14K": "14K",
+            "18K": "18K"
+          };
+          detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+          console.log(`[detectMaterialFromCode] 数字匹配: "${karatNumberMatch[1]}" -> 识别为: "${detectedKarat}"`);
+        } else {
+          console.log(`[detectMaterialFromCode] 未找到成色标记，使用默认值: "${detectedKarat}"`);
+        }
       }
     }
 
