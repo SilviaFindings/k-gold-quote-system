@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 开始验证数据完整性:', {
       userId: user.id,
+      userEmail: user.email,
       localProductCount,
       localHistoryCount,
       localProductIds: localProductIds.length,
@@ -43,8 +44,14 @@ export async function POST(request: NextRequest) {
     });
 
     // 1. 检查产品数据
+    console.log('📦 查询数据库中的产品数据...');
     const dbProducts = await productManager.getProducts(user.id, { limit: 10000 });
     const dbProductCount = dbProducts.length;
+
+    console.log('📦 数据库产品数据:', {
+      count: dbProductCount,
+      firstFewIds: dbProducts.slice(0, 3).map(p => p.id),
+    });
 
     // 判断产品数据是否匹配
     let productsMatch = false;
@@ -108,8 +115,14 @@ export async function POST(request: NextRequest) {
     });
 
     // 2. 检查价格历史
+    console.log('📈 查询数据库中的价格历史数据...');
     const dbHistory = await priceHistoryManager.getHistoryByUserId(user.id, { limit: 10000 });
     const dbHistoryCount = dbHistory.length;
+
+    console.log('📈 数据库价格历史数据:', {
+      count: dbHistoryCount,
+      firstFewIds: dbHistory.slice(0, 3).map(h => h.id),
+    });
 
     // 判断价格历史是否匹配
     let historyMatch = false;

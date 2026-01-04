@@ -2922,110 +2922,173 @@ function QuotePage() {
     reader.readAsArrayBuffer(file);
   };
 
-  // 数据诊断函数
-  const diagnoseData = () => {
-    console.log("========== 数据诊断开始 ==========");
+  // 诊断数据库状态
+  const diagnoseData = async () => {
+    setIsVerifying(true);
+    try {
+      console.log("========== 数据诊断开始 ==========");
 
-    const lsProducts = localStorage.getItem("goldProducts");
-    const lsHistory = localStorage.getItem("goldPriceHistory");
-    const lsGoldPrice = localStorage.getItem("goldPrice");
-    const lsGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
-    const lsCoefficients = localStorage.getItem("priceCoefficients");
+      const lsProducts = localStorage.getItem("goldProducts");
+      const lsHistory = localStorage.getItem("goldPriceHistory");
+      const lsGoldPrice = localStorage.getItem("goldPrice");
+      const lsGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
+      const lsCoefficients = localStorage.getItem("priceCoefficients");
 
-    let message = "🔍 数据诊断报告\n";
-    message += "=".repeat(40) + "\n\n";
+      let message = "🔍 数据诊断报告\n";
+      message += "=".repeat(40) + "\n\n";
 
-    // 诊断产品数据
-    message += "【产品数据】\n";
+      // 诊断产品数据
+      message += "【产品数据】\n";
 
-    // 检查 React state
-    message += `📱 React State: ${products.length} 条\n`;
+      // 检查 React state
+      message += `📱 React State: ${products.length} 条\n`;
 
-    // 检查 localStorage
-    if (lsProducts) {
-      try {
-        const parsed = JSON.parse(lsProducts);
-        message += `💾 LocalStorage: ${parsed.length} 条\n`;
+      // 检查 localStorage
+      if (lsProducts) {
+        try {
+          const parsed = JSON.parse(lsProducts);
+          message += `💾 LocalStorage: ${parsed.length} 条\n`;
 
-        if (parsed.length > 0) {
-          const categories = [...new Set(parsed.map((p: any) => p.category))];
-          message += `📊 分类分布: ${categories.join(", ")}\n`;
-          message += `📝 样例数据:\n`;
-          message += `   货号: ${parsed[0].productCode}\n`;
-          message += `   名称: ${parsed[0].productName}\n`;
-          message += `   分类: ${parsed[0].category}\n`;
-          message += `   重量: ${parsed[0].weight}g\n`;
-          message += `   零售价: CAD$${parsed[0].retailPrice?.toFixed(2) || "N/A"}\n`;
+          if (parsed.length > 0) {
+            const categories = [...new Set(parsed.map((p: any) => p.category))];
+            message += `📊 分类分布: ${categories.join(", ")}\n`;
+            message += `📝 样例数据:\n`;
+            message += `   货号: ${parsed[0].productCode}\n`;
+            message += `   名称: ${parsed[0].productName}\n`;
+            message += `   分类: ${parsed[0].category}\n`;
+            message += `   重量: ${parsed[0].weight}g\n`;
+            message += `   零售价: CAD$${parsed[0].retailPrice?.toFixed(2) || "N/A"}\n`;
+          }
+
+          // 对比状态
+          if (parsed.length !== products.length) {
+            message += `⚠️ 警告：LocalStorage 和 React State 数据不一致！\n`;
+            message += `   建议点击"重新加载数据"按钮\n`;
+          }
+        } catch (e) {
+          message += `❌ 数据解析失败: ${(e as Error).message}\n`;
         }
+      } else {
+        message += `💾 LocalStorage: 无数据\n`;
+      }
 
-        // 对比状态
-        if (parsed.length !== products.length) {
-          message += `⚠️ 警告：LocalStorage 和 React State 数据不一致！\n`;
-          message += `   建议点击\"重新加载数据\"按钮\n`;
+      message += "\n";
+
+      // 诊断历史记录
+      message += "【历史记录】\n";
+      message += `📱 React State: ${priceHistory.length} 条\n`;
+      if (lsHistory) {
+        try {
+          const parsed = JSON.parse(lsHistory);
+          message += `💾 LocalStorage: ${parsed.length} 条\n`;
+        } catch (e) {
+          message += `❌ 数据解析失败: ${(e as Error).message}\n`;
+        }
+      } else {
+        message += `💾 LocalStorage: 无数据\n`;
+      }
+
+      message += "\n";
+
+      // 诊断金价
+      message += "【金价设置】\n";
+      if (lsGoldPrice) {
+        message += `✅ 金价: ¥${lsGoldPrice}/克\n`;
+        message += `📅 更新时间: ${lsGoldPriceTimestamp || "未知"}\n`;
+      } else {
+        message += `⚠️ LocalStorage 中没有金价数据\n`;
+      }
+
+      message += "\n";
+
+      // 诊断系数
+      message += "【价格系数】\n";
+      if (lsCoefficients) {
+        try {
+          const coeff = JSON.parse(lsCoefficients);
+          message += `✅ 系数已设置\n`;
+          message += `   14K金含量: ${coeff.goldFactor14K}\n`;
+          message += `   18K金含量: ${coeff.goldFactor18K}\n`;
+          message += `   零售价工费系数: ${coeff.laborFactorRetail}\n`;
+          message += `   批发价工费系数: ${coeff.laborFactorWholesale}\n`;
+        } catch (e) {
+          message += `❌ 系数解析失败: ${(e as Error).message}\n`;
+        }
+      } else {
+        message += `⚠️ LocalStorage 中没有系数数据\n`;
+      }
+
+      message += "\n";
+      message += "=".repeat(40) + "\n";
+
+      // 诊断数据库
+      message += "【数据库诊断】\n";
+      try {
+        console.log('🔧 开始诊断数据库状态...');
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/diagnostic', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ 诊断结果:', result);
+
+          message += `👤 用户: ${result.user.email}\n`;
+          message += `🆔 用户ID: ${result.user.id}\n\n`;
+          message += `📦 产品数据: ${result.database.products.count} 条\n`;
+          if (result.database.products.count > 0) {
+            message += `   示例:\n`;
+            result.database.products.sampleIds.forEach((p: any, idx: number) => {
+              message += `   ${idx + 1}. ${p.productCode} (${p.productName})\n`;
+            });
+          } else {
+            message += `   ⚠️ 数据库中没有产品数据\n`;
+          }
+          message += `\n`;
+          message += `📈 价格历史: ${result.database.priceHistory.count} 条\n`;
+          if (result.database.priceHistory.count > 0) {
+            message += `   示例:\n`;
+            result.database.priceHistory.sampleIds.forEach((h: any, idx: number) => {
+              message += `   ${idx + 1}. ${h.productCode} (产品ID: ${h.productId})\n`;
+            });
+          } else {
+            message += `   ⚠️ 数据库中没有价格历史数据\n`;
+          }
+          message += `\n`;
+          message += `⚙️ 系统配置: ${result.database.configs.count} 条\n`;
+          if (result.database.configs.count > 0) {
+            message += `   配置键: ${result.database.configs.keys.join(', ')}\n`;
+          } else {
+            message += `   ⚠️ 数据库中没有配置数据\n`;
+          }
+        } else {
+          message += `❌ 数据库诊断失败: ${response.statusText}\n`;
         }
       } catch (e) {
-        message += `❌ 数据解析失败: ${(e as Error).message}\n`;
+        message += `❌ 数据库诊断失败: ${(e as Error).message}\n`;
       }
-    } else {
-      message += `💾 LocalStorage: 无数据\n`;
+
+      message += "\n";
+      message += "=".repeat(40) + "\n";
+      message += "💡 提示：\n";
+      message += "1. 如果 React State 和 LocalStorage 不一致，请点击\"重新加载数据\"\n";
+      message += "2. 诊断结果已同步到控制台 (F12)\n";
+      message += "3. 如果数据库中没有数据，请点击\"同步到数据库\"按钮\n";
+      message += "4. 可以使用\"查看备份文件\"功能检查备份文件内容\n";
+
+      alert(message);
+
+      console.log("========== 数据诊断结束 ==========");
+    } catch (error: any) {
+      console.error("❌ 数据诊断失败:", error);
+      alert("数据诊断失败，请检查控制台获取详细错误信息。");
+    } finally {
+      setIsVerifying(false);
     }
-
-    message += "\n";
-
-    // 诊断历史记录
-    message += "【历史记录】\n";
-    message += `📱 React State: ${priceHistory.length} 条\n`;
-    if (lsHistory) {
-      try {
-        const parsed = JSON.parse(lsHistory);
-        message += `💾 LocalStorage: ${parsed.length} 条\n`;
-      } catch (e) {
-        message += `❌ 数据解析失败: ${(e as Error).message}\n`;
-      }
-    } else {
-      message += `💾 LocalStorage: 无数据\n`;
-    }
-
-    message += "\n";
-
-    // 诊断金价
-    message += "【金价设置】\n";
-    if (lsGoldPrice) {
-      message += `✅ 金价: ¥${lsGoldPrice}/克\n`;
-      message += `📅 更新时间: ${lsGoldPriceTimestamp || "未知"}\n`;
-    } else {
-      message += `⚠️ LocalStorage 中没有金价数据\n`;
-    }
-
-    message += "\n";
-
-    // 诊断系数
-    message += "【价格系数】\n";
-    if (lsCoefficients) {
-      try {
-        const coeff = JSON.parse(lsCoefficients);
-        message += `✅ 系数已设置\n`;
-        message += `   14K金含量: ${coeff.goldFactor14K}\n`;
-        message += `   18K金含量: ${coeff.goldFactor18K}\n`;
-        message += `   零售价工费系数: ${coeff.laborFactorRetail}\n`;
-        message += `   批发价工费系数: ${coeff.laborFactorWholesale}\n`;
-      } catch (e) {
-        message += `❌ 系数解析失败: ${(e as Error).message}\n`;
-      }
-    } else {
-      message += `⚠️ LocalStorage 中没有系数数据\n`;
-    }
-
-    message += "\n";
-    message += "=".repeat(40) + "\n";
-    message += "💡 提示：\n";
-    message += "1. 如果 React State 和 LocalStorage 不一致，请点击\"重新加载数据\"\n";
-    message += "2. 诊断结果已同步到控制台 (F12)\n";
-    message += "3. 可以使用\"查看备份文件\"功能检查备份文件内容\n";
-
-    alert(message);
-
-    console.log("========== 数据诊断结束 ==========");
   };
 
   // 修复子分类数据

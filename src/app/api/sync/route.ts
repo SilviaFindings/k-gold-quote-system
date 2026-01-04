@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await isAuthenticated(request);
     if (!user) {
+      console.error('❌ 同步失败: 未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -33,13 +34,16 @@ export async function POST(request: NextRequest) {
     let skippedHistory = 0;
     let syncedConfigs = 0;
 
+    console.log('='.repeat(60));
     console.log('📥 收到同步请求:', {
       userId: user.id,
+      userEmail: user.email,
       productsCount: Array.isArray(products) ? products.length : 0,
       historyCount: Array.isArray(priceHistory) ? priceHistory.length : 0,
       hasConfigs: !!configs,
       hasDataVersion: !!configs?.dataVersion,
     });
+    console.log('='.repeat(60));
 
     // 1. 同步产品数据
     if (Array.isArray(products) && products.length > 0) {
@@ -258,7 +262,7 @@ export async function POST(request: NextRequest) {
     // 获取同步后的数据版本号
     const dataVersionConfig = await appConfigManager.getConfig(user.id, 'dataVersion');
 
-    return NextResponse.json({
+    const result = {
       success: true,
       message: '数据同步成功',
       stats: {
@@ -270,11 +274,17 @@ export async function POST(request: NextRequest) {
         syncedConfigs,
         dataVersion: dataVersionConfig?.configValue as number || null,
       }
-    });
+    };
+
+    console.log('✅ 返回同步结果:', result);
+    console.log('='.repeat(60));
+
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('❌ 数据同步失败:', error);
+    console.error('错误堆栈:', error.stack);
     return NextResponse.json(
-      { error: error.message || '数据同步失败' },
+      { error: error.message || '数据同步失败', details: error.toString() },
       { status: 500 }
     );
   }
