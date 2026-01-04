@@ -3419,6 +3419,9 @@ function QuotePage() {
         setProducts([...filteredProducts, ...newProducts]);
         setPriceHistory([...priceHistory, ...newHistory]);
 
+        // 更新当前子分类，让列表显示刚导入的数据
+        setCurrentSubCategory(importSubCategory);
+
         alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 导入设置：\n  • 小类: ${importSubCategory}\n  • 大类: ${importCategory}\n\n💡 提示：产品已按照您选择的小类导入，系统不会进行自动分类识别。`);
 
         // 清空文件输入
