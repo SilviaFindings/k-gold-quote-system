@@ -1431,7 +1431,9 @@ function QuotePage() {
 
       setLastSyncTime(new Date().toLocaleString("zh-CN"));
       setSyncStatus("success");
-      setSyncMessage(`上传成功！产品: ${result.syncedProducts || 0} 个，历史记录: ${result.syncedHistory || 0} 条`);
+      // 🔥 修复：从 result.stats 中读取统计信息
+      const stats = result.stats || {};
+      setSyncMessage(`上传成功！产品: ${stats.syncedProducts || 0} 个（新建 ${stats.newProducts || 0}，更新 ${stats.updatedProducts || 0}），历史记录: ${stats.syncedHistory || 0} 条`);
 
       // 3秒后清除成功状态
       setTimeout(() => {
