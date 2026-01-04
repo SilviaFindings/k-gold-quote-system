@@ -720,6 +720,9 @@ function QuotePage() {
     let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认成色
     let colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
 
+    // 🔥 调试日志
+    console.log(`[detectMaterialFromCode] 输入货号: "${productCode}" -> 转换后: "${code}"`);
+
     // 检查成色（K10, K14, K18, 10K, 14K, 18K）
     const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
     if (karatPrefixMatch) {
@@ -729,6 +732,7 @@ function QuotePage() {
         "K18": "18K"
       };
       detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
+      console.log(`[detectMaterialFromCode] 前缀匹配: "${karatPrefixMatch[1]}" -> 识别为: "${detectedKarat}"`);
     } else {
       const karatNumberMatch = code.match(/(10K|14K|18K)/i);
       if (karatNumberMatch) {
@@ -738,6 +742,9 @@ function QuotePage() {
           "18K": "18K"
         };
         detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+        console.log(`[detectMaterialFromCode] 数字匹配: "${karatNumberMatch[1]}" -> 识别为: "${detectedKarat}"`);
+      } else {
+        console.log(`[detectMaterialFromCode] 未找到成色标记，使用默认值: "${detectedKarat}"`);
       }
     }
 
@@ -788,12 +795,15 @@ function QuotePage() {
   // 当货号改变时，自动填充已存在产品的信息，并智能识别材质
   useEffect(() => {
     if (currentProduct.productCode) {
+      console.log(`[useEffect - 货号变化] 货号: "${currentProduct.productCode}"`);
+
       // 智能识别材质
       const detected = detectMaterialFromCode(currentProduct.productCode);
 
       const existingProduct = findLatestProductByCode(currentProduct.productCode);
       if (existingProduct) {
         // 自动填充已存在产品的信息
+        console.log(`[useEffect - 货号变化] 找到现有产品，成色从 "${existingProduct.karat}" 更新为 "${detected.karat}"`);
         setCurrentProduct({
           ...currentProduct,
           productName: existingProduct.productName,
@@ -805,6 +815,7 @@ function QuotePage() {
         });
       } else {
         // 没有找到现有产品，仅应用智能识别的材质
+        console.log(`[useEffect - 货号变化] 新产品，成色设置为 "${detected.karat}"`);
         setCurrentProduct({
           ...currentProduct,
           karat: detected.karat,
@@ -3435,16 +3446,27 @@ function QuotePage() {
           // 读取成色（材质）：优先使用Excel中的成色，如果没有则从货号智能识别
           const karatRaw = karatIndex !== -1 ? String(row[karatIndex]) : "";
           let validKarat: "10K" | "14K" | "18K" = "14K";
+
+          console.log(`[导入调试] 货号: ${productCode}, Excel成色原始值: "${karatRaw}", 成色列索引: ${karatIndex}`);
+
           if (karatRaw && karatRaw.trim() !== "") {
             const karatValue = String(karatRaw).trim().toUpperCase();
+            console.log(`[导入调试] Excel成色标准化后: "${karatValue}"`);
             // 支持多种格式：10K, 14K, 18K, K10, K14, K18
             if (karatValue === "10K" || karatValue === "K10") {
               validKarat = "10K";
+              console.log(`[导入调试] ✅ Excel成色有效: 识别为 10K`);
             } else if (karatValue === "14K" || karatValue === "K14") {
               validKarat = "14K";
+              console.log(`[导入调试] ✅ Excel成色有效: 识别为 14K`);
             } else if (karatValue === "18K" || karatValue === "K18") {
               validKarat = "18K";
+              console.log(`[导入调试] ✅ Excel成色有效: 识别为 18K`);
+            } else {
+              console.log(`[导入调试] ❌ Excel成色格式无效: "${karatValue}"，将使用货号识别结果`);
             }
+          } else {
+            console.log(`[导入调试] Excel成色列为空，将使用货号识别结果`);
           }
 
           // 尝试将下单口映射到有效的代码
