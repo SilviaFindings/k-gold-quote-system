@@ -4367,7 +4367,7 @@ function QuotePage() {
       localStorage.removeItem("goldPriceTimestamp");
       localStorage.removeItem("priceCoefficients");
       localStorage.removeItem("dataVersion");
-      localStorage.removeItem("auth_token"); // 如果需要，也清除登录状态
+      // 注意：不清除登录状态 (auth_token)，方便用户继续操作
 
       // 清空 state
       setProducts([]);
