@@ -3094,8 +3094,14 @@ function QuotePage() {
       return;
     }
 
+    // 🔥 在读取文件之前先检查是否选择了小类，避免不必要的文件读取
+    if (!importSubCategory) {
+      alert("⚠️ 请先选择要导入的产品小类！\n\n在页面左侧的'导入选项'区域选择产品小类后再导入。");
+      e.target.value = ""; // 清空文件输入
+      return;
+    }
+
     console.log("开始读取文件...");
-    alert("正在读取文件: " + file.name);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -3204,13 +3210,6 @@ function QuotePage() {
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
           alert("Excel文件必须包含货号和名称列！");
-          return;
-        }
-
-        // 🔥 在循环之前检查用户是否选择了导入小类
-        if (!importSubCategory) {
-          alert("⚠️ 请先选择要导入的产品小类！\n\n在页面左侧的'导入选项'区域选择产品小类后再导入。");
-          e.target.value = ""; // 清空文件输入
           return;
         }
 
