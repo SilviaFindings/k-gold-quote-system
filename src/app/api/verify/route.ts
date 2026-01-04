@@ -45,16 +45,24 @@ export async function POST(request: NextRequest) {
     // 判断产品数据是否匹配
     let productsMatch = false;
     let productsMessage = '';
-    const productsDiff = localProductCount - dbProductCount;
-    
-    if (dbProductCount === localProductCount) {
+    let productsStatus = '';
+
+    if (localProductCount === 0 && dbProductCount === 0) {
+      // 暂无数据
       productsMatch = true;
+      productsStatus = 'ℹ️ 暂无数据';
+      productsMessage = 'ℹ️ 本地和数据库都没有产品数据';
+    } else if (dbProductCount === localProductCount) {
+      productsMatch = true;
+      productsStatus = '✅ 完整';
       productsMessage = '✅ 数据一致';
     } else if (dbProductCount > localProductCount) {
       productsMatch = true;
+      productsStatus = '✅ 完整';
       productsMessage = `✅ 数据库有更多数据 (${dbProductCount} > ${localProductCount})`;
     } else {
       productsMatch = false;
+      productsStatus = '⚠️ 数量不匹配';
       const diffCount = localProductCount - dbProductCount;
       productsMessage = `⚠️ 本地有 ${diffCount} 条未同步的产品数据，需要同步到数据库`;
     }
@@ -73,16 +81,24 @@ export async function POST(request: NextRequest) {
     // 判断价格历史是否匹配
     let historyMatch = false;
     let historyMessage = '';
-    const historyDiff = localHistoryCount - dbHistoryCount;
-    
-    if (dbHistoryCount === localHistoryCount) {
+    let historyStatus = '';
+
+    if (localHistoryCount === 0 && dbHistoryCount === 0) {
+      // 暂无数据
       historyMatch = true;
+      historyStatus = 'ℹ️ 暂无数据';
+      historyMessage = 'ℹ️ 本地和数据库都没有价格历史数据';
+    } else if (dbHistoryCount === localHistoryCount) {
+      historyMatch = true;
+      historyStatus = '✅ 完整';
       historyMessage = '✅ 数据一致';
     } else if (dbHistoryCount > localHistoryCount) {
       historyMatch = true;
+      historyStatus = '✅ 完整';
       historyMessage = `✅ 数据库有更多数据 (${dbHistoryCount} > ${localHistoryCount})`;
     } else {
       historyMatch = false;
+      historyStatus = '⚠️ 数量不匹配';
       const diffCount = localHistoryCount - dbHistoryCount;
       historyMessage = `⚠️ 本地有 ${diffCount} 条未同步的价格历史，需要同步到数据库`;
     }
@@ -192,12 +208,20 @@ export async function POST(request: NextRequest) {
     // 生成建议
     const recommendations = [];
 
-    if (!productsMatch) {
+    // 当数据为0时的特殊处理
+    if (localProductCount === 0 && dbProductCount === 0) {
+      recommendations.push('💡 提示：目前没有产品数据');
+      if (localProductCount === 0) {
+        recommendations.push('📝 建议：通过Excel导入或手动录入添加产品');
+      }
+    } else if (!productsMatch) {
       const diffCount = localProductCount - dbProductCount;
       recommendations.push(`💡 建议：本地有 ${diffCount} 条未同步的产品数据，点击"🔄 同步到数据库"按钮进行同步`);
     }
 
-    if (!historyMatch) {
+    if (localHistoryCount === 0 && dbHistoryCount === 0) {
+      recommendations.push('💡 提示：目前没有价格历史数据（这是正常的，价格历史会在修改产品价格时自动生成）');
+    } else if (!historyMatch) {
       const diffCount = localHistoryCount - dbHistoryCount;
       recommendations.push(`💡 建议：本地有 ${diffCount} 条未同步的价格历史，点击"🔄 同步到数据库"按钮进行同步`);
     }
@@ -220,8 +244,10 @@ export async function POST(request: NextRequest) {
       recommendations.push(`⚠️ 警告：发现 ${issueCount} 条历史记录数据质量问题，请检查数据完整性`);
     }
 
-    if (allChecksPass) {
+    if (allChecksPass && localProductCount > 0) {
       recommendations.push('🎉 所有数据验证通过，可以放心导出！');
+    } else if (allChecksPass && localProductCount === 0) {
+      recommendations.push('✅ 系统运行正常，请添加产品数据后使用');
     }
 
     const verificationResult = {
@@ -233,14 +259,14 @@ export async function POST(request: NextRequest) {
           localCount: localProductCount,
           databaseCount: dbProductCount,
           match: productsMatch,
-          status: productsMatch ? '✅ 完整' : '⚠️ 数量不匹配',
+          status: productsStatus,
           message: productsMessage,
         },
         history: {
           localCount: localHistoryCount,
           databaseCount: dbHistoryCount,
           match: historyMatch,
-          status: historyMatch ? '✅ 完整' : '⚠️ 数量不匹配',
+          status: historyStatus,
           message: historyMessage,
         },
         configs: {
