@@ -6422,65 +6422,106 @@ function QuotePage() {
                         <p className="font-medium text-yellow-700 mb-2 text-sm">
                           💡 提示：点击下方按钮分析这些ID为何未同步
                         </p>
-                        <button
-                          onClick={async () => {
-                            try {
-                              const localProducts = localStorage.getItem('goldProducts');
-                              const localHistory = localStorage.getItem('goldPriceHistory');
-                              const products = localProducts ? JSON.parse(localProducts) : [];
-                              const history = localHistory ? JSON.parse(localHistory) : [];
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const localProducts = localStorage.getItem('goldProducts');
+                                const localHistory = localStorage.getItem('goldPriceHistory');
+                                const products = localProducts ? JSON.parse(localProducts) : [];
+                                const history = localHistory ? JSON.parse(localHistory) : [];
 
-                              const localProductIds = products.map((p: any) => p.id).filter(Boolean);
-                              const localHistoryIds = history.map((h: any) => h.id).filter(Boolean);
+                                const localProductIds = products.map((p: any) => p.id).filter(Boolean);
+                                const localHistoryIds = history.map((h: any) => h.id).filter(Boolean);
 
-                              const token = localStorage.getItem('auth_token');
-                              const response = await fetch('/api/analyze-missing', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  'Authorization': `Bearer ${token}`,
-                                },
-                                body: JSON.stringify({ localProductIds, localHistoryIds }),
-                              });
+                                const token = localStorage.getItem('auth_token');
+                                const response = await fetch('/api/analyze-missing', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`,
+                                  },
+                                  body: JSON.stringify({ localProductIds, localHistoryIds }),
+                                });
 
-                              if (!response.ok) {
-                                throw new Error('分析失败');
-                              }
+                                if (!response.ok) {
+                                  throw new Error('分析失败');
+                                }
 
-                              const result = await response.json();
-                              console.log('分析结果:', result);
+                                const result = await response.json();
+                                console.log('分析结果:', result);
 
-                              let message = '📊 未同步记录分析\n\n';
-                              message += `历史记录:\n`;
-                              message += `  - 本地数量: ${result.analysis.history.localCount}\n`;
-                              message += `  - 数据库数量: ${result.analysis.history.dbCount}\n`;
-                              message += `  - 未同步数量: ${result.analysis.history.missingCount}\n\n`;
+                                let message = '📊 未同步记录分析\n\n';
+                                message += `历史记录:\n`;
+                                message += `  - 本地数量: ${result.analysis.history.localCount}\n`;
+                                message += `  - 数据库数量: ${result.analysis.history.dbCount}\n`;
+                                message += `  - 未同步数量: ${result.analysis.history.missingCount}\n\n`;
 
-                              const lengthStats = result.analysis.history.lengthStats;
-                              message += `ID长度分布:\n`;
-                              Object.entries(lengthStats).sort((a: any, b: any) => b[0] - a[0]).forEach(([len, count]: any) => {
-                                message += `  - ${len}字符: ${count}条\n`;
-                              });
-                              message += '\n';
-
-                              const sampleTruncated = result.analysis.history.sampleTruncated;
-                              if (sampleTruncated.length > 0) {
-                                message += `⚠️ 可能的截断问题 (${sampleTruncated.length}条):\n`;
-                                sampleTruncated.slice(0, 5).forEach((item: any) => {
-                                  message += `  - ${item.id} (截断版本: ${item.truncatedId})\n`;
+                                const lengthStats = result.analysis.history.lengthStats;
+                                message += `ID长度分布:\n`;
+                                Object.entries(lengthStats).sort((a: any, b: any) => b[0] - a[0]).forEach(([len, count]: any) => {
+                                  message += `  - ${len}字符: ${count}条\n`;
                                 });
                                 message += '\n';
-                              }
 
-                              alert(message);
-                            } catch (error: any) {
-                              alert('分析失败: ' + error.message);
-                            }
-                          }}
-                          className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
-                        >
-                          🔍 分析未同步记录
-                        </button>
+                                const sampleTruncated = result.analysis.history.sampleTruncated;
+                                if (sampleTruncated.length > 0) {
+                                  message += `⚠️ 可能的截断问题 (${sampleTruncated.length}条):\n`;
+                                  sampleTruncated.slice(0, 5).forEach((item: any) => {
+                                    message += `  - ${item.id} (截断版本: ${item.truncatedId})\n`;
+                                  });
+                                  message += '\n';
+                                }
+
+                                alert(message);
+                              } catch (error: any) {
+                                alert('分析失败: ' + error.message);
+                              }
+                            }}
+                            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                          >
+                            🔍 分析未同步记录
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                // 找到最长的ID
+                                const ids = verificationResult.details.history.mismatchedIds as string[];
+                                const longestId = ids.reduce((max, id) => id.length > max.length ? id : max, '');
+
+                                console.log('测试最长的ID:', longestId, '长度:', longestId.length);
+
+                                const token = localStorage.getItem('auth_token');
+                                const response = await fetch('/api/test-long-id', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`,
+                                  },
+                                  body: JSON.stringify({ testId: longestId }),
+                                });
+
+                                if (!response.ok) {
+                                  throw new Error('测试失败');
+                                }
+
+                                const result = await response.json();
+                                console.log('测试结果:', result);
+
+                                if (result.success) {
+                                  alert(`✅ 测试成功！\n\n最长的ID可以正常插入：\n  - ID长度: ${result.idLength} 字符\n  - 数据库字段限制: ${result.idMaxLength} 字符\n\n说明数据库表结构已修复，应该可以同步所有数据。`);
+                                } else {
+                                  alert(`❌ 测试失败！\n\n错误信息: ${result.error}\n错误代码: ${result.code}\n错误详情: ${result.detail}\n\n请查看控制台获取更多详情。`);
+                                }
+                              } catch (error: any) {
+                                alert('测试失败: ' + error.message);
+                              }
+                            }}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                          >
+                            🧪 测试最长ID
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
