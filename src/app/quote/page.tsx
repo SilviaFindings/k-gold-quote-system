@@ -828,7 +828,14 @@ function QuotePage() {
       // 智能识别材质
       const detected = detectMaterialFromCode(currentProduct.productCode);
 
-      const existingProduct = findLatestProductByCode(currentProduct.productCode);
+      // 🔥 修复：如果已输入供应商代码，优先使用货号+供应商查找
+      const existingProduct = currentProduct.supplierCode
+        ? products.find((p) =>
+            p.productCode === currentProduct.productCode &&
+            p.supplierCode === currentProduct.supplierCode &&
+            p.category === currentCategory
+          )
+        : findLatestProductByCode(currentProduct.productCode);
       if (existingProduct) {
         // 自动填充已存在产品的信息
         setCurrentProduct({
@@ -1824,12 +1831,15 @@ function QuotePage() {
   const generateSubCode = (
     baseCode: string,
     existingProducts: Product[],
-    modificationType: 'coefficient' | 'specification'
+    modificationType: 'coefficient' | 'specification',
+    supplierCode: string = "K14"  // 🔥 新增：供应商代码参数
   ): string => {
     if (modificationType === 'coefficient') {
       // DU系列：基于基础货号生成，查找最大的DU编号
+      // 🔥 修复：只查找相同货号+供应商的产品
       const sameCodeProducts = existingProducts.filter(p =>
-        p.productCode === baseCode || p.productCode.startsWith(baseCode)
+        (p.productCode === baseCode || p.productCode.startsWith(baseCode)) &&
+        p.supplierCode === supplierCode
       );
 
       const duProducts = sameCodeProducts.filter(p =>
@@ -1848,9 +1858,10 @@ function QuotePage() {
       return `${baseCode}DU${nextDuNumber}`;
     } else {
       // 字母系列：基于当前货号生成，查找当前货号的最大字母
-      // 查找所有以 baseCode 开头，且以 -[A-Z] 结尾的产品
+      // 🔥 修复：只查找相同货号+供应商的产品
       const sameCodeProducts = existingProducts.filter(p =>
-        p.productCode.startsWith(baseCode)
+        p.productCode.startsWith(baseCode) &&
+        p.supplierCode === supplierCode
       );
 
       // 查找当前货号的所有字母副号
@@ -1989,7 +2000,11 @@ function QuotePage() {
     );
 
     // 判断是否为更新操作
-    const existingRecords = products.filter((p) => p.productCode === currentProduct.productCode);
+    // 🔥 修复：使用货号+供应商作为唯一键，允许相同货号存在不同供应商的产品
+    const existingRecords = products.filter((p) => 
+      p.productCode === currentProduct.productCode && 
+      p.supplierCode === (currentProduct.supplierCode || "K14")
+    );
     const isUpdate = existingRecords.length > 0;
 
     // 检测修改类型和生成副号
@@ -2007,14 +2022,16 @@ function QuotePage() {
         finalProductCode = generateSubCode(
           baseCode,
           products,
-          modificationType
+          modificationType,
+          currentProduct.supplierCode || "K14"  // 🔥 传递供应商代码
         );
       } else if (modificationType === 'specification') {
         // 修改规格：基于当前货号生成字母副号（不提取基础货号）
         finalProductCode = generateSubCode(
           currentProduct.productCode!,
           products,
-          modificationType
+          modificationType,
+          currentProduct.supplierCode || "K14"  // 🔥 传递供应商代码
         );
       } else if (modificationType === 'clear-coefficients') {
         // 清空特殊系数：回到基础货号
@@ -2068,11 +2085,13 @@ function QuotePage() {
     } else if (modificationType === 'clear-coefficients') {
       // 清空特殊系数回到基础货号：更新基础货号记录，保留所有副号记录
       const baseCode = extractBaseCode(currentProduct.productCode!);
+      const supplierCode = currentProduct.supplierCode || "K14";
       finalProducts = products.map(p => {
-        if (p.productCode === baseCode) {
+        // 🔥 修复：只更新相同货号+供应商的基础货号记录，不影响其他供应商的产品
+        if (p.productCode === baseCode && p.supplierCode === supplierCode) {
           return newProduct; // 替换基础货号记录
         }
-        return p; // 保留所有副号记录
+        return p; // 保留所有其他记录（包括其他供应商的记录）
       });
     } else {
       // 没有生成副号（modificationType === 'none'）：删除当前货号+供应商的所有旧记录，只保留新的
