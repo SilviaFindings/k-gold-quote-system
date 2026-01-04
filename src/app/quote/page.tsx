@@ -5879,28 +5879,16 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-black mb-2">🔧 修复子分类</h4>
                       <p className="text-sm text-black">自动修复缺少子分类的产品</p>
+                      <p className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        适用场景：数据迁移或导入后，部分产品缺少子分类信息
+                      </p>
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">📊 查看分类详情</h4>
-                      <p className="text-sm text-black">查看各分类和子分类的产品数量统计</p>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">📄 查看原始数据</h4>
-                      <p className="text-sm text-black">查看本地存储的原始数据（调试用）</p>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">📦 查看备份文件</h4>
-                      <p className="text-sm text-black">查看备份文件的详细信息而不恢复</p>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">🗑️ 清除所有数据</h4>
-                      <p className="text-sm text-black">清除所有本地存储的数据</p>
+                      <h4 className="font-bold text-black mb-2">🗑️ 清除本地数据</h4>
+                      <p className="text-sm text-black">清除所有本地存储的数据（产品、历史、配置）</p>
                       <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
-                        ⚠️ 危险操作，清除后需要重新导入数据
+                        ⚠️ 危险操作，清除后需要重新导入数据。云端数据库数据不受影响
                       </p>
                     </div>
                   </div>
