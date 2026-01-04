@@ -720,7 +720,7 @@ function QuotePage() {
     let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认成色
     let colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
 
-    // 检查成色（按优先级顺序：开头前缀 -> 斜杠后完整格式(10KR/14KR/18KR,10KW/14KW/18KW) -> 斜杠后前缀 -> 数字格式）
+    // 检查成色（按优先级顺序：开头前缀 -> 斜杠后完整格式(KR10/KR14/KR18,KW10/KW14/KW18) -> 斜杠后前缀 -> 数字格式）
     // 1. 检查开头的 K10/K14/K18
     const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
     if (karatPrefixMatch) {
@@ -731,25 +731,25 @@ function QuotePage() {
       };
       detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
     } else {
-      // 2. 优先检查斜杠后的 10KR/14KR/18KR（玫瑰金格式）
-      const karatKRMatch = code.match(/\/(10KR|14KR|18KR)(?=\/|$|[^A-Z])/i);
+      // 2. 优先检查斜杠后的 KR10/KR14/KR18（玫瑰金格式）
+      const karatKRMatch = code.match(/\/(KR10|KR14|KR18)(?=\/|$|[^A-Z])/i);
       if (karatKRMatch) {
-        const karatKR = karatKRMatch[1].toUpperCase().replace("KR", "K");
+        const karatKR = karatKRMatch[1].toUpperCase().replace("KR", "");
         const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-          "10K": "10K",
-          "14K": "14K",
-          "18K": "18K"
+          "10": "10K",
+          "14": "14K",
+          "18": "18K"
         };
         detectedKarat = karatMap[karatKR];
       } else {
-        // 3. 检查斜杠后的 10KW/14KW/18KW（白金格式）
-        const karatKWMatch = code.match(/\/(10KW|14KW|18KW)(?=\/|$|[^A-Z])/i);
+        // 3. 检查斜杠后的 KW10/KW14/KW18（白金格式）
+        const karatKWMatch = code.match(/\/(KW10|KW14|KW18)(?=\/|$|[^A-Z])/i);
         if (karatKWMatch) {
-          const karatKW = karatKWMatch[1].toUpperCase().replace("KW", "K");
+          const karatKW = karatKWMatch[1].toUpperCase().replace("KW", "");
           const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-            "10K": "10K",
-            "14K": "14K",
-            "18K": "18K"
+            "10": "10K",
+            "14": "14K",
+            "18": "18K"
           };
           detectedKarat = karatMap[karatKW];
         } else {
