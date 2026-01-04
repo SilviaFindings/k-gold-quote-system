@@ -355,6 +355,10 @@ function QuotePage() {
   // 导出选项菜单状态
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
 
+  // 操作指引模态框状态
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [helpSearchQuery, setHelpSearchQuery] = useState<string>("");
+
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
@@ -3158,32 +3162,40 @@ function QuotePage() {
           <h1 className="text-3xl font-bold text-black">
             K金产品报价计算表
           </h1>
-          <button
-            onClick={async () => {
-              try {
-                const response = await fetch('/api/auth/logout', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                  },
-                });
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              ❓ 操作指引
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                    },
+                  });
 
-                if (response.ok) {
+                  if (response.ok) {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                  }
+                } catch (error) {
+                  console.error('Logout error:', error);
                   localStorage.removeItem('auth_token');
                   localStorage.removeItem('user');
                   window.location.href = '/login';
                 }
-              } catch (error) {
-                console.error('Logout error:', error);
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-              }
-            }}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            登出
-          </button>
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              登出
+            </button>
+          </div>
         </div>
 
         {/* 数据状态显示 */}
@@ -5678,6 +5690,323 @@ function QuotePage() {
                 suppressHydrationWarning
               >
                 确认修改
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 操作指引模态框 */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 标题栏 */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">📚 操作指引</h2>
+              <button
+                onClick={() => setShowHelpModal(false)}
+                className="text-white hover:text-gray-200 text-3xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* 搜索栏 */}
+            <div className="p-4 bg-gray-50 border-b">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="🔍 搜索功能或问题...（例如：导出、批量操作、计算价格）"
+                  value={helpSearchQuery}
+                  onChange={(e) => setHelpSearchQuery(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+                <span className="absolute left-3 top-3 text-gray-400">🔍</span>
+              </div>
+            </div>
+
+            {/* 内容区域 - 可滚动 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-8">
+                {/* 快速入门 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">1</span>
+                    快速入门
+                  </h3>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                    <p className="text-black">
+                      <strong>第一步：</strong> 输入或导入产品数据（货号、名称、重量等）
+                    </p>
+                    <p className="text-black">
+                      <strong>第二步：</strong> 设置当前金价和价格系数
+                    </p>
+                    <p className="text-black">
+                      <strong>第三步：</strong> 系统自动计算批发价和零售价
+                    </p>
+                    <p className="text-black">
+                      <strong>第四步：</strong> 导出报价单或备份数据
+                    </p>
+                  </div>
+                </section>
+
+                {/* 产品管理 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">2</span>
+                    产品管理
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">添加单个产品</h4>
+                      <p className="text-sm text-black mb-2">在"产品信息录入"区域填写信息，点击"添加产品"按钮</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-gray-100 text-xs text-black rounded">货号（必填）</span>
+                        <span className="px-2 py-1 bg-gray-100 text-xs text-black rounded">名称（必填）</span>
+                        <span className="px-2 py-1 bg-gray-100 text-xs text-black rounded">重量</span>
+                        <span className="px-2 py-1 bg-gray-100 text-xs text-black rounded">工费</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">批量导入产品</h4>
+                      <p className="text-sm text-black mb-2">点击"批量导入"选择Excel文件，支持 .xlsx、.xls、.csv 格式</p>
+                      <div className="text-xs text-black bg-gray-50 p-2 rounded">
+                        Excel 必须包含：货号、名称列，可选包含：规格、重量、工费等
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">编辑/删除产品</h4>
+                      <p className="text-sm text-black">在产品列表中，每行右侧有"编辑"、"查看历史"、"删除"按钮</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 价格计算 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
+                    价格计算
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">修改金价</h4>
+                      <p className="text-sm text-black mb-2">在"金价设置"区域输入新的市场金价（人民币/克）</p>
+                      <p className="text-xs text-black bg-amber-50 p-2 rounded">
+                        ⚠️ 修改金价后，需要点击"更新选中产品价格"按钮才会应用到产品
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">更新产品价格</h4>
+                      <p className="text-sm text-black mb-2">
+                        1. 在产品列表勾选需要更新的产品<br />
+                        2. 点击"批量操作"区域的"🔄 更新选中产品价格"按钮
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">调整价格系数</h4>
+                      <p className="text-sm text-black mb-2">在"价格系数设置"区域修改各种系数</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <span className="px-2 py-1 bg-gray-100 text-black rounded">金含量系数</span>
+                        <span className="px-2 py-1 bg-gray-100 text-black rounded">工费系数</span>
+                        <span className="px-2 py-1 bg-gray-100 text-black rounded">材料损耗系数</span>
+                        <span className="px-2 py-1 bg-gray-100 text-black rounded">汇率</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">为特定产品设置特殊系数</h4>
+                      <p className="text-sm text-black mb-2">在编辑产品时，可以设置该产品的特殊系数，优先使用特殊系数而不是全局系数</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 批量操作 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm">4</span>
+                    批量操作
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔄 更新选中产品价格</h4>
+                      <p className="text-sm text-black">根据当前金价和系数，重新计算选中产品的价格</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🏷️ 批量更新供应商代码</h4>
+                      <p className="text-sm text-black">根据货号列表批量设置供应商代码</p>
+                      <p className="text-xs text-black bg-purple-50 p-2 rounded mt-2">
+                        适用场景：新供应商接手一批产品，需要批量更换供应商代码
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📦 批量修改下单口</h4>
+                      <p className="text-sm text-black">根据货号列表批量修改下单口</p>
+                      <p className="text-xs text-black bg-purple-50 p-2 rounded mt-2">
+                        适用场景：某个产品改由不同的办公室下单
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">✏️ 批量修改价格系数</h4>
+                      <p className="text-sm text-black">批量修改产品的工费、配件、石头等成本</p>
+                      <p className="text-xs text-black bg-purple-50 p-2 rounded mt-2">
+                        适用场景：供应商调整了工费，需要批量更新
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🗑️ 批量删除选中产品</h4>
+                      <p className="text-sm text-black">删除选中的产品及其所有历史记录</p>
+                      <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                        ⚠️ 此操作不可恢复，请谨慎操作
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 数据导出与备份 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm">5</span>
+                    数据导出与备份
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📤 导出产品列表</h4>
+                      <p className="text-sm text-black mb-2">导出当前显示的产品列表到Excel文件</p>
+                      <p className="text-xs text-black bg-emerald-50 p-2 rounded">
+                        适用场景：分享给客户、打印报价单、进一步编辑
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📦 导出数据备份</h4>
+                      <p className="text-sm text-black mb-2">导出完整数据（产品、历史、配置）到Excel或JSON文件</p>
+                      <p className="text-xs text-black bg-emerald-50 p-2 rounded">
+                        适用场景：数据迁移、定期备份、跨设备同步
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">恢复数据</h4>
+                      <p className="text-sm text-black mb-2">从备份文件恢复数据到系统</p>
+                      <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                        ⚠️ 会覆盖当前所有数据，请先备份
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">✅ 验证数据</h4>
+                      <p className="text-sm text-black mb-2">检查数据完整性和准确性，确保导出前数据无误</p>
+                      <p className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        建议：导出前先验证数据
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔄 同步到数据库</h4>
+                      <p className="text-sm text-black mb-2">将本地数据同步到云端数据库，支持多设备访问</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 高级工具 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-gray-500 text-white rounded-full flex items-center justify-center text-sm">6</span>
+                    高级工具（更多工具菜单）
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔍 诊断数据</h4>
+                      <p className="text-sm text-black">检查数据中的异常和问题，提供修复建议</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔧 修复子分类</h4>
+                      <p className="text-sm text-black">自动修复缺少子分类的产品</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📊 查看分类详情</h4>
+                      <p className="text-sm text-black">查看各分类和子分类的产品数量统计</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📄 查看原始数据</h4>
+                      <p className="text-sm text-black">查看本地存储的原始数据（调试用）</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📦 查看备份文件</h4>
+                      <p className="text-sm text-black">查看备份文件的详细信息而不恢复</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🗑️ 清除所有数据</h4>
+                      <p className="text-sm text-black">清除所有本地存储的数据</p>
+                      <p className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                        ⚠️ 危险操作，清除后需要重新导入数据
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 常见问题 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm">?</span>
+                    常见问题
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 价格计算公式是什么？</h4>
+                      <p className="text-sm text-black">
+                        A: 总价 = (材料价 + 工费 + 其它成本) × (1 + 佣金率) × 国际运输和关税系数
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 什么是副号？</h4>
+                      <p className="text-sm text-black">
+                        A: 副号是在原货号基础上生成的变体货号，用于区分不同规格或系数的产品
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 数据存储在哪里？</h4>
+                      <p className="text-sm text-black">
+                        A: 数据存储在浏览器本地存储（localStorage）和云端数据库，支持多设备同步
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 如何批量修改产品成本？</h4>
+                      <p className="text-sm text-black">
+                        A: 使用"批量操作" → "✏️ 批量修改价格系数"功能
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {/* 底部 */}
+            <div className="border-t px-6 py-4 bg-gray-50 flex justify-between items-center">
+              <p className="text-sm text-black">
+                💡 需要更多帮助？请联系技术支持
+              </p>
+              <button
+                onClick={() => setShowHelpModal(false)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                关闭
               </button>
             </div>
           </div>
