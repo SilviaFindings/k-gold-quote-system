@@ -516,49 +516,83 @@ function QuotePage() {
   const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" } => {
     const code = productCode.toUpperCase();
 
-    // 1. 优先检查 /10k, /14k, /18k 格式（不区分大小写）
-    const slashKaratMatch = code.match(/\/(10K|14K|18K)(?=\/|$|[^A-Z])/i);
-    if (slashKaratMatch) {
-      const karatValue = slashKaratMatch[1].toUpperCase() as "10K" | "14K" | "18K";
-      return { karat: karatValue, goldColor: "黄金" };
+    // 1. 检查白金（KW）- 如 KW10, KW14, KW18
+    const whiteGoldPrefixMatch = code.match(/^(KW10|KW14|KW18)/i);
+    if (whiteGoldPrefixMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "KW10": "10K",
+        "KW14": "14K",
+        "KW18": "18K"
+      };
+      return { karat: karatMap[whiteGoldPrefixMatch[1].toUpperCase()], goldColor: "白金" };
     }
 
-    // 2. 检查以 10K, 14K, 18K 结尾
-    const endKaratMatch = code.match(/(10K|14K|18K)$/i);
-    if (endKaratMatch) {
-      const karatValue = endKaratMatch[1].toUpperCase() as "10K" | "14K" | "18K";
-      return { karat: karatValue, goldColor: "黄金" };
+    const whiteGoldSlashMatch = code.match(/\/(KW10|KW14|KW18)(?=\/|$|[^A-Z])/i);
+    if (whiteGoldSlashMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "KW10": "10K",
+        "KW14": "14K",
+        "KW18": "18K"
+      };
+      return { karat: karatMap[whiteGoldSlashMatch[1].toUpperCase()], goldColor: "白金" };
     }
 
-    // 3. 检查 K14, K18, K10 前缀
-    const kPrefixMatch = code.match(/^(K14|K18|K10)/i);
-    if (kPrefixMatch) {
-      const karatMap: Record<string, "14K" | "18K" | "10K"> = {
+    // 2. 检查玫瑰金（KR）- 如 10KR, 14KR, 18KR
+    const roseGoldSuffixMatch = code.match(/(10KR|14KR|18KR)$/i);
+    if (roseGoldSuffixMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "10KR": "10K",
+        "14KR": "14K",
+        "18KR": "18K"
+      };
+      return { karat: karatMap[roseGoldSuffixMatch[1].toUpperCase()], goldColor: "玫瑰金" };
+    }
+
+    const roseGoldSlashMatch = code.match(/\/(10KR|14KR|18KR)(?=\/|$|[^A-Z])/i);
+    if (roseGoldSlashMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "10KR": "10K",
+        "14KR": "14K",
+        "18KR": "18K"
+      };
+      return { karat: karatMap[roseGoldSlashMatch[1].toUpperCase()], goldColor: "玫瑰金" };
+    }
+
+    // 3. 检查黄金（K）- 如 K10, K14, K18, 10K, 14K, 18K
+    const goldPrefixMatch = code.match(/^(K10|K14|K18)/i);
+    if (goldPrefixMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "K10": "10K",
+        "K14": "14K",
+        "K18": "18K"
+      };
+      return { karat: karatMap[goldPrefixMatch[1].toUpperCase()], goldColor: "黄金" };
+    }
+
+    const goldSuffixMatch = code.match(/(10K|14K|18K)$/i);
+    if (goldSuffixMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "10K": "10K",
+        "14K": "14K",
+        "18K": "18K"
+      };
+      return { karat: karatMap[goldSuffixMatch[1].toUpperCase()], goldColor: "黄金" };
+    }
+
+    const goldSlashMatch = code.match(/\/(K10|K14|K18|10K|14K|18K)(?=\/|$|[^A-Z])/i);
+    if (goldSlashMatch) {
+      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+        "K10": "10K",
         "K14": "14K",
         "K18": "18K",
-        "K10": "10K"
+        "10K": "10K",
+        "14K": "14K",
+        "18K": "18K"
       };
-      const karatValue = karatMap[kPrefixMatch[1].toUpperCase()];
-      if (karatValue) {
-        return { karat: karatValue, goldColor: "黄金" };
-      }
+      return { karat: karatMap[goldSlashMatch[1].toUpperCase()], goldColor: "黄金" };
     }
 
-    // 4. 检查 /K14, /K18, /K10 格式
-    const slashKPrefixMatch = code.match(/\/(K14|K18|K10)(?=\/|$|[^A-Z])/i);
-    if (slashKPrefixMatch) {
-      const karatMap: Record<string, "14K" | "18K" | "10K"> = {
-        "K14": "14K",
-        "K18": "18K",
-        "K10": "10K"
-      };
-      const karatValue = karatMap[slashKPrefixMatch[1].toUpperCase()];
-      if (karatValue) {
-        return { karat: karatValue, goldColor: "黄金" };
-      }
-    }
-
-    // 默认返回 14K
+    // 默认返回 14K 黄金
     return { karat: "14K", goldColor: "黄金" };
   };
 
@@ -586,12 +620,14 @@ function QuotePage() {
           weight: existingProduct.weight,
           laborCost: existingProduct.laborCost,
           karat: detected.karat,  // 使用智能识别的材质
+          goldColor: detected.goldColor,  // 使用智能识别的金子颜色
         });
       } else {
         // 没有找到现有产品，仅应用智能识别的材质
         setCurrentProduct({
           ...currentProduct,
           karat: detected.karat,
+          goldColor: detected.goldColor,  // 使用智能识别的金子颜色
         });
       }
     }
