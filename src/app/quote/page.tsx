@@ -4130,6 +4130,20 @@ function QuotePage() {
                       >
                         🔍 检查云端数据
                       </button>
+
+                      <button
+                        onClick={async () => {
+                          if (confirm("⚠️ 危险操作：确定要清空所有云端数据吗？\n\n此操作不可恢复，将删除：\n• 所有产品数据\n• 所有价格历史\n• 所有配置数据\n\n确定要继续吗？")) {
+                            setShowSyncMenu(false);
+                            await cleanAllCloudData();
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                        disabled={syncStatus === "syncing"}
+                        suppressHydrationWarning
+                      >
+                        🗑️ 清空云端数据
+                      </button>
                     </div>
 
                     <div className="px-4 pt-2 border-t border-gray-200">
@@ -6707,6 +6721,14 @@ function QuotePage() {
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🗑️ 清空云端数据</h4>
+                      <p className="text-sm text-black mb-2">删除云端数据库中的所有数据</p>
+                      <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                        ⚠️ 危险操作！此操作不可恢复，会删除云端所有产品、历史记录和配置数据
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-black mb-2">✅ 自动同步</h4>
                       <p className="text-sm text-black mb-2">数据变更时自动上传到云端（默认开启）</p>
                       <div className="text-xs text-black bg-cyan-50 p-2 rounded mt-2">
@@ -6722,6 +6744,7 @@ function QuotePage() {
                         <li>换新设备时，使用"替换下载"导入云端数据</li>
                         <li>替换下载前，建议先通过"备份数据"按钮备份本地数据</li>
                         <li>可以关闭"自动同步"手动控制同步时机</li>
+                        <li>清空云端数据前，请确保已备份重要数据，此操作不可恢复</li>
                       </ul>
                     </div>
                   </div>
