@@ -3,6 +3,8 @@ import { isAuthenticated } from '@/lib/auth';
 import { productManager } from '@/storage/database/productManager';
 import { priceHistoryManager } from '@/storage/database/priceHistoryManager';
 import { appConfigManager } from '@/storage/database/appConfigManager';
+import { getDb } from 'coze-coding-dev-sdk';
+import { sql } from 'drizzle-orm';
 
 /**
  * GET /api/diagnostic - 诊断数据库状态
@@ -15,6 +17,24 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🔧 诊断数据库状态:', { userId: user.id, userEmail: user.email });
+
+    const db = await getDb();
+
+    // 0. 检查表结构
+    console.log('📊 检查表结构...');
+    const structureQuery = sql`
+      SELECT
+        table_name,
+        column_name,
+        data_type,
+        character_maximum_length
+      FROM information_schema.columns
+      WHERE table_name IN ('products', 'price_history')
+        AND column_name IN ('id', 'product_id')
+      ORDER BY table_name, column_name
+    `;
+    const tableStructure = await db.execute(structureQuery);
+    console.log('表结构检查结果:', tableStructure.rows);
 
     // 1. 查询产品数据
     const dbProducts = await productManager.getProducts(user.id, { limit: 10000 });
@@ -35,6 +55,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         email: user.email,
       },
+      tableStructure: tableStructure.rows,
       database: {
         products: {
           count: dbProducts.length,

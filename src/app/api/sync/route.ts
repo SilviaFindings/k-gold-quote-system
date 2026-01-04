@@ -3,11 +3,71 @@ import { isAuthenticated } from '@/lib/auth';
 import { ProductManager } from '@/storage/database/productManager';
 import { PriceHistoryManager } from '@/storage/database/priceHistoryManager';
 import { appConfigManager } from '@/storage/database/appConfigManager';
+import { getDb } from 'coze-coding-dev-sdk';
+import { sql } from 'drizzle-orm';
 import type { Product, PriceHistory } from '@/storage/database/shared/schema';
 
 // 创建管理器实例
 const productManager = new ProductManager();
 const priceHistoryManager = new PriceHistoryManager();
+
+/**
+ * 检查并修复数据库表结构
+ */
+async function checkAndFixDatabaseStructure() {
+  const db = await getDb();
+
+  // 检查当前表结构
+  const checkQuery = sql`
+    SELECT
+      table_name,
+      column_name,
+      character_maximum_length
+    FROM information_schema.columns
+    WHERE table_name IN ('products', 'price_history')
+      AND column_name IN ('id', 'product_id')
+    ORDER BY table_name, column_name
+  `;
+
+  const result = await db.execute(checkQuery);
+  const columns = result.rows as any[];
+
+  // 检查是否需要修复
+  const needsFix = columns.some((col: any) => {
+    const length = col.character_maximum_length;
+    return length && length < 100;
+  });
+
+  if (needsFix) {
+    console.log('🔧 检测到数据库表结构需要修复...');
+
+    // 修复表结构
+    try {
+      await db.execute(sql`ALTER TABLE price_history ALTER COLUMN id TYPE varchar(100)`);
+      console.log('  ✅ price_history.id 修改成功');
+    } catch (e: any) {
+      console.warn('  ⚠️ price_history.id 修改失败:', e.message);
+    }
+
+    try {
+      await db.execute(sql`ALTER TABLE price_history ALTER COLUMN product_id TYPE varchar(100)`);
+      console.log('  ✅ price_history.product_id 修改成功');
+    } catch (e: any) {
+      console.warn('  ⚠️ price_history.product_id 修改失败:', e.message);
+    }
+
+    try {
+      await db.execute(sql`ALTER TABLE products ALTER COLUMN id TYPE varchar(100)`);
+      console.log('  ✅ products.id 修改成功');
+    } catch (e: any) {
+      console.warn('  ⚠️ products.id 修改失败:', e.message);
+    }
+
+    console.log('✅ 数据库表结构修复完成');
+  } else {
+    console.log('✅ 数据库表结构正常，无需修复');
+  }
+}
 
 /**
  * POST /api/sync - 同步本地数据到数据库
@@ -44,6 +104,11 @@ export async function POST(request: NextRequest) {
       hasDataVersion: !!configs?.dataVersion,
     });
     console.log('='.repeat(60));
+
+    // 0. 自动检查并修复数据库表结构
+    console.log('🔍 检查数据库表结构...');
+    await checkAndFixDatabaseStructure();
+    console.log('-'.repeat(60));
 
     // 1. 同步产品数据
     if (Array.isArray(products) && products.length > 0) {
