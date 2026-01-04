@@ -6485,6 +6485,74 @@ function QuotePage() {
                           <button
                             onClick={async () => {
                               try {
+                                const localProducts = localStorage.getItem('goldProducts');
+                                const localHistory = localStorage.getItem('goldPriceHistory');
+                                const history = localHistory ? JSON.parse(localHistory) : [];
+
+                                const missingIds = verificationResult.details.history.mismatchedIds as string[];
+
+                                const token = localStorage.getItem('auth_token');
+                                const response = await fetch('/api/diagnose-failed', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`,
+                                  },
+                                  body: JSON.stringify({ missingIds, localHistory: history }),
+                                });
+
+                                if (!response.ok) {
+                                  throw new Error('诊断失败');
+                                }
+
+                                const result = await response.json();
+                                console.log('诊断结果:', result);
+
+                                let message = '🔍 失败记录详细诊断\n\n';
+
+                                if (result.summary.missingProduct > 0) {
+                                  message += `⚠️ productId不存在 (${result.summary.missingProduct}条):\n`;
+                                  result.issues.missingProduct.slice(0, 5).forEach((item: any) => {
+                                    message += `  - ${item.id} (productId: ${item.productId})\n`;
+                                  });
+                                  message += '\n';
+                                }
+
+                                if (result.summary.shortIdExists > 0) {
+                                  message += `⚠️ 存在截断版本 (${result.summary.shortIdExists}条):\n`;
+                                  result.issues.shortIdExists.slice(0, 5).forEach((item: any) => {
+                                    message += `  - ${item.id} (截断: ${item.truncatedId})\n`;
+                                  });
+                                  message += '\n';
+                                }
+
+                                if (result.summary.duplicateId > 0) {
+                                  message += `⚠️ 本地重复ID (${result.summary.duplicateId}条):\n`;
+                                  result.issues.duplicateId.slice(0, 5).forEach((item: any) => {
+                                    message += `  - ${item.id} (重复: ${item.duplicateCount}次)\n`;
+                                  });
+                                  message += '\n';
+                                }
+
+                                if (result.summary.missingProduct === 0 &&
+                                    result.summary.shortIdExists === 0 &&
+                                    result.summary.duplicateId === 0) {
+                                  message += '✅ 未发现明显问题，可能是其他原因导致同步失败。\n\n';
+                                  message += '建议查看浏览器控制台(F12)的详细同步日志。';
+                                }
+
+                                alert(message);
+                              } catch (error: any) {
+                                alert('诊断失败: ' + error.message);
+                              }
+                            }}
+                            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                          >
+                            🔬 诊断失败原因
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
                                 // 找到最长的ID
                                 const ids = verificationResult.details.history.mismatchedIds as string[];
                                 const longestId = ids.reduce((max, id) => id.length > max.length ? id : max, '');

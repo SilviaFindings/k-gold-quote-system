@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     try {
       const insertQuery = sql`
         INSERT INTO price_history (id, product_id, product_code, product_name, category, sub_category, karat, gold_color, weight, labor_cost, gold_price, wholesale_price, retail_price, user_id, timestamp)
-        VALUES (${testId}, ${testId}, 'TEST', '测试产品', '配件', '', '14K', '黄金', 1.0, 100, 500, 600, 700, ${user.id}, NOW())
+        VALUES (${testId}, ${testId}, 'TEST', 'test', 'accessories', '', '14K', 'gold', 1.0, 100, 500, 600, 700, ${user.id}, NOW())
       `;
       await db.execute(insertQuery);
 
