@@ -14,10 +14,25 @@ export class ProductManager {
   // 创建产品并指定 ID（用于同步）
   async createProductWithId(userId: string, data: any): Promise<Product> {
     const db = await getDb();
+
     // 绕过验证，直接插入数据（用于同步，ID可能超过36字符限制）
     // 数据已经在同步API中进行了预处理和验证
-    const [product] = await db.insert(products).values({ ...data, userId }).returning();
-    return product;
+
+    try {
+      const [product] = await db.insert(products).values({ ...data, userId }).returning();
+      return product;
+    } catch (error: any) {
+      console.error('❌ 插入产品失败:', {
+        id: data.id,
+        idLength: data.id ? String(data.id).length : 0,
+        productCode: data.productCode,
+        error: error.message,
+        code: error.code,
+        constraint: error.constraint,
+        detail: error.detail,
+      });
+      throw error;
+    }
   }
 
   async getProducts(userId: string, options: {

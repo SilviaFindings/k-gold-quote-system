@@ -262,9 +262,19 @@ export async function POST(request: NextRequest) {
             const { userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
             // 保留 id 字段以便同步时使用本地生成的 ID
             const dataToInsert = { ...historyToInsert, id: history.id };
-            await priceHistoryManager.createPriceHistoryWithId(user.id, dataToInsert);
-            syncedHistory++;
-            console.log(`  + 新建历史记录: ${normalizedHistory.productCode} (id: ${history.id})`);
+
+            try {
+              await priceHistoryManager.createPriceHistoryWithId(user.id, dataToInsert);
+              syncedHistory++;
+              console.log(`  + 新建历史记录: ${normalizedHistory.productCode} (id: ${history.id}, 长度: ${String(history.id).length})`);
+            } catch (insertError: any) {
+              console.error(`  ✗ 插入历史记录失败: ${normalizedHistory.productCode}`);
+              console.error(`     ID: ${history.id} (长度: ${String(history.id).length})`);
+              console.error(`     ProductId: ${history.productId} (长度: ${String(history.productId).length})`);
+              console.error(`     错误信息: ${insertError.message}`);
+              console.error(`     错误堆栈: ${insertError.stack}`);
+              // 继续处理其他历史记录
+            }
           } else {
             skippedHistory++;
             console.log(`  - 跳过已存在的历史记录: ${normalizedHistory.productCode}`);

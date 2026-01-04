@@ -14,10 +14,26 @@ export class PriceHistoryManager {
   // 创建价格历史并指定 ID（用于同步）
   async createPriceHistoryWithId(userId: string, data: any): Promise<PriceHistory> {
     const db = await getDb();
+
     // 绕过验证，直接插入数据（用于同步，ID可能超过36字符限制）
     // 数据已经在同步API中进行了预处理和验证
-    const [history] = await db.insert(priceHistory).values({ ...data, userId }).returning();
-    return history;
+
+    try {
+      const [history] = await db.insert(priceHistory).values({ ...data, userId }).returning();
+      return history;
+    } catch (error: any) {
+      console.error('❌ 插入价格历史失败:', {
+        id: data.id,
+        productId: data.productId,
+        idLength: data.id ? String(data.id).length : 0,
+        productIdLength: data.productId ? String(data.productId).length : 0,
+        error: error.message,
+        code: error.code,
+        constraint: error.constraint,
+        detail: error.detail,
+      });
+      throw error;
+    }
   }
 
   async getHistoryByUserId(userId: string, options: {
