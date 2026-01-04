@@ -421,7 +421,7 @@ function QuotePage() {
   }, [currentSubCategory]);
 
   // 分类展开/折叠状态
-  const [expandedCategories, setExpandedCategories] = useState<Set<ProductCategory>>(new Set(["配件"]));
+  const [expandedCategories, setExpandedCategories] = useState<Set<ProductCategory>>(new Set(PRODUCT_CATEGORIES)); // 默认展开所有大类
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -2438,23 +2438,52 @@ function QuotePage() {
   const exportToExcel = () => {
     // 根据选择的范围过滤产品
     const filteredProducts = exportScope === "current"
-      ? products.filter(p => p.category === currentCategory)
+      ? products.filter(p => {
+          // 先匹配大类
+          if (p.category !== currentCategory) return false;
+          // 如果选择了子分类，还要匹配子分类
+          if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+          return true;
+        })
       : products;
 
-    // 按货号分组，每个货号只保留最新的记录
-    const productMap: { [key: string]: Product } = {};
-    filteredProducts.forEach((product) => {
+    // 🔥 修复：严格按导入顺序导出，每个货号只保留最新记录
+    // 使用 Map 记录每个货号最新记录的索引，保持导入顺序
+    const latestProductIndices: { [key: string]: number } = {};
+    
+    // 第一遍：找到每个货号最新记录的索引（保持原始顺序）
+    filteredProducts.forEach((product, index) => {
       const code = product.productCode;
-      // 如果该货号还没有记录，或者当前记录更新，则保存当前记录
-      if (!productMap[code] || new Date(product.timestamp) > new Date(productMap[code].timestamp)) {
-        productMap[code] = product;
+      const timestamp = new Date(product.timestamp).getTime();
+      
+      // 如果该货号还没有记录，或者当前记录更新，则更新索引
+      if (latestProductIndices[code] === undefined) {
+        latestProductIndices[code] = index;
+      } else {
+        const existingTimestamp = new Date(filteredProducts[latestProductIndices[code]].timestamp).getTime();
+        if (timestamp > existingTimestamp) {
+          latestProductIndices[code] = index;
+        }
       }
     });
 
-    // 转换为数组并按货号排序
-    const productsToExport = Object.values(productMap).sort((a, b) =>
-      a.productCode.localeCompare(b.productCode)
-    );
+    // 第二遍：按索引顺序导出，严格保持导入顺序
+    const productsToExport: Product[] = [];
+    const usedCodes = new Set<string>();
+    
+    filteredProducts.forEach((product) => {
+      const code = product.productCode;
+      const expectedIndex = latestProductIndices[code];
+      
+      // 如果当前记录是该货号的最新记录，且未被处理过，则添加到导出列表
+      // 通过检查索引确保每个货号只添加一次，且顺序与原始导入顺序一致
+      if (expectedIndex !== undefined && filteredProducts[expectedIndex].id === product.id && !usedCodes.has(code)) {
+        productsToExport.push(product);
+        usedCodes.add(code);
+      }
+    });
+
+    console.log(`📤 导出统计: 过滤后产品数=${filteredProducts.length}, 去重后导出数=${productsToExport.length}`);
 
     // 判断产品是否被修改过（通过历史记录数量判断）
     const isProductModified = (productId: string): boolean => {
@@ -2635,10 +2664,20 @@ function QuotePage() {
     // 添加工作表到工作簿
     XLSX.utils.book_append_sheet(wb, ws, "产品报价");
 
-    // 导出文件
-    const fileName = exportScope === "current"
-      ? `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx"
-      : `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
+    // 导出文件名：包含大类和子分类
+    let fileName;
+    if (exportScope === "current") {
+      if (currentSubCategory) {
+        // 选择了子分类：大类-子分类_产品报价单_日期.xlsx
+        fileName = `${currentCategory}-${currentSubCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
+      } else {
+        // 只选了大类：大类_产品报价单_日期.xlsx
+        fileName = `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
+      }
+    } else {
+      // 全部分类
+      fileName = `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
+    }
 
     XLSX.writeFile(wb, fileName);
   };
@@ -3139,7 +3178,7 @@ function QuotePage() {
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
 
-        console.log("解析的数据:", jsonData);
+        console.log("解析的数据总行数:", jsonData.length);
 
         if (jsonData.length < 2) {
           alert("Excel文件为空或格式不正确！");
@@ -3151,72 +3190,61 @@ function QuotePage() {
         console.log(`localStorage中的金价: ¥${localStorage.getItem("goldPrice")}/克`);
 
         const headers = jsonData[0] as string[];
-        console.log("表头:", headers);
+        console.log("===== Excel表头 =====");
+        console.log(headers);
+        console.log("表头数组长度:", headers.length);
+
         const rows = jsonData.slice(1);
+        console.log("===== 数据行数 =====");
+        console.log("总行数:", rows.length);
+        console.log("前5行数据:");
+        rows.slice(0, 5).forEach((row, idx) => {
+          console.log(`第${idx + 1}行:`, row);
+          console.log(`  货号:`, row[0]);
+          console.log(`  名称:`, row[1]);
+        });
+
+        // 改进的列索引查找：先精确匹配，再模糊匹配
+        const findColumnIndex = (exactMatch: string, ...keywords: string[]): number => {
+          // 先尝试精确匹配
+          const exactIndex = headers.findIndex(h => h && String(h).trim() === exactMatch);
+          if (exactIndex !== -1) {
+            console.log(`列 "${exactMatch}" 精确匹配到索引 ${exactIndex}`);
+            return exactIndex;
+          }
+
+          // 再尝试模糊匹配
+          for (const keyword of keywords) {
+            const fuzzyIndex = headers.findIndex(h =>
+              h && String(h).includes(keyword)
+            );
+            if (fuzzyIndex !== -1) {
+              console.log(`列 "${keyword}" 模糊匹配到索引 ${fuzzyIndex} ("${headers[fuzzyIndex]}")`);
+              return fuzzyIndex;
+            }
+          }
+
+          console.warn(`⚠️ 未找到包含关键词 [${keywords.join(', ')}] 的列`);
+          return -1;
+        };
 
         // 查找列索引
-        const productCodeIndex = headers.findIndex(h =>
-          h && String(h).includes("货号")
-        );
-        const productNameIndex = headers.findIndex(h =>
-          h && String(h).includes("名称")
-        );
-        const specificationIndex = headers.findIndex(h =>
-          h && String(h).includes("规格")
-        );
-        const weightIndex = headers.findIndex(h =>
-          h && String(h).includes("重量")
-        );
-        const laborCostIndex = headers.findIndex(h =>
-          h && (String(h).includes("工费") || String(h).includes("人工") ||
-               String(h).includes("加工") || String(h).includes("手工"))
-        );
-        const karatIndex = headers.findIndex(h =>
-          h && String(h).includes("成色")
-        );
+        const productCodeIndex = findColumnIndex("货号", "货号", "产品编号");
+        const productNameIndex = findColumnIndex("产品名称", "名称", "产品名");
+        const specificationIndex = findColumnIndex("规格", "规格型号");
+        const weightIndex = findColumnIndex("重量", "重量(g)", "重量(克)", "净重");
+        const laborCostIndex = findColumnIndex("工费", "工费", "人工费", "加工费", "手工费");
+        const karatIndex = findColumnIndex("成色", "成色", "K金", "材质");
+        const accessoryCostIndex = findColumnIndex("配件成本", "配件成本", "配件");
+        const stoneCostIndex = findColumnIndex("石头成本", "石头成本", "石头");
+        const platingCostIndex = findColumnIndex("电镀成本", "电镀成本", "电镀");
+        const moldCostIndex = findColumnIndex("模具成本", "模具成本", "模具");
+        const commissionIndex = findColumnIndex("佣金", "佣金率");
+        const supplierCodeIndex = findColumnIndex("供应商代码", "供应商", "供应商代码");
+        const orderChannelIndex = findColumnIndex("下单口", "下单口");
+        const shapeIndex = findColumnIndex("形状", "形状");
 
-        // 新增的成本列
-        const accessoryCostIndex = headers.findIndex(h =>
-          h && String(h).includes("配件") && String(h).includes("成本")
-        );
-        const stoneCostIndex = headers.findIndex(h =>
-          h && String(h).includes("石头") && String(h).includes("成本")
-        );
-        const platingCostIndex = headers.findIndex(h =>
-          h && String(h).includes("电镀") && String(h).includes("成本")
-        );
-        const moldCostIndex = headers.findIndex(h =>
-          h && String(h).includes("模具") && String(h).includes("成本")
-        );
-        const commissionIndex = headers.findIndex(h =>
-          h && String(h).includes("佣金")
-        );
-        const supplierCodeIndex = headers.findIndex(h =>
-          h && String(h).includes("供应商")
-        );
-        const orderChannelIndex = headers.findIndex(h =>
-          h && String(h).includes("下单口")
-        );
-        const shapeIndex = headers.findIndex(h =>
-          h && String(h).includes("形状")
-        );
-
-        console.log("列索引:", {
-          productCodeIndex,
-          productNameIndex,
-          specificationIndex,
-          weightIndex,
-          laborCostIndex,
-          karatIndex,
-          accessoryCostIndex,
-          stoneCostIndex,
-          platingCostIndex,
-          moldCostIndex,
-          commissionIndex,
-          supplierCodeIndex,
-          orderChannelIndex,
-          shapeIndex
-        });
+        console.log("==================================");
 
         if (productCodeIndex === -1 || productNameIndex === -1) {
           alert("Excel文件必须包含货号和名称列！");
@@ -3235,19 +3263,78 @@ function QuotePage() {
         const newProducts: Product[] = [];
         const newHistory: PriceHistory[] = [];
 
-        rows.forEach((row: any) => {
+        rows.forEach((row: any, rowIndex: number) => {
           const productCode = row[productCodeIndex];
           const productName = row[productNameIndex];
           const specification = specificationIndex !== -1 ? row[specificationIndex] : "";
-          const weight = importWeight && weightIndex !== -1 ? Number(row[weightIndex]) || 0 : 0;
-          const laborCost = importLaborCost && laborCostIndex !== -1 ? Number(row[laborCostIndex]) || 0 : 0;
 
-          // 读取新的成本字段
-          const accessoryCost = accessoryCostIndex !== -1 ? Number(row[accessoryCostIndex]) || 0 : 0;
-          const stoneCost = stoneCostIndex !== -1 ? Number(row[stoneCostIndex]) || 0 : 0;
-          const platingCost = platingCostIndex !== -1 ? Number(row[platingCostIndex]) || 0 : 0;
-          const moldCost = moldCostIndex !== -1 ? Number(row[moldCostIndex]) || 0 : 0;
-          const commission = commissionIndex !== -1 ? Number(row[commissionIndex]) || 0 : 0;
+          // 改进数值读取：更好的处理Excel中的数字
+          const weightRaw = importWeight && weightIndex !== -1 ? row[weightIndex] : undefined;
+          let weight = 0;
+          if (weightRaw !== undefined && weightRaw !== null && weightRaw !== "") {
+            const parsedWeight = parseFloat(String(weightRaw).replace(/,/g, ''));
+            if (!isNaN(parsedWeight)) {
+              weight = parsedWeight;
+            } else {
+              console.warn(`第${rowIndex + 2}行：无法解析重量 "${weightRaw}"，使用0`);
+            }
+          }
+
+          const laborCostRaw = importLaborCost && laborCostIndex !== -1 ? row[laborCostIndex] : undefined;
+          let laborCost = 0;
+          if (laborCostRaw !== undefined && laborCostRaw !== null && laborCostRaw !== "") {
+            const parsedLaborCost = parseFloat(String(laborCostRaw).replace(/,/g, ''));
+            if (!isNaN(parsedLaborCost)) {
+              laborCost = parsedLaborCost;
+            } else {
+              console.warn(`第${rowIndex + 2}行：无法解析工费 "${laborCostRaw}"，使用0`);
+            }
+          }
+
+          // 调试：输出第一个产品和特定货号的详细数据
+          const isTargetProduct = productCode && (
+            String(productCode).includes("KCR0430") ||
+            String(productCode).includes("KOR0430")
+          );
+
+          if (newProducts.length === 0 && productCode) {
+            console.log(`===== 第一个产品导入调试 =====`);
+            console.log(`货号: ${productCode}`);
+            console.log(`Excel原始重量: ${weightRaw}`);
+            console.log(`解析后重量: ${weight}`);
+            console.log(`Excel原始工费: ${laborCostRaw}`);
+            console.log(`解析后工费: ${laborCost}`);
+            console.log(`importWeight: ${importWeight}`);
+            console.log(`weightIndex: ${weightIndex}`);
+            console.log(`importLaborCost: ${importLaborCost}`);
+            console.log(`laborCostIndex: ${laborCostIndex}`);
+          }
+
+          // 对特定货号进行详细调试
+          if (isTargetProduct) {
+            console.log(`===== 目标产品调试 [${productCode}] =====`);
+            console.log(`Excel行号: ${rowIndex + 2}`);
+            console.log(`完整行数据:`, row);
+            console.log(`货号: ${productCode} (索引${productCodeIndex})`);
+            console.log(`名称: ${productName} (索引${productNameIndex})`);
+            console.log(`重量列(索引${weightIndex}):`, weightRaw, `-> ${weight}`);
+            console.log(`工费列(索引${laborCostIndex}):`, laborCostRaw, `-> ${laborCost}`);
+          }
+
+          // 读取新的成本字段（改进数值解析）
+          const parseCost = (value: any, fieldName: string) => {
+            if (value === undefined || value === null || value === "") return 0;
+            const parsed = parseFloat(String(value).replace(/,/g, ''));
+            if (!isNaN(parsed)) return parsed;
+            console.warn(`第${rowIndex + 2}行：无法解析${fieldName} "${value}"，使用0`);
+            return 0;
+          };
+
+          const accessoryCost = accessoryCostIndex !== -1 ? parseCost(row[accessoryCostIndex], "配件成本") : 0;
+          const stoneCost = stoneCostIndex !== -1 ? parseCost(row[stoneCostIndex], "石头成本") : 0;
+          const platingCost = platingCostIndex !== -1 ? parseCost(row[platingCostIndex], "电镀成本") : 0;
+          const moldCost = moldCostIndex !== -1 ? parseCost(row[moldCostIndex], "模具成本") : 0;
+          const commission = commissionIndex !== -1 ? parseCost(row[commissionIndex], "佣金") : 0;
 
           // 供应商代码：Excel中有值就用Excel的，没有值就用默认值"K14"
           const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) : "";
@@ -3427,11 +3514,15 @@ function QuotePage() {
 
         // 确保要设置的子分类不为空
         const targetSubCategory = importSubCategory || newProducts[0]?.subCategory || "";
+        const targetCategory = importCategory || newProducts[0]?.category || currentCategory;
 
         console.log("=== 导入完成，准备更新状态 ===");
         console.log("importSubCategory:", importSubCategory);
+        console.log("importCategory:", importCategory);
         console.log("targetSubCategory:", targetSubCategory);
+        console.log("targetCategory:", targetCategory);
         console.log("newProducts[0]?.subCategory:", newProducts[0]?.subCategory);
+        console.log("newProducts[0]?.category:", newProducts[0]?.category);
 
         // 使用回调函数确保状态更新
         setProducts(prev => {
@@ -3444,7 +3535,14 @@ function QuotePage() {
           return [...prev, ...newHistory];
         });
 
-        // 使用回调函数更新当前子分类
+        // 同时更新当前大类和子分类
+        setCurrentCategory(prev => {
+          console.log("setCurrentCategory 被调用");
+          console.log("  前一个值:", prev);
+          console.log("  新值:", targetCategory);
+          return targetCategory;
+        });
+
         setCurrentSubCategory(prev => {
           console.log("setCurrentSubCategory 被调用");
           console.log("  前一个值:", prev);
@@ -3453,6 +3551,17 @@ function QuotePage() {
         });
 
         console.log("=== 状态更新函数调用完成 ===");
+
+        // 验证特定货号的数据
+        console.log("===== 验证特定货号数据 =====");
+        newProducts.forEach(p => {
+          if (p.productCode.includes("KCR0430") || p.productCode.includes("KOR0430")) {
+            console.log(`验证货号: ${p.productCode}`);
+            console.log(`  重量: ${p.weight}g`);
+            console.log(`  工费: ¥${p.laborCost}`);
+          }
+        });
+        console.log("================================");
 
         // 延迟验证
         setTimeout(() => {
@@ -4401,30 +4510,22 @@ function QuotePage() {
               return (
                 <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
                   {/* 大分类按钮 */}
-                  <button
-                    onClick={() => {
-                      setCurrentCategory(category);
-                      setCurrentSubCategory(""); // 清除子分类选择
-                      setCurrentProduct({ ...currentProduct, category });
-                      // 展开/折叠子分类
-                      setExpandedCategories(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has(category)) {
-                          newSet.delete(category);
-                        } else {
-                          newSet.add(category);
-                        }
-                        return newSet;
-                      });
-                    }}
+                  <div
                     className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${
                       currentCategory === category
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-black hover:bg-gray-200"
+                        : "bg-gray-100 text-black"
                     }`}
-                    suppressHydrationWarning
                   >
-                    <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setCurrentCategory(category);
+                        setCurrentSubCategory(""); // 清除子分类选择
+                        setCurrentProduct({ ...currentProduct, category });
+                      }}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                      suppressHydrationWarning
+                    >
                       <span className="font-semibold text-lg">{category}</span>
                       {hasData && (
                         <span
@@ -4437,16 +4538,33 @@ function QuotePage() {
                           {count}
                         </span>
                       )}
-                    </div>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedCategories(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(category)) {
+                            newSet.delete(category);
+                          } else {
+                            newSet.add(category);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      className="p-1 hover:opacity-80 transition-opacity"
+                      suppressHydrationWarning
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+                      <svg
+                        className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
 
                   {/* 子分类列表 */}
                   {isExpanded && (
@@ -5537,11 +5655,11 @@ function QuotePage() {
               <h2 className="text-xl font-semibold text-black">
                 当前产品列表-{currentCategory}{currentSubCategory ? `-${currentSubCategory}` : ''}
               </h2>
-              {/* 调试信息 */}
-              <div className="text-xs text-gray-500">
-                Debug: subCategory={currentSubCategory || '(empty)'}
-              </div>
-              {products.filter(p => p.category === currentCategory).length > 0 && (
+              {products.filter(p => {
+                  if (p.category !== currentCategory) return false;
+                  if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                  return true;
+                }).length > 0 && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-black font-medium">导出范围:</label>
                   <select
@@ -5550,7 +5668,7 @@ function QuotePage() {
                     className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                     suppressHydrationWarning
                   >
-                    <option value="current">当前分类</option>
+                    <option value="current">{currentSubCategory ? `当前子分类（${currentSubCategory}）` : `当前大类（${currentCategory}）`}</option>
                     <option value="all">所有分类</option>
                   </select>
                   <button
