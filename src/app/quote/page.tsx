@@ -347,6 +347,7 @@ function QuotePage() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [isValidatingExport, setIsValidatingExport] = useState<boolean>(false);
 
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
@@ -2380,6 +2381,93 @@ function QuotePage() {
     }
   };
 
+  // 验证导出数据的准确性
+  const validateExportAccuracy = async () => {
+    setIsValidatingExport(true);
+
+    try {
+      console.log('🔍 开始验证导出数据的准确性...');
+
+      // 调用验证 API
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/validate-export', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('验证失败:', errorText);
+        throw new Error('验证失败');
+      }
+
+      const result = await response.json();
+
+      console.log('✅ 验证完成:', result);
+
+      // 显示验证结果
+      let message = result.overallStatus + '\n\n';
+      message += `验证时间: ${new Date(result.timestamp).toLocaleString('zh-CN')}\n\n`;
+      message += '📊 数据统计：\n';
+      message += `  - 产品数据: ${result.dataCounts.products} 条\n`;
+      message += `  - 价格历史: ${result.dataCounts.history} 条\n`;
+      message += `  - 系统配置: ${result.dataCounts.configs} 条\n\n`;
+      message += '📦 产品数据验证：\n';
+      message += `  - 总数: ${result.productValidation.total} 条\n`;
+      message += `  - 有效: ${result.productValidation.validCount} 条 ✅\n`;
+      message += `  - 无效: ${result.productValidation.invalidCount} 条 ${result.productValidation.invalidCount > 0 ? '❌' : '✅'}\n\n`;
+      message += '📈 价格历史验证：\n';
+      message += `  - 总数: ${result.historyValidation.total} 条\n`;
+      message += `  - 有效: ${result.historyValidation.validCount} 条 ✅\n`;
+      message += `  - 无效: ${result.historyValidation.invalidCount} 条 ${result.historyValidation.invalidCount > 0 ? '❌' : '✅'}\n\n`;
+      message += '⚙️  系统配置验证：\n';
+      message += `  - 总数: ${result.configValidation.total} 条\n`;
+      message += `  - 有效: ${result.configValidation.validCount} 条 ✅\n`;
+      message += `  - 无效: ${result.configValidation.invalidCount} 条 ${result.configValidation.invalidCount > 0 ? '❌' : '✅'}\n\n`;
+
+      // 显示问题详情（最多显示 5 条）
+      const showIssues = (issues: any[], title: string) => {
+        if (issues.length > 0) {
+          message += `${title}（最多显示 5 条）：\n`;
+          const displayIssues = issues.slice(0, 5);
+          displayIssues.forEach((issue: any) => {
+            message += `  • ${issue.productCode || issue.configKey || '未知'}:\n`;
+            issue.issues.forEach((err: string) => {
+              message += `    - ${err}\n`;
+            });
+          });
+          if (issues.length > 5) {
+            message += `  ... 还有 ${issues.length - 5} 条问题\n`;
+          }
+          message += '\n';
+        }
+      };
+
+      showIssues(result.productValidation.issues, '📦 产品数据问题');
+      showIssues(result.historyValidation.issues, '📈 价格历史问题');
+      showIssues(result.configValidation.issues, '⚙️  配置数据问题');
+
+      // 建议
+      if (result.productValidation.invalidCount === 0 &&
+          result.historyValidation.invalidCount === 0 &&
+          result.configValidation.invalidCount === 0) {
+        message += '🎉 所有数据验证通过，可以放心导出！';
+      } else {
+        message += '⚠️  发现数据问题，建议修复后再导出。';
+      }
+
+      alert(message);
+    } catch (error: any) {
+      console.error('验证失败:', error);
+      alert('验证失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
+    } finally {
+      setIsValidatingExport(false);
+    }
+  };
+
   // 删除产品（同时删除相关的历史记录）
   const deleteProduct = (id: string) => {
     // 从产品列表中删除
@@ -3816,7 +3904,11 @@ function QuotePage() {
                   {products.length > 0 && (
                     <div className="mb-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs">
                       <p className="text-yellow-800">
-                        💡 提示：如果导出数据为空，请先点击"同步到数据库"
+                        💡 提示：请按顺序操作<br />
+                        1️⃣ 点击"🔍 验证完整性"检查数据同步状态<br />
+                        2️⃣ 点击"✅ 验证准确性"检查数据正确性<br />
+                        3️⃣ 点击"🔄 同步到数据库"同步数据到云端<br />
+                        4️⃣ 点击"📦 导出备份"导出完整数据
                       </p>
                     </div>
                   )}
@@ -3830,6 +3922,17 @@ function QuotePage() {
                     >
                       {isVerifying ? '验证中...' : '🔍 验证完整性'}
                     </button>
+                    <button
+                      onClick={validateExportAccuracy}
+                      disabled={isValidatingExport}
+                      className="flex-1 rounded-lg bg-orange-600 px-3 py-2 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      suppressHydrationWarning
+                    >
+                      {isValidatingExport ? '验证中...' : '✅ 验证准确性'}
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 mb-2">
                     <button
                       onClick={syncToDatabase}
                       disabled={isSyncing}
