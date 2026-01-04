@@ -5691,6 +5691,8 @@ function QuotePage() {
                         suppressHydrationWarning
                       />
                     </th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">大类</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">小类</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
@@ -5767,6 +5769,14 @@ function QuotePage() {
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           suppressHydrationWarning
                         />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                          {product.category || "-"}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-black text-xs">
+                        {product.subCategory || "-"}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 font-semibold text-black">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 font-medium text-black">{product.productName}</td>
@@ -5870,6 +5880,8 @@ function QuotePage() {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">时间</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">大类</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">小类</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">名称</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">成色</th>
@@ -5887,6 +5899,14 @@ function QuotePage() {
                   <tr key={history.id}>
                     <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-black">
                       {formatDate(history.timestamp)}
+                    </td>
+                    <td className="border border-gray-200 px-3 py-2 text-black">
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                        {history.category || "-"}
+                      </span>
+                    </td>
+                    <td className="border border-gray-200 px-3 py-2 text-black text-xs">
+                      {history.subCategory || "-"}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-black">{history.productCode}</td>
                     <td className="border border-gray-200 px-3 py-2 text-black">{history.productName}</td>
