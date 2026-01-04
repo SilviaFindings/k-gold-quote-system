@@ -2611,9 +2611,9 @@ function QuotePage() {
 
     // 定义固定的表头顺序
     const allColumns = [
-      "货号", "分类", "名称", "成色", "金子颜色", "规格", "形状", "供应商代码",
-      "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金", "下单口",
-      "零售价", "批发价"
+      "货号", "供应商代码", "分类", "名称", "成色", "金子颜色", "规格", "形状",
+      "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金",
+      "零售价", "批发价", "下单口"
     ];
 
     // 生成表头和数据数组
@@ -3317,7 +3317,7 @@ function QuotePage() {
         // 查找列索引
         const productCodeIndex = findColumnIndex("货号", "货号", "产品编号");
         const productNameIndex = findColumnIndex("产品名称", "名称", "产品名");
-        const specificationIndex = findColumnIndex("规格", "规格型号");
+        const specificationIndex = findColumnIndex("规格", "规格", "规格型号", "产品规格", "规格说明", "尺寸");
         const weightIndex = findColumnIndex("重量", "重量(g)", "重量(克)", "净重");
         const laborCostIndex = findColumnIndex("工费", "工费", "人工费", "加工费", "手工费");
         const karatIndex = findColumnIndex("成色", "成色", "K金", "材质");
