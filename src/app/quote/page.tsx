@@ -102,6 +102,85 @@ const CATEGORY_MAPPING: Record<string, ProductCategory> = {
   "金线": "配件",
 };
 
+// 智能识别产品分类（根据产品名称关键词）
+const detectCategoryFromName = (productName: string): ProductCategory | null => {
+  const name = productName.toLowerCase();
+
+  // 配件类关键词
+  const accessoriesKeywords = [
+    "扣", "圈", "珠", "管", "针", "托珠", "包扣", "字印", "吊牌", "夹",
+    "耳逼", "耳夹", "定位珠", "短管", "圆珠", "车花", "金线",
+    "开口圈", "闭口圈", "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣"
+  ];
+
+  // 宝石托类关键词
+  const settingsKeywords = [
+    "戒子托", "耳环托", "耳钉托", "吊坠托",
+    "戒指托", "耳饰托", "吊饰托", "镶嵌托"
+  ];
+
+  // 链条类关键词
+  const chainKeywords = [
+    "金链", "延长链", "项链", "手链", "链子"
+  ];
+
+  // 检查配件类
+  if (accessoriesKeywords.some(keyword => name.includes(keyword))) {
+    return "配件";
+  }
+
+  // 检查宝石托类
+  if (settingsKeywords.some(keyword => name.includes(keyword))) {
+    return "宝石托";
+  }
+
+  // 检查链条类
+  if (chainKeywords.some(keyword => name.includes(keyword))) {
+    return "链条";
+  }
+
+  return null;
+};
+
+// 智能识别产品子分类
+const detectSubCategoryFromName = (productName: string): string | null => {
+  const name = productName.toLowerCase();
+
+  // 定义子分类关键词
+  const subCategoryKeywords: Record<string, string[]> = {
+    "耳环/耳逼": ["耳环", "耳逼", "耳夹"],
+    "扣子": ["扣", "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣"],
+    "开口圈/闭口圈": ["开口圈", "闭口圈", "圈"],
+    "圆珠": ["圆珠"],
+    "车花珠": ["车花珠", "车花"],
+    "定位珠/短管": ["定位珠", "短管"],
+    "包扣": ["包扣"],
+    "字印片/吊牌": ["字印", "吊牌"],
+    "珠针": ["珠针", "针"],
+    "空心管": ["空心管"],
+    "珠托": ["珠托", "托珠"],
+    "吊坠夹": ["吊坠夹", "夹"],
+    "镶嵌配件": ["镶嵌"],
+    "珍珠配件": ["珍珠"],
+    "金线": ["金线"],
+    "戒子托": ["戒子托", "戒指托"],
+    "耳环托": ["耳环托"],
+    "耳钉托": ["耳钉托"],
+    "吊坠托": ["吊坠托"],
+    "金链": ["金链", "链", "项链", "手链"],
+    "延长链": ["延长链"],
+  };
+
+  // 遍历查找匹配
+  for (const [subCategory, keywords] of Object.entries(subCategoryKeywords)) {
+    if (keywords.some(keyword => name.includes(keyword))) {
+      return subCategory;
+    }
+  }
+
+  return null;
+};
+
 // 下单口列表
 export const ORDER_CHANNELS = [
   { code: "Van", name: "Van (Vancouver)" },
@@ -2833,6 +2912,17 @@ function QuotePage() {
 
           if (!productCode || !productName) return;
 
+          // 智能识别产品分类和子分类（优先从产品名称识别）
+          const detectedCategory = detectCategoryFromName(String(productName));
+          const detectedSubCategory = detectSubCategoryFromName(String(productName));
+
+          // 如果智能识别成功，使用识别结果；否则使用当前选中的分类
+          const finalCategory = detectedCategory || currentCategory;
+          const finalSubCategory = detectedSubCategory || currentSubCategory;
+
+          // 调试日志：输出分类识别结果
+          console.log(`产品 ${productCode} (${productName}): 智能识别分类="${detectedCategory}", 使用分类="${finalCategory}", 智能识别子分类="${detectedSubCategory}", 使用子分类="${finalSubCategory}"`);
+
           // 确定最终使用的成色：优先使用Excel中的成色，如果没有则从货号智能识别
           const finalKarat = validKarat || "14K";
           const detectedMaterial = detectMaterialFromCode(String(productCode));
@@ -2870,8 +2960,8 @@ function QuotePage() {
 
           const newProduct: Product = {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
-            category: currentCategory,
-            subCategory: currentSubCategory, // Excel导入时使用当前选中的子分类
+            category: finalCategory,
+            subCategory: finalSubCategory, // 使用智能识别的子分类
             productCode: String(productCode),
             productName: String(productName),
             specification: String(specification || ""),
@@ -2905,7 +2995,7 @@ function QuotePage() {
           const historyRecord: PriceHistory = {
             id: newProduct.id + "_hist",
             productId: newProduct.id,
-            category: currentCategory,
+            category: finalCategory,
             subCategory: newProduct.subCategory,
             productCode: newProduct.productCode,
             productName: newProduct.productName,
@@ -2945,7 +3035,17 @@ function QuotePage() {
         setProducts([...filteredProducts, ...newProducts]);
         setPriceHistory([...priceHistory, ...newHistory]);
 
-        alert(`成功导入 ${newProducts.length} 个产品！`);
+        // 统计智能识别的分类分布
+        const categoryStats: Record<string, number> = {};
+        newProducts.forEach(p => {
+          categoryStats[p.category] = (categoryStats[p.category] || 0) + 1;
+        });
+
+        const categoryText = Object.entries(categoryStats)
+          .map(([cat, count]) => `${cat}: ${count}个`)
+          .join(', ');
+
+        alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 智能分类结果：\n${categoryText}\n\n💡 提示：系统已根据产品名称自动识别分类，如有错误请手动调整。`);
 
         // 清空文件输入
         e.target.value = "";
@@ -3297,6 +3397,102 @@ function QuotePage() {
     alert(message);
 
     console.log("========== 分类详情显示结束 ==========");
+  };
+
+  // 智能修复产品分类（根据产品名称自动识别分类）
+  const repairProductCategories = () => {
+    console.log("========== 开始智能修复分类 ==========");
+
+    // 统计修复前的数据
+    const categoryCountsBefore: Record<string, number> = {};
+    products.forEach((p) => {
+      categoryCountsBefore[p.category] = (categoryCountsBefore[p.category] || 0) + 1;
+    });
+
+    // 修复逻辑：对所有产品使用智能识别重新设置分类
+    const fixedProducts = products.map((product) => {
+      // 智能识别分类和子分类
+      const detectedCategory = detectCategoryFromName(product.productName);
+      const detectedSubCategory = detectSubCategoryFromName(product.productName);
+
+      // 如果识别成功，使用识别结果；否则保持原有分类
+      const newCategory = detectedCategory || product.category;
+      const newSubCategory = detectedSubCategory || product.subCategory;
+
+      // 如果分类发生变化，记录日志
+      if (newCategory !== product.category || newSubCategory !== product.subCategory) {
+        console.log(`产品 ${product.productCode} (${product.productName}):`);
+        console.log(`  分类: ${product.category} → ${newCategory}`);
+        console.log(`  子分类: ${product.subCategory || '(无)'} → ${newSubCategory || '(无)'}`);
+      }
+
+      return {
+        ...product,
+        category: newCategory,
+        subCategory: newSubCategory,
+      };
+    });
+
+    // 同步更新历史记录中的分类
+    const fixedHistory = priceHistory.map((history) => {
+      // 智能识别分类和子分类
+      const detectedCategory = detectCategoryFromName(history.productName);
+      const detectedSubCategory = detectSubCategoryFromName(history.productName);
+
+      // 如果识别成功，使用识别结果；否则保持原有分类
+      const newCategory = detectedCategory || history.category;
+      const newSubCategory = detectedSubCategory || history.subCategory;
+
+      return {
+        ...history,
+        category: newCategory,
+        subCategory: newSubCategory,
+      };
+    });
+
+    // 保存修复后的数据
+    localStorage.setItem("goldProducts", JSON.stringify(fixedProducts));
+    localStorage.setItem("goldPriceHistory", JSON.stringify(fixedHistory));
+    setProducts(fixedProducts);
+    setPriceHistory(fixedHistory);
+
+    // 统计修复后的数据
+    const categoryCountsAfter: Record<string, number> = {};
+    fixedProducts.forEach((p) => {
+      categoryCountsAfter[p.category] = (categoryCountsAfter[p.category] || 0) + 1;
+    });
+
+    // 计算变化的产品数量
+    let changedCount = 0;
+    products.forEach((p, index) => {
+      const fp = fixedProducts[index];
+      if (p.category !== fp.category || p.subCategory !== fp.subCategory) {
+        changedCount++;
+      }
+    });
+
+    // 显示修复结果
+    let message = "✅ 智能分类修复完成\n\n";
+    message += `总计产品: ${products.length} 个\n`;
+    message += `分类变化: ${changedCount} 个产品\n\n`;
+
+    message += "修复前后分类对比:\n";
+    PRODUCT_CATEGORIES.forEach((category) => {
+      const beforeCount = categoryCountsBefore[category] || 0;
+      const afterCount = categoryCountsAfter[category] || 0;
+      const diff = afterCount - beforeCount;
+      const diffText = diff > 0 ? ` (+${diff})` : diff < 0 ? ` (${diff})` : "";
+      message += `  ${category}: ${beforeCount} → ${afterCount}${diffText}\n`;
+    });
+
+    message += "\n💡 提示：\n";
+    message += "- 系统已根据产品名称智能识别分类\n";
+    message += "- 如有识别错误，请手动调整产品分类\n";
+    message += "- 点击顶部分类按钮查看各分类下的产品";
+
+    alert(message);
+
+    console.log("========== 智能分类修复结束 ==========");
   };
 
   // 显示原始数据（用于调试）
@@ -3797,6 +3993,16 @@ function QuotePage() {
                       suppressHydrationWarning
                     >
                       🔧 修复子分类
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        repairProductCategories();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      🎯 智能修复分类
                     </button>
                     <div className="border-t border-gray-200 my-1"></div>
                     <button
