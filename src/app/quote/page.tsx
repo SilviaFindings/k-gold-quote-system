@@ -5700,7 +5700,8 @@ function QuotePage() {
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         suppressHydrationWarning
-
+                      />
+                    </th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">颜色</th>
