@@ -1384,19 +1384,34 @@ function QuotePage() {
         throw new Error("未登录，请先登录");
       }
 
-      // 准备同步数据
+      // 🔥 修复：从 localStorage 读取数据，确保数据是最新的
+      // 如果 localStorage 为空，则使用 state 中的数据
+      const localProducts = localStorage.getItem("goldProducts");
+      const localHistory = localStorage.getItem("goldPriceHistory");
+      const localGoldPrice = localStorage.getItem("goldPrice");
+      const localGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
+      const localCoefficients = localStorage.getItem("priceCoefficients");
+
+      // 准备同步数据（优先使用 localStorage 数据）
       const syncData = {
-        products: products,
-        priceHistory: priceHistory,
+        products: localProducts ? JSON.parse(localProducts) : products,
+        priceHistory: localHistory ? JSON.parse(localHistory) : priceHistory,
         configs: {
-          goldPrice,
-          goldPriceTimestamp,
-          priceCoefficients: coefficients,
+          goldPrice: localGoldPrice ? Number(localGoldPrice) : goldPrice,
+          goldPriceTimestamp: localGoldPriceTimestamp || goldPriceTimestamp,
+          priceCoefficients: localCoefficients ? JSON.parse(localCoefficients) : coefficients,
           dataVersion: DATA_VERSION,
         },
       };
 
       console.log("📤 开始上传数据到云端...");
+      console.log("📊 上传统计:", {
+        productsCount: syncData.products.length,
+        historyCount: syncData.priceHistory.length,
+        hasGoldPrice: !!syncData.configs.goldPrice,
+        dataVersion: syncData.configs.dataVersion,
+      });
+
       const response = await fetch("/api/sync", {
         method: "POST",
         headers: {
