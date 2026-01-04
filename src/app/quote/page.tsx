@@ -5702,6 +5702,7 @@ function QuotePage() {
                         suppressHydrationWarning
                       />
                     </th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">颜色</th>
