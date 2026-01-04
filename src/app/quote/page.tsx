@@ -2388,6 +2388,89 @@ function QuotePage() {
     }
   };
 
+  // 彻底清除所有数据（数据库+本地）
+  const clearAllData = async () => {
+    // 二次确认
+    const confirmed = confirm(
+      '⚠️ 警告：此操作将彻底清除所有数据！\n\n' +
+      '这将删除：\n' +
+      '  • 数据库中的所有产品数据\n' +
+      '  • 数据库中的所有价格历史\n' +
+      '  • 数据库中的所有配置\n' +
+      '  • 本地localStorage中的所有数据\n\n' +
+      '❗ 此操作不可撤销！\n\n' +
+      '确定要继续吗？'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    // 三次确认，需要输入 "DELETE"
+    const verifyInput = prompt(
+      '为了防止误操作，请输入 "DELETE" 以确认清除所有数据：'
+    );
+
+    if (verifyInput !== 'DELETE') {
+      alert('操作已取消');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token');
+
+      // 1. 清除数据库数据
+      console.log('🗑️ 开始清除数据库数据...');
+      const response = await fetch('/api/clear-all-data', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('清除数据库数据失败:', errorText);
+        throw new Error('清除数据库数据失败');
+      }
+
+      const dbResult = await response.json();
+      console.log('✅ 数据库数据清除完成:', dbResult);
+
+      // 2. 清除本地数据
+      console.log('🗑️ 开始清除本地数据...');
+      localStorage.removeItem('goldProducts');
+      localStorage.removeItem('goldPriceHistory');
+      localStorage.removeItem('goldPrice');
+      localStorage.removeItem('goldPriceTimestamp');
+      localStorage.removeItem('priceCoefficients');
+      localStorage.removeItem('dataVersion');
+      localStorage.removeItem('appSettings');
+      console.log('✅ 本地数据清除完成');
+
+      // 3. 显示成功消息
+      let message = '✅ 所有数据已清除！\n\n';
+      message += '数据库数据：\n';
+      message += `  - 产品: ${dbResult.deletedCounts.products} 个\n`;
+      message += `  - 价格历史: ${dbResult.deletedCounts.history} 条\n`;
+      message += `  - 配置: ${dbResult.deletedCounts.configs} 条\n\n`;
+      message += '本地数据：\n';
+      message += `  - localStorage 已清空\n\n`;
+      message += '页面将重新加载...';
+
+      alert(message);
+
+      // 4. 重新加载页面
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error: any) {
+      console.error('清除数据失败:', error);
+      alert('清除数据失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
+    }
+  };
+
   // 验证导出数据的准确性
   const validateExportAccuracy = async () => {
     setIsValidatingExport(true);
@@ -6143,6 +6226,14 @@ function QuotePage() {
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t">
+              {/* 彻底清除所有数据按钮 - 始终显示 */}
+              <button
+                onClick={clearAllData}
+                className="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors"
+              >
+                💥 彻底清除所有数据
+              </button>
+
               {verificationResult.details.products.mismatchedIds &&
                verificationResult.details.products.mismatchedIds.length > 0 && (
                 <>
