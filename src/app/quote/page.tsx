@@ -3435,10 +3435,15 @@ function QuotePage() {
           // 读取成色（材质）：优先使用Excel中的成色，如果没有则从货号智能识别
           const karatRaw = karatIndex !== -1 ? String(row[karatIndex]) : "";
           let validKarat: "10K" | "14K" | "18K" = "14K";
-          if (karatRaw) {
+          if (karatRaw && karatRaw.trim() !== "") {
             const karatValue = String(karatRaw).trim().toUpperCase();
-            if (karatValue === "10K" || karatValue === "14K" || karatValue === "18K") {
-              validKarat = karatValue as "10K" | "14K" | "18K";
+            // 支持多种格式：10K, 14K, 18K, K10, K14, K18
+            if (karatValue === "10K" || karatValue === "K10") {
+              validKarat = "10K";
+            } else if (karatValue === "14K" || karatValue === "K14") {
+              validKarat = "14K";
+            } else if (karatValue === "18K" || karatValue === "K18") {
+              validKarat = "18K";
             }
           }
 
@@ -3490,11 +3495,13 @@ function QuotePage() {
           // 调试日志：输出分类结果
           console.log(`产品 ${productCode} (${productName}): 用户选择小类="${importSubCategory}", 自动推断大类="${finalCategory}"`);
 
-          // 确定最终使用的成色：优先使用Excel中的成色，如果没有则从货号智能识别
-          const finalKarat = validKarat || "14K";
+          // 确定最终使用的成色：
+          // 1. 如果Excel中有成色且是有效格式（10K/14K/18K/K10/K14/K18），则使用Excel的成色
+          // 2. 否则，从货号智能识别成色
           const detectedMaterial = detectMaterialFromCode(String(productCode));
-          // 如果Excel中有成色内容（非空）就用Excel的，否则使用智能识别的结果
-          const karat = (karatRaw && karatRaw.trim() !== "") ? finalKarat : detectedMaterial.karat;
+          const isExcelKaratValid = karatRaw && karatRaw.trim() !== "" &&
+            (["10K", "14K", "18K", "K10", "K14", "K18"].includes(String(karatRaw).trim().toUpperCase()));
+          const karat = isExcelKaratValid ? validKarat : detectedMaterial.karat;
 
           // 调试日志：输出成色和金价识别结果
           console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}", 导入金价="${goldPrice}", 工费="${laborCost}"`);
