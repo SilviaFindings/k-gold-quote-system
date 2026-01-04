@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       database: {
         products: {
           count: dbProducts.length,
+          allIds: dbProducts.map(p => p.id),
           sampleIds: dbProducts.slice(0, 5).map(p => ({
             id: p.id,
             productCode: p.productCode,
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
         },
         priceHistory: {
           count: dbHistory.length,
+          allIds: dbHistory.map(h => h.id),
           sampleIds: dbHistory.slice(0, 5).map(h => ({
             id: h.id,
             productCode: h.productCode,

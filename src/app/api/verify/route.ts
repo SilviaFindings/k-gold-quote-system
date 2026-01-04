@@ -138,8 +138,27 @@ export async function POST(request: NextRequest) {
     } else if (localHistoryIds.length > 0) {
       // 如果前端传递了ID列表，进行详细的ID匹配检查（即使数量不一致也检查）
       const dbHistoryIds = dbHistory.map(h => h.id);
-      const missingInDb = localHistoryIds.filter((id: string) => !dbHistoryIds.includes(id));
-      const extraInDb = dbHistoryIds.filter(id => !localHistoryIds.includes(id));
+
+      console.log('📊 历史记录ID匹配分析:', {
+        localCount: localHistoryIds.length,
+        dbCount: dbHistoryIds.length,
+        localSample: localHistoryIds.slice(0, 3),
+        dbSample: dbHistoryIds.slice(0, 3),
+      });
+
+      // 清理ID（去除前后空格）
+      const cleanedLocalIds = localHistoryIds.map((id: string) => id.trim());
+      const cleanedDbIds = dbHistoryIds.map((id: string) => id.trim());
+
+      const missingInDb = cleanedLocalIds.filter((id: string) => !cleanedDbIds.includes(id));
+      const extraInDb = cleanedDbIds.filter(id => !cleanedLocalIds.includes(id));
+
+      console.log('📊 匹配结果:', {
+        missingInDbCount: missingInDb.length,
+        extraInDbCount: extraInDb.length,
+        missingSamples: missingInDb.slice(0, 3),
+        extraSamples: extraInDb.slice(0, 3),
+      });
 
       if (missingInDb.length === 0 && extraInDb.length === 0 && localHistoryCount === dbHistoryCount) {
         historyMatch = true;
