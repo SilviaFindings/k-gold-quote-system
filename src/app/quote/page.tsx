@@ -272,6 +272,7 @@ interface Product {
   specialLaborFactorRetail?: number;   // 特殊零售价工费系数
   specialLaborFactorWholesale?: number; // 特殊批发价工费系数
   specialUsdExchangeRate?: number;  // 特殊美金汇率（仅用于US201订单）
+  specialCommissionRate?: number;  // 特殊佣金率（默认10%）
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -628,6 +629,9 @@ function QuotePage() {
     // 汇率相关
     usdExchangeRate: number;  // 美金汇率（加币 x 汇率 = 美金）
     usdExchangeRateMode: "fixed" | "special";  // 汇率模式
+    // 佣金相关
+    commissionRate: number;  // 佣金率（默认10%）
+    commissionRateMode: "fixed" | "special";  // 佣金率模式
   }>(() => {
     if (typeof window === 'undefined') {
       return {
@@ -647,6 +651,8 @@ function QuotePage() {
         profitMarginMode: "fixed",
         usdExchangeRate: 0.8,  // 默认美金汇率：加币 x 0.8 = 美金
         usdExchangeRateMode: "fixed",
+        commissionRate: 10,  // 默认佣金率：10%
+        commissionRateMode: "fixed",
       };
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
@@ -670,6 +676,8 @@ function QuotePage() {
         profitMarginMode: parsed.profitMarginMode ?? "fixed",
         usdExchangeRate: parsed.usdExchangeRate ?? 0.8,
         usdExchangeRateMode: parsed.usdExchangeRateMode ?? "fixed",
+        commissionRate: parsed.commissionRate ?? 10,
+        commissionRateMode: parsed.commissionRateMode ?? "fixed",
       };
     }
     return {
@@ -689,6 +697,8 @@ function QuotePage() {
       profitMarginMode: "fixed",
       usdExchangeRate: 0.8,
       usdExchangeRateMode: "fixed",
+      commissionRate: 10,
+      commissionRateMode: "fixed",
     };
   });
 
@@ -1026,6 +1036,8 @@ function QuotePage() {
           laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
           usdExchangeRate: coeff.usdExchangeRate ?? 0.8,
           usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
+          commissionRate: coeff.commissionRate ?? 10,
+          commissionRateMode: coeff.commissionRateMode ?? "fixed",
         };
         console.log("设置系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1316,6 +1328,8 @@ function QuotePage() {
           laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
           usdExchangeRate: coeff.usdExchangeRate ?? 0.8,
           usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
+          commissionRate: coeff.commissionRate ?? 10,
+          commissionRateMode: coeff.commissionRateMode ?? "fixed",
         };
         console.log("✅ 加载系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1694,7 +1708,6 @@ function QuotePage() {
     stoneCost: number = 0,
     platingCost: number = 0,
     moldCost: number = 0,
-    commission: number = 0,
     orderChannel?: OrderChannel,  // 下单口（用于判断是否转换货币）
     // 特殊系数（可选，如果提供则优先使用）
     specialMaterialLoss?: number,
@@ -1702,7 +1715,8 @@ function QuotePage() {
     specialProfitMargin?: number,
     specialLaborFactorRetail?: number,
     specialLaborFactorWholesale?: number,
-    specialUsdExchangeRate?: number  // 特殊美金汇率
+    specialUsdExchangeRate?: number,  // 特殊美金汇率
+    specialCommissionRate?: number  // 特殊佣金率
   ): number => {
     let goldFactor: number;
     if (karat === "10K") {
@@ -1726,19 +1740,23 @@ function QuotePage() {
     const materialCost = specialMaterialCost !== undefined ? specialMaterialCost : coefficients.materialCost;
     const profitMargin = specialProfitMargin !== undefined ? specialProfitMargin : coefficients.profitMargin;
 
+    // 计算工费（加币）
+    const laborPriceCAD = laborCost * laborFactor / coefficients.exchangeRate;
+
     // 材料价 = 市场金价 x 金含量 x 重量 x 材料损耗 x 材料浮动系数 / 汇率
     const materialPrice =
       marketGoldPrice * goldFactor * weight * materialLoss * materialCost / coefficients.exchangeRate;
 
-    // 工费 = 人工成本 x 系数 / 汇率
-    const laborPrice = laborCost * laborFactor / coefficients.exchangeRate;
-
     // 其它成本 = (配件 + 石头 + 电镀) x 工费系数 / 汇率
     const otherCosts = (accessoryCost + stoneCost + platingCost) * laborFactor / coefficients.exchangeRate;
 
-    // 总价 = (材料价 + 工费 + 其它成本) x (1 + 佣金率/100) x 国际运输和关税系数
-    const basePrice = materialPrice + laborPrice + otherCosts;
-    const totalPrice = basePrice * (1 + commission / 100) * profitMargin;
+    // 佣金 = 工费 x 佣金率
+    const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
+    const commissionAmount = laborPriceCAD * (commissionRate / 100);
+
+    // 总价 = (材料价 + 工费 + 其它成本 + 佣金) x 国际运输和关税系数
+    const basePrice = materialPrice + laborPriceCAD + otherCosts + commissionAmount;
+    const totalPrice = basePrice * profitMargin;
 
     let finalPrice = Math.round(totalPrice * 100) / 100; // 保留两位小数
 
@@ -1750,6 +1768,13 @@ function QuotePage() {
     }
 
     return finalPrice;
+  };
+
+  // 计算佣金金额
+  const calculateCommissionAmount = (laborCost: number, specialCommissionRate?: number): number => {
+    const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
+    // 佣金 = 工费 x 佣金率 / 100
+    return Math.round(laborCost * commissionRate * 100) / 100;
   };
 
   // 从货号中提取基础货号（去掉副号）
@@ -1900,12 +1925,12 @@ function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
-      currentProduct.commission || 0,
       currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
-      currentProduct.specialUsdExchangeRate
+      currentProduct.specialUsdExchangeRate,
+      currentProduct.specialCommissionRate
     );
 
     const retailPrice = calculatePrice(
@@ -1918,12 +1943,12 @@ function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
-      currentProduct.commission || 0,
       currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
-      currentProduct.specialUsdExchangeRate
+      currentProduct.specialUsdExchangeRate,
+      currentProduct.specialCommissionRate
     );
 
     // 判断是否为更新操作
@@ -2102,12 +2127,12 @@ function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
-        product.commission || 0,
         product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
         product.specialProfitMargin,
-        product.specialUsdExchangeRate
+        product.specialUsdExchangeRate,
+        product.specialCommissionRate
       );
 
       const newRetailPrice = calculatePrice(
@@ -2120,12 +2145,12 @@ function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
-        product.commission || 0,
         product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
         product.specialProfitMargin,
-        product.specialUsdExchangeRate
+        product.specialUsdExchangeRate,
+        product.specialCommissionRate
       );
 
       // 创建新的产品记录
@@ -2411,12 +2436,12 @@ function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
-        updatedProduct.commission,
         updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
-        updatedProduct.specialUsdExchangeRate
+        updatedProduct.specialUsdExchangeRate,
+        updatedProduct.specialCommissionRate
       );
 
       updatedProduct.retailPrice = calculatePrice(
@@ -2429,12 +2454,12 @@ function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
-        updatedProduct.commission,
         updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
-        updatedProduct.specialUsdExchangeRate
+        updatedProduct.specialUsdExchangeRate,
+        updatedProduct.specialCommissionRate
       );
 
       updatedProduct.timestamp = new Date().toLocaleString("zh-CN");
@@ -2559,13 +2584,13 @@ function QuotePage() {
 
       const row: any = {
         货号: product.productCode,
+        供应商代码: product.supplierCode || "",
         分类: product.category,
         名称: product.productName,
         成色: product.karat,
         金子颜色: product.goldColor || "黄金",
         规格: product.specification || "",
         形状: product.shape || "",
-        供应商代码: product.supplierCode || "",
         重量: product.weight,
         金价: `¥${product.goldPrice.toFixed(2)}`,
         工费: `¥${product.laborCost.toFixed(2)}`,
@@ -2573,11 +2598,11 @@ function QuotePage() {
         石头: `¥${(product.stoneCost || 0).toFixed(2)}\n${formatDate(product.stoneCostDate || product.timestamp)}`,
         电镀: `¥${(product.platingCost || 0).toFixed(2)}\n${formatDate(product.platingCostDate || product.timestamp)}`,
         模具: `¥${(product.moldCost || 0).toFixed(2)}\n${formatDate(product.moldCostDate || product.timestamp)}`,
-        佣金: `${(product.commission || 0).toFixed(2)}%\n${formatDate(product.commissionDate || product.timestamp)}`,
-        下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
+        佣金: `¥${calculateCommissionAmount(product.laborCost, product.specialCommissionRate).toFixed(2)}\n${formatDate(product.commissionDate || product.timestamp)}`,
         // 价格：修改过的用★标记
         零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
+        下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
         _modified: modified,  // 内部字段，用于标记是否修改过
       };
 
@@ -3484,7 +3509,6 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
-            commission,
             validOrderChannel || undefined,
             undefined,
             undefined,
@@ -3503,7 +3527,6 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
-            commission,
             validOrderChannel || undefined,
             undefined,
             undefined,
@@ -5232,6 +5255,31 @@ function QuotePage() {
               />
               <div className="mt-1 text-xs text-black">默认: 0.8 {coefficients.usdExchangeRateMode === "special" && "(可被产品特殊汇率覆盖)"}</div>
             </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="mb-2 block text-sm font-medium text-black">
+                  佣金率（佣金=工费×佣金率）
+                </label>
+                <select
+                  value={coefficients.commissionRateMode}
+                  onChange={(e) => setCoefficients({...coefficients, commissionRateMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
+              <input
+                type="number"
+                value={coefficients.commissionRate}
+                onChange={(e) => setCoefficients({...coefficients, commissionRate: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.1"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 10% {coefficients.commissionRateMode === "special" && "(可被产品特殊佣金率覆盖)"}</div>
+            </div>
           </div>
         </div>
 
@@ -5502,6 +5550,25 @@ function QuotePage() {
                       className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                       step="0.01"
                       placeholder={`默认: ${coefficients.usdExchangeRate}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black">
+                      特殊佣金率
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialCommissionRate ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialCommissionRate: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                      step="0.1"
+                      placeholder={`默认: ${coefficients.commissionRate}%`}
                       suppressHydrationWarning
                     />
                   </div>
@@ -6004,6 +6071,7 @@ function QuotePage() {
                       />
                     </th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">供应商</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">颜色</th>
@@ -6016,11 +6084,10 @@ function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">电镀</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">模具</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">佣金</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">供应商</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">下单口</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">金价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">金价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">批发价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">下单口</th>
                     <th className="border border-gray-200 px-3 py-2 text-center text-black bg-gray-100">操作</th>
                   </tr>
                 </thead>
@@ -6081,6 +6148,7 @@ function QuotePage() {
                         />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 font-semibold text-black">{product.productCode}</td>
+                      <td className="border border-gray-200 px-3 py-2 font-medium text-black">{product.supplierCode || "-"}</td>
                       <td className="border border-gray-200 px-3 py-2 font-medium text-black">{product.productName}</td>
                       <td className="border border-gray-200 px-3 py-2 text-black">{product.karat}</td>
                       <td className="border border-gray-200 px-3 py-2 text-black">{product.goldColor}</td>
@@ -6108,17 +6176,10 @@ function QuotePage() {
                         <div className="text-xs text-black">{formatDate(product.moldCostDate)}</div>
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
-                        <div className="font-medium text-black">{product.commission}%</div>
+                        <div className="font-medium text-black">
+                          ¥{calculateCommissionAmount(product.laborCost, product.specialCommissionRate).toFixed(2)}
+                        </div>
                         <div className="text-xs text-black">{formatDate(product.commissionDate)}</div>
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-black">{product.supplierCode || "-"}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-black">
-                        {product.orderChannel ? (
-                          (() => {
-                            const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
-                            return channel ? channel.code : product.orderChannel;
-                          })()
-                        ) : "-"}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right">
                         <div className="font-semibold text-black">
@@ -6145,6 +6206,14 @@ function QuotePage() {
                         <div className="mt-1 text-xs text-black">
                           {formatDate(product.timestamp)}
                         </div>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-left font-medium text-black">
+                        {product.orderChannel ? (
+                          (() => {
+                            const channel = ORDER_CHANNELS.find(d => d.code === product.orderChannel);
+                            return channel ? channel.code : product.orderChannel;
+                          })()
+                        ) : "-"}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <button
