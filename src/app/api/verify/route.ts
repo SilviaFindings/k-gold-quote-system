@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
     const {
       localProductCount = 0,
       localHistoryCount = 0,
+      localProductIds = [],
+      localHistoryIds = [],
       hasGoldPrice = false,
       hasCoefficients = false,
       hasDataVersion = false,
@@ -33,6 +35,8 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       localProductCount,
       localHistoryCount,
+      localProductIds: localProductIds.length,
+      localHistoryIds: localHistoryIds.length,
       hasGoldPrice,
       hasCoefficients,
       hasDataVersion,
@@ -46,16 +50,38 @@ export async function POST(request: NextRequest) {
     let productsMatch = false;
     let productsMessage = '';
     let productsStatus = '';
+    let mismatchedIds: string[] = [];
 
     if (localProductCount === 0 && dbProductCount === 0) {
       // 暂无数据
       productsMatch = true;
       productsStatus = 'ℹ️ 暂无数据';
       productsMessage = 'ℹ️ 本地和数据库都没有产品数据';
+    } else if (localProductIds.length > 0 && localProductIds.length === localProductCount) {
+      // 如果前端传递了ID列表，进行详细的ID匹配检查
+      const dbProductIds = dbProducts.map(p => p.id);
+      const missingInDb = localProductIds.filter((id: string) => !dbProductIds.includes(id));
+      const extraInDb = dbProductIds.filter(id => !localProductIds.includes(id));
+
+      if (missingInDb.length === 0 && extraInDb.length === 0) {
+        productsMatch = true;
+        productsStatus = '✅ 完整';
+        productsMessage = '✅ 数据完全一致';
+      } else if (missingInDb.length > 0) {
+        productsMatch = false;
+        productsStatus = '⚠️ ID不匹配';
+        mismatchedIds = missingInDb;
+        productsMessage = `⚠️ 本地有 ${missingInDb.length} 个产品的ID在数据库中不存在，需要同步`;
+      } else if (extraInDb.length > 0) {
+        productsMatch = true;
+        productsStatus = 'ℹ️ 数据库有额外数据';
+        productsMessage = `ℹ️ 数据库有 ${extraInDb.length} 个产品是本地没有的`;
+      }
     } else if (dbProductCount === localProductCount) {
+      // 没有传递ID列表，只检查数量
       productsMatch = true;
-      productsStatus = '✅ 完整';
-      productsMessage = '✅ 数据一致';
+      productsStatus = '⚠️ 需要详细验证';
+      productsMessage = '⚠️ 数量一致，但建议进行详细验证';
     } else if (dbProductCount > localProductCount) {
       productsMatch = true;
       productsStatus = '✅ 完整';
@@ -70,8 +96,10 @@ export async function POST(request: NextRequest) {
     console.log('产品数据验证:', {
       localStorage: localProductCount,
       database: dbProductCount,
+      localIds: localProductIds.length,
       match: productsMatch,
       message: productsMessage,
+      mismatchedIds: mismatchedIds.length,
     });
 
     // 2. 检查价格历史
@@ -82,16 +110,38 @@ export async function POST(request: NextRequest) {
     let historyMatch = false;
     let historyMessage = '';
     let historyStatus = '';
+    let mismatchedHistoryIds: string[] = [];
 
     if (localHistoryCount === 0 && dbHistoryCount === 0) {
       // 暂无数据
       historyMatch = true;
       historyStatus = 'ℹ️ 暂无数据';
       historyMessage = 'ℹ️ 本地和数据库都没有价格历史数据';
+    } else if (localHistoryIds.length > 0 && localHistoryIds.length === localHistoryCount) {
+      // 如果前端传递了ID列表，进行详细的ID匹配检查
+      const dbHistoryIds = dbHistory.map(h => h.id);
+      const missingInDb = localHistoryIds.filter((id: string) => !dbHistoryIds.includes(id));
+      const extraInDb = dbHistoryIds.filter(id => !localHistoryIds.includes(id));
+
+      if (missingInDb.length === 0 && extraInDb.length === 0) {
+        historyMatch = true;
+        historyStatus = '✅ 完整';
+        historyMessage = '✅ 数据完全一致';
+      } else if (missingInDb.length > 0) {
+        historyMatch = false;
+        historyStatus = '⚠️ ID不匹配';
+        mismatchedHistoryIds = missingInDb;
+        historyMessage = `⚠️ 本地有 ${missingInDb.length} 条历史记录的ID在数据库中不存在，需要同步`;
+      } else if (extraInDb.length > 0) {
+        historyMatch = true;
+        historyStatus = 'ℹ️ 数据库有额外数据';
+        historyMessage = `ℹ️ 数据库有 ${extraInDb.length} 条历史记录是本地没有的`;
+      }
     } else if (dbHistoryCount === localHistoryCount) {
+      // 没有传递ID列表，只检查数量
       historyMatch = true;
-      historyStatus = '✅ 完整';
-      historyMessage = '✅ 数据一致';
+      historyStatus = '⚠️ 需要详细验证';
+      historyMessage = '⚠️ 数量一致，但建议进行详细验证';
     } else if (dbHistoryCount > localHistoryCount) {
       historyMatch = true;
       historyStatus = '✅ 完整';
@@ -106,8 +156,10 @@ export async function POST(request: NextRequest) {
     console.log('价格历史验证:', {
       localStorage: localHistoryCount,
       database: dbHistoryCount,
+      localIds: localHistoryIds.length,
       match: historyMatch,
       message: historyMessage,
+      mismatchedIds: mismatchedHistoryIds.length,
     });
 
     // 3. 检查配置数据
@@ -261,6 +313,7 @@ export async function POST(request: NextRequest) {
           match: productsMatch,
           status: productsStatus,
           message: productsMessage,
+          mismatchedIds: mismatchedIds,
         },
         history: {
           localCount: localHistoryCount,
@@ -268,6 +321,7 @@ export async function POST(request: NextRequest) {
           match: historyMatch,
           status: historyStatus,
           message: historyMessage,
+          mismatchedIds: mismatchedHistoryIds,
         },
         configs: {
           goldPrice: {

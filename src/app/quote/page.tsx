@@ -2326,8 +2326,13 @@ function QuotePage() {
       const localCoefficients = localStorage.getItem('priceCoefficients');
       const localDataVersion = localStorage.getItem('dataVersion');
 
-      const localProductCount = localProducts ? JSON.parse(localProducts).length : 0;
-      const localHistoryCount = localHistory ? JSON.parse(localHistory).length : 0;
+      const products = localProducts ? JSON.parse(localProducts) : [];
+      const history = localHistory ? JSON.parse(localHistory) : [];
+
+      const localProductCount = products.length;
+      const localHistoryCount = history.length;
+      const localProductIds = products.map((p: any) => p.id).filter(Boolean);
+      const localHistoryIds = history.map((h: any) => h.id).filter(Boolean);
       const hasGoldPrice = !!localGoldPrice;
       const hasCoefficients = !!localCoefficients;
       const hasDataVersion = !!localDataVersion;
@@ -2335,6 +2340,8 @@ function QuotePage() {
       console.log('🔍 开始验证数据完整性:', {
         localProductCount,
         localHistoryCount,
+        localProductIds: localProductIds.length,
+        localHistoryIds: localHistoryIds.length,
         hasGoldPrice,
         hasCoefficients,
         hasDataVersion,
@@ -2351,6 +2358,8 @@ function QuotePage() {
         body: JSON.stringify({
           localProductCount,
           localHistoryCount,
+          localProductIds,
+          localHistoryIds,
           hasGoldPrice,
           hasCoefficients,
           hasDataVersion,
@@ -2377,6 +2386,9 @@ function QuotePage() {
       if (result.details.products.message) {
         message += `  - 说明: ${result.details.products.message}\n`;
       }
+      if (result.details.products.mismatchedIds && result.details.products.mismatchedIds.length > 0) {
+        message += `  - 不匹配的ID数: ${result.details.products.mismatchedIds.length}\n`;
+      }
       message += '\n';
       message += '📈 价格历史：\n';
       message += `  - 本地: ${result.details.history.localCount} 条\n`;
@@ -2384,6 +2396,9 @@ function QuotePage() {
       message += `  - 状态: ${result.details.history.status}\n`;
       if (result.details.history.message) {
         message += `  - 说明: ${result.details.history.message}\n`;
+      }
+      if (result.details.history.mismatchedIds && result.details.history.mismatchedIds.length > 0) {
+        message += `  - 不匹配的ID数: ${result.details.history.mismatchedIds.length}\n`;
       }
       message += '\n';
       message += '⚙️  系统配置：\n';
