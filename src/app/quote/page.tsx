@@ -558,6 +558,18 @@ function QuotePage() {
     },
   });
 
+  // ========== 数据同步相关状态 ==========
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [syncMessage, setSyncMessage] = useState<string>("");
+  const [lastSyncTime, setLastSyncTime] = useState<string>("");
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem("autoSyncEnabled");
+    return saved ? saved === "true" : true;
+  });
+  const [showSyncMenu, setShowSyncMenu] = useState<boolean>(false);
+  const [cloudDataExists, setCloudDataExists] = useState<boolean>(false);
+
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
     goldFactor10K: number;
@@ -1047,7 +1059,89 @@ function QuotePage() {
     console.log("========== 数据加载完成 ==========");
   }, []);
 
-  // 更新滚动条宽度
+  // ========== 云端数据同步逻辑 ==========
+
+  // 检查云端数据并在首次加载时提示用户
+  useEffect(() => {
+    const checkCloudAndPrompt = async () => {
+      // 检查是否已登录
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        return;
+      }
+
+      // 检查是否已经提示过（避免每次刷新都提示）
+      const prompted = sessionStorage.getItem("cloudDataPrompted");
+      if (prompted) {
+        return;
+      }
+
+      // 延迟检查，确保页面加载完成
+      setTimeout(async () => {
+        try {
+          console.log("🔍 检查云端数据...");
+          const hasCloudData = await checkCloudData();
+
+          if (hasCloudData) {
+            console.log("✅ 发现云端数据，提示用户");
+
+            // 标记已提示
+            sessionStorage.setItem("cloudDataPrompted", "true");
+
+            // 询问用户是否下载
+            const shouldDownload = confirm(
+              "检测到云端有数据！\n\n" +
+              "您可以选择：\n" +
+              "• 确定 - 从云端下载数据（合并模式）\n" +
+              "• 取消 - 继续使用本地数据\n\n" +
+              "您也可以通过顶部的「云端同步」按钮随时同步数据。"
+            );
+
+            if (shouldDownload) {
+              await downloadFromCloud("merge");
+            } else {
+              console.log("用户取消下载，继续使用本地数据");
+            }
+          } else {
+            console.log("ℹ️ 云端暂无数据");
+          }
+        } catch (error) {
+          console.error("检查云端数据失败:", error);
+        }
+      }, 2000); // 延迟2秒执行
+    };
+
+    checkCloudAndPrompt();
+  }, []);
+
+  // ========== 云端数据同步逻辑结束 ==========
+
+  // ========== 自动同步防抖逻辑 ==========
+  const syncTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // 触发自动同步（带防抖）
+  const triggerAutoSync = () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    // 延迟3秒执行同步，避免频繁同步
+    syncTimeoutRef.current = setTimeout(() => {
+      autoSync();
+    }, 3000);
+  };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, []);
+  // ========== 自动同步防抖逻辑结束 ==========
+
+  // 保存数据到 localStorage
   useEffect(() => {
     // 延迟更新，确保表格渲染完成
     setTimeout(() => {
@@ -1267,6 +1361,241 @@ function QuotePage() {
     }, 500);
   };
 
+  // ========== 数据同步函数 ==========
+
+  /**
+   * 上传数据到云端
+   */
+  const uploadToCloud = async () => {
+    setSyncStatus("syncing");
+    setSyncMessage("正在上传数据到云端...");
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("未登录，请先登录");
+      }
+
+      // 准备同步数据
+      const syncData = {
+        products: products,
+        priceHistory: priceHistory,
+        configs: {
+          goldPrice,
+          goldPriceTimestamp,
+          priceCoefficients: coefficients,
+          dataVersion: DATA_VERSION,
+        },
+      };
+
+      console.log("📤 开始上传数据到云端...");
+      const response = await fetch("/api/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(syncData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "未知错误" }));
+        throw new Error(errorData.error || "上传失败");
+      }
+
+      const result = await response.json();
+      console.log("✅ 上传成功:", result);
+
+      setLastSyncTime(new Date().toLocaleString("zh-CN"));
+      setSyncStatus("success");
+      setSyncMessage(`上传成功！产品: ${result.syncedProducts || 0} 个，历史记录: ${result.syncedHistory || 0} 条`);
+
+      // 3秒后清除成功状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 3000);
+
+      return result;
+    } catch (error: any) {
+      console.error("❌ 上传失败:", error);
+      setSyncStatus("error");
+      setSyncMessage(`上传失败: ${error.message || "未知错误"}`);
+
+      // 5秒后清除错误状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 5000);
+
+      throw error;
+    }
+  };
+
+  /**
+   * 从云端下载数据
+   */
+  const downloadFromCloud = async (mergeMode: "replace" | "merge" = "merge") => {
+    setSyncStatus("syncing");
+    setSyncMessage("正在从云端下载数据...");
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("未登录，请先登录");
+      }
+
+      console.log("📥 开始从云端下载数据...");
+
+      // 并行获取产品和配置数据
+      const [productsRes, configRes] = await Promise.all([
+        fetch("/api/products", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        fetch("/api/config", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
+
+      if (!productsRes.ok) {
+        throw new Error("获取产品数据失败");
+      }
+
+      const productsData = await productsRes.json();
+      let cloudProducts: Product[] = productsData.products || [];
+      let cloudConfigs: any = {};
+
+      if (configRes.ok) {
+        const configData = await configRes.json();
+        cloudConfigs = configData.config || {};
+      }
+
+      console.log("✅ 下载成功:", {
+        productsCount: cloudProducts.length,
+        hasConfig: Object.keys(cloudConfigs).length > 0,
+      });
+
+      if (mergeMode === "replace") {
+        // 完全替换模式：直接使用云端数据
+        console.log("🔄 使用云端数据完全替换本地数据");
+
+        setProducts(cloudProducts);
+        setCloudDataExists(cloudProducts.length > 0);
+
+        // 更新配置
+        if (cloudConfigs.goldPrice) {
+          setGoldPrice(cloudConfigs.goldPrice);
+          localStorage.setItem("goldPrice", cloudConfigs.goldPrice);
+        }
+
+        if (cloudConfigs.goldPriceTimestamp) {
+          setGoldPriceTimestamp(cloudConfigs.goldPriceTimestamp);
+          localStorage.setItem("goldPriceTimestamp", cloudConfigs.goldPriceTimestamp);
+        }
+
+        if (cloudConfigs.priceCoefficients) {
+          setCoefficients(cloudConfigs.priceCoefficients);
+          localStorage.setItem("priceCoefficients", JSON.stringify(cloudConfigs.priceCoefficients));
+        }
+
+        // 保存到 localStorage
+        localStorage.setItem("goldProducts", JSON.stringify(cloudProducts));
+
+        setSyncMessage(`下载成功！已加载 ${cloudProducts.length} 个产品数据（替换模式）`);
+      } else {
+        // 合并模式：合并云端和本地数据
+        console.log("🔄 合并云端数据和本地数据");
+
+        // 创建产品 ID 映射
+        const localProductMap = new Map(products.map(p => [p.id, p]));
+        const cloudProductMap = new Map(cloudProducts.map((p: Product) => [p.id, p]));
+
+        // 合并策略：云端数据优先
+        const mergedProducts = new Map([...localProductMap, ...cloudProductMap]);
+        const mergedProductsArray = Array.from(mergedProducts.values());
+
+        setProducts(mergedProductsArray);
+        setCloudDataExists(cloudProducts.length > 0);
+
+        // 保存到 localStorage
+        localStorage.setItem("goldProducts", JSON.stringify(mergedProductsArray));
+
+        setSyncMessage(`下载成功！合并后共有 ${mergedProductsArray.length} 个产品（合并模式）`);
+      }
+
+      setLastSyncTime(new Date().toLocaleString("zh-CN"));
+      setSyncStatus("success");
+
+      // 3秒后清除成功状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 3000);
+
+      return cloudProducts;
+    } catch (error: any) {
+      console.error("❌ 下载失败:", error);
+      setSyncStatus("error");
+      setSyncMessage(`下载失败: ${error.message || "未知错误"}`);
+
+      // 5秒后清除错误状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 5000);
+
+      throw error;
+    }
+  };
+
+  /**
+   * 检查云端是否有数据
+   */
+  const checkCloudData = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        return false;
+      }
+
+      const response = await fetch("/api/products?limit=1", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      const hasData = data.products && data.products.length > 0;
+      setCloudDataExists(hasData);
+      return hasData;
+    } catch (error) {
+      console.error("检查云端数据失败:", error);
+      return false;
+    }
+  };
+
+  /**
+   * 自动同步（数据变更时调用）
+   */
+  const autoSync = async () => {
+    if (!autoSyncEnabled || syncStatus === "syncing") {
+      return;
+    }
+
+    try {
+      await uploadToCloud();
+    } catch (error) {
+      console.error("自动同步失败:", error);
+      // 静默失败，不提示用户
+    }
+  };
+
+  // ========== 数据同步函数结束 ==========
+
   // 保存数据到 localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1274,6 +1603,8 @@ function QuotePage() {
     if (products.length > 0) {
       localStorage.setItem("goldProducts", JSON.stringify(products));
       console.log("已保存产品数据到 localStorage，数量:", products.length);
+      // 触发自动同步
+      triggerAutoSync();
     }
   }, [products]);
 
@@ -1283,6 +1614,8 @@ function QuotePage() {
     if (priceHistory.length > 0) {
       localStorage.setItem("goldPriceHistory", JSON.stringify(priceHistory));
       console.log("已保存历史记录到 localStorage，数量:", priceHistory.length);
+      // 触发自动同步
+      triggerAutoSync();
     }
   }, [priceHistory]);
 
@@ -1292,12 +1625,16 @@ function QuotePage() {
     localStorage.setItem("goldPrice", goldPrice.toString());
     setGoldPriceTimestamp(new Date().toLocaleString("zh-CN"));
     localStorage.setItem("goldPriceTimestamp", new Date().toLocaleString("zh-CN"));
+    // 触发自动同步
+    triggerAutoSync();
   }, [goldPrice]);
 
   // 保存系数到 localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem("priceCoefficients", JSON.stringify(coefficients));
+    // 触发自动同步
+    triggerAutoSync();
   }, [coefficients]);
 
   // 计算价格函数
@@ -3690,10 +4027,133 @@ function QuotePage() {
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold text-black">
-            K金产品报价计算表
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-black">
+              K金产品报价计算表
+            </h1>
+            {/* 同步状态显示 */}
+            <div className="flex items-center gap-2">
+              {syncStatus === "syncing" && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span>同步中...</span>
+                </div>
+              )}
+              {syncStatus === "success" && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  <span>✓</span>
+                  <span>{syncMessage || "同步成功"}</span>
+                </div>
+              )}
+              {syncStatus === "error" && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                  <span>✗</span>
+                  <span>{syncMessage || "同步失败"}</span>
+                </div>
+              )}
+              {syncStatus === "idle" && lastSyncTime && (
+                <div className="text-xs text-gray-600">
+                  上次同步: {lastSyncTime}
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-3">
+            {/* 同步按钮组 */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSyncMenu(!showSyncMenu)}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"
+                suppressHydrationWarning
+              >
+                ☁️ 云端同步
+              </button>
+
+              {showSyncMenu && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-3">
+                    <div className="px-4 pb-2 border-b border-gray-200">
+                      <div className="text-sm font-semibold text-black">云端数据同步</div>
+                      {cloudDataExists && (
+                        <div className="text-xs text-green-600 mt-1">✓ 云端已有数据</div>
+                      )}
+                      {!cloudDataExists && (
+                        <div className="text-xs text-gray-500 mt-1">暂无云端数据</div>
+                      )}
+                    </div>
+
+                    <div className="px-4 py-2 space-y-2">
+                      <button
+                        onClick={async () => {
+                          setShowSyncMenu(false);
+                          await uploadToCloud();
+                        }}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+                        disabled={syncStatus === "syncing"}
+                        suppressHydrationWarning
+                      >
+                        📤 上传到云端
+                      </button>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={async () => {
+                            setShowSyncMenu(false);
+                            await downloadFromCloud("merge");
+                          }}
+                          className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs font-medium"
+                          disabled={syncStatus === "syncing"}
+                          suppressHydrationWarning
+                        >
+                          📥 合并下载
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setShowSyncMenu(false);
+                            if (confirm("⚠️ 警告：替换模式会覆盖本地所有数据！\n\n确定要使用云端数据替换本地数据吗？")) {
+                              await downloadFromCloud("replace");
+                            }
+                          }}
+                          className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-medium"
+                          disabled={syncStatus === "syncing"}
+                          suppressHydrationWarning
+                        >
+                          🔄 替换下载
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={async () => {
+                          setShowSyncMenu(false);
+                          const hasData = await checkCloudData();
+                          alert(hasData ? "✅ 云端有数据可以下载" : "❌ 云端暂无数据");
+                        }}
+                        className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm"
+                        suppressHydrationWarning
+                      >
+                        🔍 检查云端数据
+                      </button>
+                    </div>
+
+                    <div className="px-4 pt-2 border-t border-gray-200">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={autoSyncEnabled}
+                          onChange={(e) => {
+                            setAutoSyncEnabled(e.target.checked);
+                            localStorage.setItem("autoSyncEnabled", String(e.target.checked));
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm text-gray-700">自动同步（数据变更时）</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setShowHelpModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
