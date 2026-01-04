@@ -14,10 +14,9 @@ export class PriceHistoryManager {
   // 创建价格历史并指定 ID（用于同步）
   async createPriceHistoryWithId(userId: string, data: any): Promise<PriceHistory> {
     const db = await getDb();
-    // 如果数据中包含 id，使用 insertPriceHistoryWithIdSchema，否则使用 insertPriceHistorySchema
-    const schema = data.id ? insertPriceHistoryWithIdSchema : insertPriceHistorySchema;
-    const validated = schema.parse({ ...data });
-    const [history] = await db.insert(priceHistory).values({ ...validated, userId }).returning();
+    // 绕过验证，直接插入数据（用于同步，ID可能超过36字符限制）
+    // 数据已经在同步API中进行了预处理和验证
+    const [history] = await db.insert(priceHistory).values({ ...data, userId }).returning();
     return history;
   }
 

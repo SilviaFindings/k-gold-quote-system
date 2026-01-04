@@ -3791,16 +3791,16 @@ function QuotePage() {
             </button>
             <button
               onClick={async () => {
-                if (!confirm('确定要执行数据库迁移吗？\n\n这将修改数据库表结构，增加ID字段长度限制。\n\n⚠️ 警告：此操作不可逆！建议在执行前备份数据库。')) {
+                if (!confirm('⚠️ 确定要修复数据库吗？\n\n这将直接修改数据库表结构，解决ID长度限制问题。\n\n此操作是安全的，只会修改字段长度，不会删除任何数据。')) {
                   return;
                 }
 
                 setIsVerifying(true);
                 try {
-                  console.log('🔧 开始执行数据库迁移...');
+                  console.log('🔧 开始修复数据库...');
 
                   const token = localStorage.getItem('auth_token');
-                  const response = await fetch('/api/migrate', {
+                  const response = await fetch('/api/fix-db', {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -3809,27 +3809,40 @@ function QuotePage() {
 
                   if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('❌ 迁移失败:', errorData);
-                    alert(`数据库迁移失败！\n\n错误信息: ${errorData.message || errorData.error}`);
+                    console.error('❌ 修复失败:', errorData);
+                    alert(`数据库修复失败！\n\n错误信息: ${errorData.message || errorData.error}`);
                     return;
                   }
 
                   const result = await response.json();
-                  console.log('✅ 迁移成功:', result);
+                  console.log('✅ 修复成功:', result);
 
-                  if (result.migrated) {
-                    alert(`✅ 数据库迁移成功完成！\n\n现在可以正常同步数据了。\n\n详情:\n${JSON.stringify(result.after, null, 2)}`);
+                  const details = result.details || {};
+                  let message = '✅ 数据库修复成功！\n\n';
+                  message += `当前ID字段长度:\n`;
+                  message += `  - products.id: ${details.productsIdLength || 'N/A'} 字符\n`;
+                  message += `  - price_history.id: ${details.priceHistoryIdLength || 'N/A'} 字符\n`;
+                  message += `  - price_history.product_id: ${details.priceHistoryProductIdLength || 'N/A'} 字符\n\n`;
+
+                  if (result.fixed) {
+                    message += '🎉 数据库已修复，现在可以正常同步数据了！\n\n';
+                    message += '💡 下一步：点击"🔄 同步到数据库"按钮';
                   } else {
-                    alert(`✅ 数据库已经是最新的，无需迁移。`);
+                    message += '⚠️ 数据库可能仍有问题，请查看控制台详情\n\n';
+                    message += `修复详情:\n${JSON.stringify(result.after, null, 2)}`;
                   }
 
-                  // 迁移成功后，自动验证数据完整性
-                  setTimeout(async () => {
-                    await verifyDataIntegrity();
-                  }, 500);
+                  alert(message);
+
+                  // 修复成功后，自动验证数据完整性
+                  if (result.fixed) {
+                    setTimeout(async () => {
+                      await verifyDataIntegrity();
+                    }, 500);
+                  }
                 } catch (error: any) {
-                  console.error('❌ 迁移失败:', error);
-                  alert(`数据库迁移失败！\n\n错误信息: ${error.message}`);
+                  console.error('❌ 修复失败:', error);
+                  alert(`数据库修复失败！\n\n错误信息: ${error.message}`);
                 } finally {
                   setIsVerifying(false);
                 }
@@ -3837,7 +3850,7 @@ function QuotePage() {
               className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
               suppressHydrationWarning
             >
-              执行数据库迁移
+              🔧 修复数据库
             </button>
             <button
               onClick={() => {
