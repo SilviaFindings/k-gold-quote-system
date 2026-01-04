@@ -1392,6 +1392,13 @@ function QuotePage() {
       const localGoldPriceTimestamp = localStorage.getItem("goldPriceTimestamp");
       const localCoefficients = localStorage.getItem("priceCoefficients");
 
+      // 详细日志：检查 localStorage 数据
+      console.log("🔍 检查 localStorage 数据:");
+      console.log("  goldProducts:", localProducts ? `${JSON.parse(localProducts).length} 个产品` : "无数据");
+      console.log("  goldPriceHistory:", localHistory ? `${JSON.parse(localHistory).length} 条历史` : "无数据");
+      console.log("  goldPrice:", localGoldPrice);
+      console.log("  priceCoefficients:", localCoefficients ? "有数据" : "无数据");
+
       // 准备同步数据（优先使用 localStorage 数据）
       const syncData = {
         products: localProducts ? JSON.parse(localProducts) : products,
@@ -1410,6 +1417,8 @@ function QuotePage() {
         historyCount: syncData.priceHistory.length,
         hasGoldPrice: !!syncData.configs.goldPrice,
         dataVersion: syncData.configs.dataVersion,
+        productsSource: localProducts ? "localStorage" : "state",
+        historySource: localHistory ? "localStorage" : "state",
       });
 
       const response = await fetch("/api/sync", {
@@ -1428,6 +1437,14 @@ function QuotePage() {
 
       const result = await response.json();
       console.log("✅ 上传成功:", result);
+      console.log("📊 响应数据结构:", {
+        keys: Object.keys(result),
+        stats: result.stats,
+        syncedProducts: result.stats?.syncedProducts,
+        newProducts: result.stats?.newProducts,
+        updatedProducts: result.stats?.updatedProducts,
+        syncedHistory: result.stats?.syncedHistory,
+      });
 
       setLastSyncTime(new Date().toLocaleString("zh-CN"));
       setSyncStatus("success");
