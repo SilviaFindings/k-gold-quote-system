@@ -347,6 +347,7 @@ function QuotePage() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [showVerificationModal, setShowVerificationModal] = useState<boolean>(false);
   const [isValidatingExport, setIsValidatingExport] = useState<boolean>(false);
 
   // 更多工具菜单状态
@@ -2377,50 +2378,8 @@ function QuotePage() {
 
       console.log('✅ 验证完成:', result);
 
-      // 显示验证结果
-      let message = result.overallStatus + '\n\n';
-      message += '📦 产品数据：\n';
-      message += `  - 本地: ${result.details.products.localCount} 个\n`;
-      message += `  - 数据库: ${result.details.products.databaseCount} 个\n`;
-      message += `  - 状态: ${result.details.products.status}\n`;
-      if (result.details.products.message) {
-        message += `  - 说明: ${result.details.products.message}\n`;
-      }
-      if (result.details.products.mismatchedIds && result.details.products.mismatchedIds.length > 0) {
-        message += `  - 不匹配的ID数: ${result.details.products.mismatchedIds.length}\n`;
-      }
-      message += '\n';
-      message += '📈 价格历史：\n';
-      message += `  - 本地: ${result.details.history.localCount} 条\n`;
-      message += `  - 数据库: ${result.details.history.databaseCount} 条\n`;
-      message += `  - 状态: ${result.details.history.status}\n`;
-      if (result.details.history.message) {
-        message += `  - 说明: ${result.details.history.message}\n`;
-      }
-      if (result.details.history.mismatchedIds && result.details.history.mismatchedIds.length > 0) {
-        message += `  - 不匹配的ID数: ${result.details.history.mismatchedIds.length}\n`;
-      }
-      message += '\n';
-      message += '⚙️  系统配置：\n';
-      message += `  - 金价: ${result.details.configs.goldPrice.status}\n`;
-      message += `  - 价格系数: ${result.details.configs.coefficients.status}\n`;
-      message += `  - 数据版本: ${result.details.configs.dataVersion.status}\n\n`;
-      message += '📋 数据质量：\n';
-      message += `  - 产品数据: ${result.details.dataQuality.products.status}\n`;
-      message += `  - 历史记录: ${result.details.dataQuality.history.status}\n\n`;
-
-      // 显示建议
-      if (result.recommendations && result.recommendations.length > 0) {
-        message += '💡 操作建议：\n';
-        message += '------------------\n';
-        result.recommendations.forEach((rec: string) => {
-          message += `${rec}\n`;
-        });
-      } else {
-        message += '🎉 所有检查通过！\n';
-      }
-
-      alert(message);
+      // 显示验证结果模态框
+      setShowVerificationModal(true);
     } catch (error: any) {
       console.error('验证失败:', error);
       alert('验证失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
@@ -6042,6 +6001,186 @@ function QuotePage() {
               </p>
               <button
                 onClick={() => setShowHelpModal(false)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 验证结果模态框 */}
+      {showVerificationModal && verificationResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-black">数据完整性验证结果</h2>
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="text-black hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-sm text-black mb-6">
+              <p className="mb-2">
+                <strong>验证时间：</strong> {new Date(verificationResult.timestamp).toLocaleString('zh-CN')}
+              </p>
+              <p className={`mb-4 ${verificationResult.success ? 'text-green-600' : 'text-orange-600'}`}>
+                <strong>{verificationResult.overallStatus}</strong>
+              </p>
+
+              {/* 产品数据 */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-2">📦 产品数据</h3>
+                <div className="space-y-1">
+                  <p>- 本地: {verificationResult.details.products.localCount} 个</p>
+                  <p>- 数据库: {verificationResult.details.products.databaseCount} 个</p>
+                  <p>- 状态: <span className={`font-medium ${
+                    verificationResult.details.products.match ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.products.status}</span></p>
+                  {verificationResult.details.products.message && (
+                    <p className="text-gray-600 text-sm">{verificationResult.details.products.message}</p>
+                  )}
+                  {verificationResult.details.products.mismatchedIds && verificationResult.details.products.mismatchedIds.length > 0 && (
+                    <div className="mt-2 p-2 bg-red-50 rounded text-sm">
+                      <p className="font-medium text-red-700 mb-1">
+                        ⚠️ 不匹配的ID ({verificationResult.details.products.mismatchedIds.length} 个):
+                      </p>
+                      <div className="max-h-32 overflow-y-auto text-xs font-mono bg-white p-2 rounded">
+                        {verificationResult.details.products.mismatchedIds.map((id: string, idx: number) => (
+                          <div key={idx}>{id}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 价格历史 */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-2">📈 价格历史</h3>
+                <div className="space-y-1">
+                  <p>- 本地: {verificationResult.details.history.localCount} 条</p>
+                  <p>- 数据库: {verificationResult.details.history.databaseCount} 条</p>
+                  <p>- 状态: <span className={`font-medium ${
+                    verificationResult.details.history.match ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.history.status}</span></p>
+                  {verificationResult.details.history.message && (
+                    <p className="text-gray-600 text-sm">{verificationResult.details.history.message}</p>
+                  )}
+                  {verificationResult.details.history.mismatchedIds && verificationResult.details.history.mismatchedIds.length > 0 && (
+                    <div className="mt-2 p-2 bg-red-50 rounded text-sm">
+                      <p className="font-medium text-red-700 mb-1">
+                        ⚠️ 不匹配的ID ({verificationResult.details.history.mismatchedIds.length} 条):
+                      </p>
+                      <div className="max-h-32 overflow-y-auto text-xs font-mono bg-white p-2 rounded">
+                        {verificationResult.details.history.mismatchedIds.map((id: string, idx: number) => (
+                          <div key={idx}>{id}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 系统配置 */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-2">⚙️ 系统配置</h3>
+                <div className="space-y-1">
+                  <p>- 金价: <span className={`font-medium ${
+                    verificationResult.details.configs.goldPrice.match ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.configs.goldPrice.status}</span></p>
+                  <p>- 价格系数: <span className={`font-medium ${
+                    verificationResult.details.configs.coefficients.match ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.configs.coefficients.status}</span></p>
+                  <p>- 数据版本: <span className={`font-medium ${
+                    verificationResult.details.configs.dataVersion.match ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.configs.dataVersion.status}</span></p>
+                </div>
+              </div>
+
+              {/* 数据质量 */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-2">📋 数据质量</h3>
+                <div className="space-y-1">
+                  <p>- 产品数据: <span className={`font-medium ${
+                    verificationResult.details.dataQuality.products.status ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.dataQuality.products.status}</span></p>
+                  <p>- 历史记录: <span className={`font-medium ${
+                    verificationResult.details.dataQuality.history.status ? 'text-green-600' : 'text-red-600'
+                  }`}>{verificationResult.details.dataQuality.history.status}</span></p>
+                  {verificationResult.details.dataQuality.products.issues && verificationResult.details.dataQuality.products.issues.length > 0 && (
+                    <div className="mt-2 p-2 bg-orange-50 rounded text-sm">
+                      <p className="font-medium text-orange-700 mb-1">
+                        ⚠️ 产品数据问题 ({verificationResult.details.dataQuality.products.issues.length} 个):
+                      </p>
+                      <div className="max-h-32 overflow-y-auto text-xs">
+                        {verificationResult.details.dataQuality.products.issues.map((issue: any, idx: number) => (
+                          <div key={idx} className="p-1">
+                            <span className="font-medium">{issue.productCode}:</span> {issue.issues.join(', ')}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 操作建议 */}
+              {verificationResult.recommendations && verificationResult.recommendations.length > 0 && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-semibold text-black mb-2">💡 操作建议</h3>
+                  <div className="space-y-1 text-sm">
+                    {verificationResult.recommendations.map((rec: string, idx: number) => (
+                      <p key={idx}>{rec}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              {verificationResult.details.products.mismatchedIds &&
+               verificationResult.details.products.mismatchedIds.length > 0 && (
+                <>
+                  <button
+                    onClick={async () => {
+                      if (confirm('确定要清理本地数据吗？\n\n这将删除所有localStorage中的数据，然后你可以从数据库重新加载或导入新数据。\n\n⚠️ 警告：此操作不可撤销！')) {
+                        // 清理本地数据
+                        localStorage.removeItem('goldProducts');
+                        localStorage.removeItem('goldPriceHistory');
+                        localStorage.removeItem('goldPrice');
+                        localStorage.removeItem('goldPriceTimestamp');
+                        localStorage.removeItem('priceCoefficients');
+                        localStorage.removeItem('dataVersion');
+                        localStorage.removeItem('appSettings');
+
+                        // 重新加载页面
+                        window.location.reload();
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    🗑️ 清理本地数据
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm('确定要将本地数据同步到数据库吗？这将添加本地数据到数据库。\n\n⚠️ 警告：如果数据库中有不同的数据，将会产生重复！')) {
+                        setShowVerificationModal(false);
+                        await syncToDatabase();
+                      }
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    🔄 同步到数据库
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setShowVerificationModal(false)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 关闭
