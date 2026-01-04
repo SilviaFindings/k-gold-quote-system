@@ -4266,6 +4266,53 @@ function QuotePage() {
     console.log("========== 云端数据清空结束 ==========");
   };
 
+  // 清空所有本地数据
+  const clearAllLocalData = () => {
+    console.log("========== 开始清空本地数据 ==========");
+
+    // 确认操作
+    const confirmed = window.confirm(
+      "确定要清空所有本地数据吗？\n\n" +
+      "清空后不可恢复！\n" +
+      "如果云端有数据，可以重新从云端同步。\n\n" +
+      `当前数据：\n` +
+      `- 本地产品：${products.length} 个\n` +
+      `- 本地历史：${priceHistory.length} 条`
+    );
+
+    if (!confirmed) {
+      console.log("用户取消清空操作");
+      return;
+    }
+
+    try {
+      // 清空 localStorage 中的数据
+      localStorage.removeItem("goldProducts");
+      localStorage.removeItem("goldPriceHistory");
+      localStorage.removeItem("goldPrice");
+      localStorage.removeItem("goldPriceTimestamp");
+      localStorage.removeItem("priceCoefficients");
+      localStorage.removeItem("dataVersion");
+      localStorage.removeItem("auth_token"); // 如果需要，也清除登录状态
+
+      // 清空 state
+      setProducts([]);
+      setPriceHistory([]);
+
+      // 显示成功消息
+      alert("✅ 本地数据已清空\n\n" +
+        "- 产品数据：已清空\n" +
+        "- 历史记录：已清空\n" +
+        "- 金价配置：已重置\n" +
+        "- 价格系数：已重置");
+
+      console.log("========== 本地数据清空结束 ==========");
+    } catch (error: any) {
+      console.error("❌ 清空失败:", error);
+      alert("❌ 清空失败: " + error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -4406,6 +4453,18 @@ function QuotePage() {
                         suppressHydrationWarning
                       >
                         🗑️ 清空云端数据
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          setShowSyncMenu(false);
+                          clearAllLocalData();
+                        }}
+                        className="w-full px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors text-sm"
+                        disabled={syncStatus === "syncing"}
+                        suppressHydrationWarning
+                      >
+                        🗑️ 清空本地数据
                       </button>
                     </div>
 
