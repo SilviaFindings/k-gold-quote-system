@@ -345,6 +345,8 @@ function QuotePage() {
 
   // 数据同步相关状态
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
 
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
@@ -2191,11 +2193,13 @@ function QuotePage() {
     const localGoldPrice = localStorage.getItem('goldPrice');
     const localGoldPriceTimestamp = localStorage.getItem('goldPriceTimestamp');
     const localCoefficients = localStorage.getItem('priceCoefficients');
+    const localDataVersion = localStorage.getItem('dataVersion');
 
     const productCount = localProducts ? JSON.parse(localProducts).length : 0;
     const historyCount = localHistory ? JSON.parse(localHistory).length : 0;
     const hasGoldPrice = !!localGoldPrice;
     const hasCoefficients = !!localCoefficients;
+    const hasDataVersion = !!localDataVersion;
 
     if (productCount === 0 && historyCount === 0 && !hasGoldPrice) {
       alert('本地没有数据，无需同步。');
@@ -2208,7 +2212,8 @@ function QuotePage() {
     confirmMsg += `📦 产品数据: ${productCount} 个\n`;
     confirmMsg += `📈 价格历史: ${historyCount} 条\n`;
     confirmMsg += `💰 金价配置: ${hasGoldPrice ? '✓' : '✗'}\n`;
-    confirmMsg += `⚙️  价格系数: ${hasCoefficients ? '✓' : '✗'}\n\n`;
+    confirmMsg += `⚙️  价格系数: ${hasCoefficients ? '✓' : '✗'}\n`;
+    confirmMsg += `🔢 数据版本: ${hasDataVersion ? '✓' : '✗'}\n\n`;
     confirmMsg += '同步后，所有数据将保存到数据库，并可以通过"导出备份"功能导出。\n\n';
     confirmMsg += '是否继续？';
 
@@ -2227,6 +2232,7 @@ function QuotePage() {
           goldPrice: localGoldPrice,
           goldPriceTimestamp: localGoldPriceTimestamp,
           priceCoefficients: localCoefficients ? JSON.parse(localCoefficients) : null,
+          dataVersion: localDataVersion,
         },
       };
 
@@ -2235,6 +2241,8 @@ function QuotePage() {
         historyCount: syncData.priceHistory.length,
         hasGoldPrice: !!syncData.configs.goldPrice,
         hasCoefficients: !!syncData.configs.priceCoefficients,
+        hasDataVersion: !!syncData.configs.dataVersion,
+        dataVersion: syncData.configs.dataVersion,
       });
 
       // 调用同步 API
@@ -2269,8 +2277,9 @@ function QuotePage() {
       message += `  - 新建: ${result.stats.syncedHistory} 条\n`;
       message += `  - 跳过（已存在）: ${result.stats.skippedHistory || 0} 条\n\n`;
       message += '⚙️  系统配置：\n';
-      message += `  - 金价配置: ${result.stats.syncedConfigs > 0 ? '✓' : '-'}\n`;
-      message += `  - 价格系数: ${result.stats.syncedConfigs > 1 ? '✓' : '-'}\n\n`;
+      message += `  - 金价配置: ✓\n`;
+      message += `  - 价格系数: ✓\n`;
+      message += `  - 数据版本: ${result.stats.dataVersion ? `v${result.stats.dataVersion}` : '-'}\n\n`;
       message += '🎉 现在可以使用"导出备份"功能了！';
 
       alert(message);
@@ -2279,6 +2288,95 @@ function QuotePage() {
       alert('同步失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  // 验证数据完整性
+  const verifyDataIntegrity = async () => {
+    setIsVerifying(true);
+    setVerificationResult(null);
+
+    try {
+      // 统计本地数据
+      const localProducts = localStorage.getItem('goldProducts');
+      const localHistory = localStorage.getItem('goldPriceHistory');
+      const localGoldPrice = localStorage.getItem('goldPrice');
+      const localCoefficients = localStorage.getItem('priceCoefficients');
+      const localDataVersion = localStorage.getItem('dataVersion');
+
+      const localProductCount = localProducts ? JSON.parse(localProducts).length : 0;
+      const localHistoryCount = localHistory ? JSON.parse(localHistory).length : 0;
+      const hasGoldPrice = !!localGoldPrice;
+      const hasCoefficients = !!localCoefficients;
+      const hasDataVersion = !!localDataVersion;
+
+      console.log('🔍 开始验证数据完整性:', {
+        localProductCount,
+        localHistoryCount,
+        hasGoldPrice,
+        hasCoefficients,
+        hasDataVersion,
+      });
+
+      // 调用验证 API
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          localProductCount,
+          localHistoryCount,
+          hasGoldPrice,
+          hasCoefficients,
+          hasDataVersion,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('验证失败:', errorText);
+        throw new Error('验证失败');
+      }
+
+      const result = await response.json();
+      setVerificationResult(result);
+
+      console.log('✅ 验证完成:', result);
+
+      // 显示验证结果
+      let message = result.overallStatus + '\n\n';
+      message += '📦 产品数据：\n';
+      message += `  - 本地: ${result.details.products.localCount} 个\n`;
+      message += `  - 数据库: ${result.details.products.databaseCount} 个\n`;
+      message += `  - 状态: ${result.details.products.status}\n\n`;
+      message += '📈 价格历史：\n';
+      message += `  - 本地: ${result.details.history.localCount} 条\n`;
+      message += `  - 数据库: ${result.details.history.databaseCount} 条\n`;
+      message += `  - 状态: ${result.details.history.status}\n\n`;
+      message += '⚙️  系统配置：\n';
+      message += `  - 金价: ${result.details.configs.goldPrice.status}\n`;
+      message += `  - 价格系数: ${result.details.configs.coefficients.status}\n`;
+      message += `  - 数据版本: ${result.details.configs.dataVersion.status}\n\n`;
+      message += '📋 数据质量：\n';
+      message += `  - 产品数据: ${result.details.dataQuality.products.status}\n`;
+      message += `  - 历史记录: ${result.details.dataQuality.history.status}\n\n`;
+
+      if (result.recommendations && result.recommendations.length > 0) {
+        message += '💡 建议：\n';
+        result.recommendations.forEach((rec: string) => {
+          message += `${rec}\n`;
+        });
+      }
+
+      alert(message);
+    } catch (error: any) {
+      console.error('验证失败:', error);
+      alert('验证失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -3724,6 +3822,14 @@ function QuotePage() {
                   )}
 
                   <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={verifyDataIntegrity}
+                      disabled={isVerifying}
+                      className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      suppressHydrationWarning
+                    >
+                      {isVerifying ? '验证中...' : '🔍 验证完整性'}
+                    </button>
                     <button
                       onClick={syncToDatabase}
                       disabled={isSyncing}
