@@ -1779,6 +1779,32 @@ function QuotePage() {
     const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
     const commissionAmount = laborCost * (commissionRate / 100) / 5;
 
+    // 🔥 详细计算日志
+    console.log(`========== 价格计算详情 ==========`);
+    console.log(`基本信息：`);
+    console.log(`  货号: ${marketGoldPrice ? '导入' : '手动'}`);
+    console.log(`  成色: ${karat}, 重量: ${weight}g`);
+    console.log(`  金价: ¥${marketGoldPrice}/g, 工费: ¥${laborCost}`);
+    console.log(`  价格类型: ${isRetail ? '零售' : '批发'}`);
+    console.log(`\n系数设置：`);
+    console.log(`  金含量(${karat}): ${goldFactor}`);
+    console.log(`  工费系数(${isRetail ? '零售' : '批发'}): ${laborFactor}`);
+    console.log(`  汇率: ${coefficients.exchangeRate}`);
+    console.log(`  材料损耗: ${materialLoss}`);
+    console.log(`  材料浮动: ${materialCost}`);
+    console.log(`  利润系数: ${profitMargin}`);
+    console.log(`  佣金率: ${commissionRate}%`);
+    console.log(`\n详细计算：`);
+    console.log(`  1. 工费(加币): ${laborCost} × ${laborFactor} ÷ ${coefficients.exchangeRate} = ${laborPriceCAD.toFixed(4)}`);
+    console.log(`  2. 材料价(加币): ${marketGoldPrice} × ${goldFactor} × ${weight} × ${materialLoss} × ${materialCost} ÷ ${coefficients.exchangeRate} = ${materialPrice.toFixed(4)}`);
+    console.log(`     = ${marketGoldPrice} × ${goldFactor} × ${weight} × ${materialLoss * materialCost} ÷ ${coefficients.exchangeRate}`);
+    console.log(`  3. 其他成本(加币): ${accessoryCost + stoneCost + platingCost} × ${laborFactor} ÷ ${coefficients.exchangeRate} = ${otherCosts.toFixed(4)}`);
+    console.log(`  4. 佣金(加币): ${laborCost} × (${commissionRate}% ÷ 100) ÷ 5 = ${commissionAmount.toFixed(4)}`);
+    console.log(`  5. 基础价: ${laborPriceCAD.toFixed(4)} + ${materialPrice.toFixed(4)} + ${otherCosts.toFixed(4)} + ${commissionAmount.toFixed(4)} = ${(laborPriceCAD + materialPrice + otherCosts + commissionAmount).toFixed(4)}`);
+    console.log(`  6. 最终价(×利润系数): ${(laborPriceCAD + materialPrice + otherCosts + commissionAmount).toFixed(4)} × ${profitMargin} = ${((laborPriceCAD + materialPrice + otherCosts + commissionAmount) * profitMargin).toFixed(4)}`);
+    console.log(`\n最终结果: CAD${Math.round(((laborPriceCAD + materialPrice + otherCosts + commissionAmount) * profitMargin) * 100) / 100}`);
+    console.log(`================================`);
+
     // 总价 = (材料价 + 工费 + 其它成本 + 佣金) x 国际运输和关税系数
     const basePrice = materialPrice + laborPriceCAD + otherCosts + commissionAmount;
     const totalPrice = basePrice * profitMargin;
