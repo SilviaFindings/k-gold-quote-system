@@ -5483,7 +5483,7 @@ function QuotePage() {
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-black">
-                当前产品列表 - {currentCategory}{currentSubCategory ? ` / ${currentSubCategory}` : ''}
+                当前产品列表-{currentCategory}{currentSubCategory ? `-${currentSubCategory}` : ''}
               </h2>
               {products.filter(p => p.category === currentCategory).length > 0 && (
                 <div className="flex items-center gap-2">
@@ -5691,8 +5691,7 @@ function QuotePage() {
                         suppressHydrationWarning
                       />
                     </th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">大类</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">小类</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">分类</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">成色</th>
@@ -5772,11 +5771,8 @@ function QuotePage() {
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-black">
                         <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
-                          {product.category || "-"}
+                          {product.category || "-"}{product.subCategory ? `-${product.subCategory}` : ""}
                         </span>
-                      </td>
-                      <td className="border border-gray-200 px-3 py-2 text-black text-xs">
-                        {product.subCategory || "-"}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 font-semibold text-black">{product.productCode}</td>
                       <td className="border border-gray-200 px-3 py-2 font-medium text-black">{product.productName}</td>
@@ -5880,8 +5876,7 @@ function QuotePage() {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">时间</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-black">大类</th>
-                  <th className="border border-gray-200 px-3 py-2 text-left text-black">小类</th>
+                  <th className="border border-gray-200 px-3 py-2 text-left text-black">分类</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">名称</th>
                   <th className="border border-gray-200 px-3 py-2 text-left text-black">成色</th>
@@ -5902,11 +5897,8 @@ function QuotePage() {
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-black">
                       <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
-                        {history.category || "-"}
+                        {history.category || "-"}{history.subCategory ? `-${history.subCategory}` : ""}
                       </span>
-                    </td>
-                    <td className="border border-gray-200 px-3 py-2 text-black text-xs">
-                      {history.subCategory || "-"}
                     </td>
                     <td className="border border-gray-200 px-3 py-2 text-black">{history.productCode}</td>
                     <td className="border border-gray-200 px-3 py-2 text-black">{history.productName}</td>
@@ -5936,7 +5928,7 @@ function QuotePage() {
                 {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={9}
                       className="border border-gray-200 px-3 py-4 text-center text-black"
                     >
                       暂无{currentCategory}历史记录
