@@ -1,0 +1,84 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { isAuthenticated } from '@/lib/auth';
+import { getDb } from 'coze-coding-dev-sdk';
+import { sql } from 'drizzle-orm';
+import { productManager } from '@/storage/database/productManager';
+import { priceHistoryManager } from '@/storage/database/priceHistoryManager';
+import { appConfigManager } from '@/storage/database/appConfigManager';
+
+/**
+ * POST /api/clean-all - 清空所有用户数据
+ * 警告：此操作不可逆，会删除所有产品、价格历史和配置
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const user = await isAuthenticated(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    console.log('🗑️ 开始清空用户数据:', user.email);
+
+    const results = {
+      productsDeleted: 0,
+      historyDeleted: 0,
+      configDeleted: false,
+      errors: [] as string[],
+    };
+
+    // 1. 删除所有价格历史
+    try {
+      const deletedHistory = await priceHistoryManager.deleteAllHistory(user.id);
+      results.historyDeleted = deletedHistory;
+      console.log(`✅ 删除价格历史: ${deletedHistory} 条`);
+    } catch (e: any) {
+      const error = `删除价格历史失败: ${e.message}`;
+      results.errors.push(error);
+      console.error('❌', error);
+    }
+
+    // 2. 删除所有产品
+    try {
+      const db = await getDb();
+      const deleteResult = await db.execute(sql`
+        DELETE FROM products
+        WHERE user_id = ${user.id}
+      `);
+      results.productsDeleted = deleteResult.rowCount ?? 0;
+      console.log(`✅ 删除产品: ${results.productsDeleted} 条`);
+    } catch (e: any) {
+      const error = `删除产品失败: ${e.message}`;
+      results.errors.push(error);
+      console.error('❌', error);
+    }
+
+    // 3. 删除所有配置
+    try {
+      const db = await getDb();
+      const deleteResult = await db.execute(sql`
+        DELETE FROM app_config
+        WHERE user_id = ${user.id}
+      `);
+      results.configDeleted = true;
+      console.log('✅ 删除配置');
+    } catch (e: any) {
+      const error = `删除配置失败: ${e.message}`;
+      results.errors.push(error);
+      console.error('❌', error);
+    }
+
+    console.log('🗑️ 数据清理完成');
+
+    return NextResponse.json({
+      success: results.errors.length === 0,
+      message: '数据清理完成',
+      results,
+    });
+  } catch (error: any) {
+    console.error('❌ 清理失败:', error);
+    return NextResponse.json(
+      { error: error.message || '清理失败', details: error.toString() },
+      { status: 500 }
+    );
+  }
+}

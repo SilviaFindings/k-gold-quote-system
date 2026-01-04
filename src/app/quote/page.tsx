@@ -3298,6 +3298,101 @@ function QuotePage() {
     console.log("========== 原始数据显示结束 ==========");
   };
 
+  // 修复数据库表结构
+  const fixDatabaseSchema = async () => {
+    console.log("========== 开始修复数据库表结构 ==========");
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/fix-schema', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        let message = "✅ 数据库表结构修复成功\n\n";
+        message += `修复内容：\n`;
+        if (result.results.tablesFixed.length > 0) {
+          result.results.tablesFixed.forEach((fix: string) => {
+            message += `  • ${fix}\n`;
+          });
+        } else {
+          message += `  • 表结构已是最新，无需修复\n`;
+        }
+
+        if (result.results.errors.length > 0) {
+          message += `\n⚠️ 遇到错误：\n`;
+          result.results.errors.forEach((error: string) => {
+            message += `  • ${error}\n`;
+          });
+        }
+
+        alert(message);
+        console.log("修复结果:", result);
+      } else {
+        alert("❌ 修复失败: " + (result.error || "未知错误"));
+        console.error("修复失败:", result);
+      }
+    } catch (error: any) {
+      console.error("❌ 修复失败:", error);
+      alert("❌ 修复失败: " + error.message);
+    }
+
+    console.log("========== 数据库表结构修复结束 ==========");
+  };
+
+  // 清空所有云端数据
+  const cleanAllCloudData = async () => {
+    console.log("========== 开始清空云端数据 ==========");
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/clean-all', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        let message = "✅ 云端数据清空成功\n\n";
+        message += `清空内容：\n`;
+        message += `  • 产品数据: ${result.results.productsDeleted} 条\n`;
+        message += `  • 价格历史: ${result.results.historyDeleted} 条\n`;
+        message += `  • 配置数据: ${result.results.configDeleted ? '已清空' : '失败'}\n`;
+
+        if (result.results.errors.length > 0) {
+          message += `\n⚠️ 遇到错误：\n`;
+          result.results.errors.forEach((error: string) => {
+            message += `  • ${error}\n`;
+          });
+        }
+
+        message += "\n💡 提示：\n";
+        message += "1. 云端数据已清空\n";
+        message += "2. 可以重新从本地数据导入到云端\n";
+        message += "3. 建议先点击\"修复表结构\"确保数据库支持长ID\n";
+
+        alert(message);
+        console.log("清空结果:", result);
+      } else {
+        alert("❌ 清空失败: " + (result.error || "未知错误"));
+        console.error("清空失败:", result);
+      }
+    } catch (error: any) {
+      console.error("❌ 清空失败:", error);
+      alert("❌ 清空失败: " + error.message);
+    }
+
+    console.log("========== 云端数据清空结束 ==========");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
@@ -4163,7 +4258,31 @@ function QuotePage() {
                       className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                       suppressHydrationWarning
                     >
-                      🗑️ 清除所有数据
+                      🗑️ 清除本地数据
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        if (confirm("⚠️ 警告：此操作不可逆！\n\n确定要修复数据库表结构吗？\n这将把所有ID字段长度调整为200字符以支持长ID。")) {
+                          fixDatabaseSchema();
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
+                      suppressHydrationWarning
+                    >
+                      🔧 修复表结构
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        if (confirm("⚠️ 严重警告：此操作不可逆！\n\n确定要清空所有云端数据吗？\n这将删除数据库中的所有产品、价格历史和配置！\n\n强烈建议先备份数据！")) {
+                          cleanAllCloudData();
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 font-semibold"
+                      suppressHydrationWarning
+                    >
+                      ☢️ 清空云端数据
                     </button>
                   </div>
                 </div>
