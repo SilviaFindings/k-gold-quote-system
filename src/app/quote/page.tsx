@@ -449,6 +449,7 @@ function QuotePage() {
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
   const [defaultKarat, setDefaultKarat] = useState<"10K" | "14K" | "18K">("14K");
+  const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的小类
 
   // 导出Excel范围选择
   const [exportScope, setExportScope] = useState<"current" | "all">("current");
@@ -2872,6 +2873,17 @@ function QuotePage() {
         const newProducts: Product[] = [];
         const newHistory: PriceHistory[] = [];
 
+        // 根据用户选择的小类推断所属的大类（所有产品使用相同的大类）
+        let importCategory: ProductCategory = "配件";
+        if (importSubCategory) {
+          for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
+            if (subList.includes(importSubCategory)) {
+              importCategory = cat as ProductCategory;
+              break;
+            }
+          }
+        }
+
         rows.forEach((row: any) => {
           const productCode = row[productCodeIndex];
           const productName = row[productNameIndex];
@@ -2947,27 +2959,19 @@ function QuotePage() {
 
           if (!productCode || !productName) return;
 
-          // 智能识别产品分类和子分类（优先从产品名称识别）
-          const detectedCategory = detectCategoryFromName(String(productName));
-          const detectedSubCategory = detectSubCategoryFromName(String(productName));
-
-          // 🔥 智能推断：如果子分类识别成功但大类失败，根据子分类推断大类
-          let finalCategory = detectedCategory || currentCategory;
-          let finalSubCategory = detectedSubCategory || currentSubCategory;
-
-          if (detectedSubCategory && !detectedCategory) {
-            // 根据子分类查找所属的大类
-            for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
-              if (subList.includes(detectedSubCategory)) {
-                finalCategory = cat as ProductCategory;
-                console.log(`产品 ${productCode}: 根据子分类"${detectedSubCategory}"推断大类="${finalCategory}"`);
-                break;
-              }
-            }
+          // 检查用户是否选择了导入小类
+          if (!importSubCategory) {
+            alert("⚠️ 请先选择要导入的产品小类！\n\n在'导入选项'区域选择产品小类后再导入。");
+            e.target.value = ""; // 清空文件输入
+            return;
           }
 
-          // 调试日志：输出分类识别结果
-          console.log(`产品 ${productCode} (${productName}): 智能识别分类="${detectedCategory}", 使用分类="${finalCategory}", 智能识别子分类="${detectedSubCategory}", 使用子分类="${finalSubCategory}"`);
+          // 使用用户选择的小类和推断的大类
+          const finalCategory = importCategory;
+          const finalSubCategory = importSubCategory;
+
+          // 调试日志：输出分类结果
+          console.log(`产品 ${productCode} (${productName}): 用户选择小类="${importSubCategory}", 自动推断大类="${finalCategory}"`);
 
           // 确定最终使用的成色：优先使用Excel中的成色，如果没有则从货号智能识别
           const finalKarat = validKarat || "14K";
@@ -3081,17 +3085,7 @@ function QuotePage() {
         setProducts([...filteredProducts, ...newProducts]);
         setPriceHistory([...priceHistory, ...newHistory]);
 
-        // 统计智能识别的分类分布
-        const categoryStats: Record<string, number> = {};
-        newProducts.forEach(p => {
-          categoryStats[p.category] = (categoryStats[p.category] || 0) + 1;
-        });
-
-        const categoryText = Object.entries(categoryStats)
-          .map(([cat, count]) => `${cat}: ${count}个`)
-          .join(', ');
-
-        alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 智能分类结果：\n${categoryText}\n\n💡 提示：系统已根据产品名称自动识别分类，如有错误请手动调整。`);
+        alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 导入设置：\n  • 小类: ${importSubCategory}\n  • 大类: ${importCategory}\n\n💡 提示：产品已按照您选择的小类导入，系统不会进行自动分类识别。`);
 
         // 清空文件输入
         e.target.value = "";
@@ -4518,7 +4512,7 @@ function QuotePage() {
             {/* 导入选项 */}
             <div className="mb-4 rounded bg-gray-50 p-3">
               <p className="mb-2 text-sm font-medium text-black">导入选项：</p>
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="mb-3 flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center text-black">
                   <input
                     type="checkbox"
@@ -4539,8 +4533,10 @@ function QuotePage() {
                   />
                   导入人工成本
                 </label>
+              </div>
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-black">默认材质：</span>
+                  <label className="text-sm font-medium text-black">默认材质：</label>
                   <select
                     value={defaultKarat}
                     onChange={(e) => setDefaultKarat(e.target.value as "10K" | "14K" | "18K")}
@@ -4551,6 +4547,36 @@ function QuotePage() {
                     <option value="14K">14K金</option>
                     <option value="18K">18K金</option>
                   </select>
+                </div>
+                <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-3">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    🎯 选择产品小类（导入前必选）
+                  </label>
+                  <p className="text-xs text-black mb-2">
+                    选择要导入的产品小类，系统将使用您选择的小类，不再进行自动识别
+                  </p>
+                  <select
+                    value={importSubCategory}
+                    onChange={(e) => setImportSubCategory(e.target.value)}
+                    className="w-full rounded border-2 border-blue-300 px-3 py-2 bg-white focus:border-blue-500 focus:outline-none text-black font-medium"
+                    suppressHydrationWarning
+                  >
+                    <option value="">请选择产品小类...</option>
+                    {Object.entries(SUB_CATEGORIES).map(([category, subCats]) => (
+                      <optgroup key={category} label={category}>
+                        {subCats.map(subCat => (
+                          <option key={subCat} value={subCat}>
+                            {subCat}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {!importSubCategory && (
+                    <p className="mt-2 text-xs text-red-600">
+                      ⚠️ 请先选择产品小类再导入！
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
