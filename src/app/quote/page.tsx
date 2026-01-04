@@ -349,6 +349,12 @@ function QuotePage() {
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isValidatingExport, setIsValidatingExport] = useState<boolean>(false);
 
+  // 更多工具菜单状态
+  const [showMoreToolsMenu, setShowMoreToolsMenu] = useState<boolean>(false);
+
+  // 导出选项菜单状态
+  const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
@@ -3654,108 +3660,171 @@ function QuotePage() {
               查看原始数据
             </button>
             <button
-              onClick={() => {
-                if (confirm("确定要查看备份文件内容吗？")) {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = ".json";
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      try {
-                        const backup = JSON.parse(event.target?.result as string);
-                        console.log("备份文件内容:", backup);
-
-                        let message = "备份文件内容：\n\n";
-
-                        // 产品数据
-                        if (backup.products && backup.products !== "null") {
-                          try {
-                            const products = JSON.parse(backup.products);
-                            message += `产品数量: ${products.length}\n`;
-                            if (products.length > 0) {
-                              message += `产品样例:\n`;
-                              message += `  - ${products[0].category} | ${products[0].productCode} | ${products[0].productName}\n`;
-                            }
-                          } catch (e) {
-                            message += `产品数据解析失败\n`;
-                          }
-                        } else {
-                          message += `产品数据: 无\n`;
-                        }
-
-                        // 历史记录
-                        if (backup.history && backup.history !== "null") {
-                          try {
-                            const history = JSON.parse(backup.history);
-                            message += `历史记录数量: ${history.length}\n`;
-                          } catch (e) {
-                            message += `历史记录解析失败\n`;
-                          }
-                        } else {
-                          message += `历史记录: 无\n`;
-                        }
-
-                        // 金价
-                        if (backup.goldPrice && backup.goldPrice !== "null") {
-                          message += `金价: ¥${backup.goldPrice}/克\n`;
-                        } else {
-                          message += `金价: 无\n`;
-                        }
-
-                        // 系数
-                        if (backup.coefficients && backup.coefficients !== "null") {
-                          try {
-                            const coeff = JSON.parse(backup.coefficients);
-                            message += `价格系数: 已设置\n`;
-                          } catch (e) {
-                            message += `价格系数解析失败\n`;
-                          }
-                        } else {
-                          message += `价格系数: 无\n`;
-                        }
-
-                        alert(message);
-                      } catch (err) {
-                        alert("备份文件格式错误！\n" + (err as Error).message);
-                      }
-                    };
-                    reader.readAsText(file);
-                  };
-                  input.click();
-                }
-              }}
-              className="rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700"
-              suppressHydrationWarning
-            >
-              查看备份文件
-            </button>
-            <button
-              onClick={() => {
-                if (confirm("⚠️ 警告：这将清除所有数据！\n\n确定要清除所有 localStorage 数据吗？\n建议在清除前先备份数据。")) {
-                  localStorage.removeItem("goldProducts");
-                  localStorage.removeItem("goldPriceHistory");
-                  localStorage.removeItem("goldPrice");
-                  localStorage.removeItem("goldPriceTimestamp");
-                  localStorage.removeItem("priceCoefficients");
-                  alert("所有数据已清除，请刷新页面");
-                  location.reload();
-                }
-              }}
-              className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-              suppressHydrationWarning
-            >
-              清除所有数据
-            </button>
-            <button
               onClick={reloadFromLocalStorage}
               className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
               suppressHydrationWarning
             >
               重新加载数据
             </button>
+
+            {/* 更多工具下拉菜单 */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMoreToolsMenu(!showMoreToolsMenu)}
+                className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                suppressHydrationWarning
+              >
+                更多工具 ▼
+              </button>
+
+              {showMoreToolsMenu && (
+                <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        diagnoseData();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      🔍 诊断数据
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        if (confirm("确定要修复子分类数据吗？这将根据产品的分类信息自动设置子分类。")) {
+                          repairSubCategoryData();
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      🔧 修复子分类
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        showCategoryDetails();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      📊 查看分类详情
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        showRawData();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      📄 查看原始数据
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        if (confirm("确定要查看备份文件内容吗？")) {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = ".json";
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              try {
+                                const backup = JSON.parse(event.target?.result as string);
+                                console.log("备份文件内容:", backup);
+
+                                let message = "备份文件内容：\n\n";
+
+                                // 产品数据
+                                if (backup.products && backup.products !== "null") {
+                                  try {
+                                    const products = JSON.parse(backup.products);
+                                    message += `产品数量: ${products.length}\n`;
+                                    if (products.length > 0) {
+                                      message += `产品样例:\n`;
+                                      message += `  - ${products[0].category} | ${products[0].productCode} | ${products[0].productName}\n`;
+                                    }
+                                  } catch (e) {
+                                    message += `产品数据解析失败\n`;
+                                  }
+                                } else {
+                                  message += `产品数据: 无\n`;
+                                }
+
+                                // 历史记录
+                                if (backup.history && backup.history !== "null") {
+                                  try {
+                                    const history = JSON.parse(backup.history);
+                                    message += `历史记录数量: ${history.length}\n`;
+                                  } catch (e) {
+                                    message += `历史记录解析失败\n`;
+                                  }
+                                } else {
+                                  message += `历史记录: 无\n`;
+                                }
+
+                                // 金价
+                                if (backup.goldPrice && backup.goldPrice !== "null") {
+                                  message += `金价: ¥${backup.goldPrice}/克\n`;
+                                } else {
+                                  message += `金价: 无\n`;
+                                }
+
+                                // 系数
+                                if (backup.coefficients && backup.coefficients !== "null") {
+                                  try {
+                                    const coeff = JSON.parse(backup.coefficients);
+                                    message += `价格系数: 已设置\n`;
+                                  } catch (e) {
+                                    message += `价格系数解析失败\n`;
+                                  }
+                                } else {
+                                  message += `价格系数: 无\n`;
+                                }
+
+                                alert(message);
+                              } catch (err) {
+                                alert("备份文件格式错误！\n" + (err as Error).message);
+                              }
+                            };
+                            reader.readAsText(file);
+                          };
+                          input.click();
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-black hover:bg-gray-100"
+                      suppressHydrationWarning
+                    >
+                      📦 查看备份文件
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <button
+                      onClick={() => {
+                        setShowMoreToolsMenu(false);
+                        if (confirm("⚠️ 警告：这将清除所有数据！\n\n确定要清除所有 localStorage 数据吗？\n建议在清除前先备份数据。")) {
+                          localStorage.removeItem("goldProducts");
+                          localStorage.removeItem("goldPriceHistory");
+                          localStorage.removeItem("goldPrice");
+                          localStorage.removeItem("goldPriceTimestamp");
+                          localStorage.removeItem("priceCoefficients");
+                          alert("所有数据已清除，请刷新页面");
+                          location.reload();
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                      suppressHydrationWarning
+                    >
+                      🗑️ 清除所有数据
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 操作区域 - 分为三个功能区 */}
@@ -3896,8 +3965,7 @@ function QuotePage() {
                 {/* 导出数据备份 */}
                 <div className="pt-2 border-t border-gray-200 mt-2">
                   <div className="flex items-center justify-between text-xs text-black mb-2">
-                    <span>导出数据备份（含产品、历史、配置）</span>
-                    <span className="text-purple-600 font-bold">✨ 新功能</span>
+                    <span>导出数据备份</span>
                   </div>
 
                   {/* 同步提示 */}
@@ -3905,30 +3973,26 @@ function QuotePage() {
                     <div className="mb-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs">
                       <p className="text-yellow-800">
                         💡 提示：请按顺序操作<br />
-                        1️⃣ 点击"🔍 验证完整性"检查数据同步状态<br />
-                        2️⃣ 点击"✅ 验证准确性"检查数据正确性<br />
-                        3️⃣ 点击"🔄 同步到数据库"同步数据到云端<br />
-                        4️⃣ 点击"📦 导出备份"导出完整数据
+                        1️⃣ 点击"✅ 验证数据"检查数据状态<br />
+                        2️⃣ 点击"🔄 同步到数据库"同步数据到云端<br />
+                        3️⃣ 点击"📦 导出备份"导出完整数据
                       </p>
                     </div>
                   )}
 
                   <div className="flex gap-2 mb-2">
                     <button
-                      onClick={verifyDataIntegrity}
-                      disabled={isVerifying}
-                      className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      onClick={async () => {
+                        // 先验证完整性
+                        await verifyDataIntegrity();
+                        // 然后验证准确性
+                        await validateExportAccuracy();
+                      }}
+                      disabled={isVerifying || isValidatingExport}
+                      className="w-full rounded-lg bg-green-600 px-3 py-2 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       suppressHydrationWarning
                     >
-                      {isVerifying ? '验证中...' : '🔍 验证完整性'}
-                    </button>
-                    <button
-                      onClick={validateExportAccuracy}
-                      disabled={isValidatingExport}
-                      className="flex-1 rounded-lg bg-orange-600 px-3 py-2 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      suppressHydrationWarning
-                    >
-                      {isValidatingExport ? '验证中...' : '✅ 验证准确性'}
+                      {(isVerifying || isValidatingExport) ? '验证中...' : '✅ 验证数据'}
                     </button>
                   </div>
 
