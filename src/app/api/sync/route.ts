@@ -101,7 +101,9 @@ export async function POST(request: NextRequest) {
             console.log(`  ✓ 更新产品: ${normalizedProduct.productCode}`);
           } else {
             // 不存在，创建
-            await productManager.createProduct(user.id, normalizedProduct);
+            // 注意：创建时不要包含 id、userId、createdAt、updatedAt 等自动生成的字段
+            const { id: _id, userId: _userId, createdAt: _createdAt, updatedAt: _updatedAt, ...productToInsert } = normalizedProduct as any;
+            await productManager.createProduct(user.id, productToInsert);
             newProducts++;
             console.log(`  + 新建产品: ${normalizedProduct.productCode}`);
           }
@@ -180,7 +182,9 @@ export async function POST(request: NextRequest) {
           const existingHistory = await priceHistoryManager.getHistoryById(history.id, user.id);
           if (!existingHistory) {
             // 只同步不存在的历史记录
-            await priceHistoryManager.createPriceHistory(user.id, normalizedHistory);
+            // 注意：创建时不要包含 id、userId、createdAt 等自动生成的字段
+            const { id: _id, userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
+            await priceHistoryManager.createPriceHistory(user.id, historyToInsert);
             syncedHistory++;
             console.log(`  + 新建历史记录: ${normalizedHistory.productCode}`);
           } else {

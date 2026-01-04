@@ -2291,12 +2291,23 @@ function QuotePage() {
       message += `  - 金价配置: ✓\n`;
       message += `  - 价格系数: ✓\n`;
       message += `  - 数据版本: ${result.stats.dataVersion ? `v${result.stats.dataVersion}` : '-'}\n\n`;
-      message += '🎉 现在可以使用"导出备份"功能了！';
+      message += '🎉 现在可以使用"导出备份"功能了！\n\n';
+      message += '💡 提示：数据已同步，建议点击"✅ 验证数据"检查数据完整性。';
 
       alert(message);
+
+      // 同步成功后，自动重新验证数据完整性
+      console.log('🔄 同步完成后自动验证数据完整性...');
+      setTimeout(async () => {
+        try {
+          await verifyDataIntegrity();
+        } catch (e) {
+          console.error('自动验证失败:', e);
+        }
+      }, 500);
     } catch (error: any) {
       console.error('同步失败:', error);
-      alert('同步失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
+      alert('同步失败，请重试。\n\n错误信息: ' + (error.message || '未知错误') + '\n\n💡 提示：请检查控制台获取详细的错误日志。');
     } finally {
       setIsSyncing(false);
     }
