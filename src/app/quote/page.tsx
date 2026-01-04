@@ -4224,6 +4224,13 @@ function QuotePage() {
 
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert("❌ 清空失败: 未登录，请先登录");
+        return;
+      }
+
+      console.log("Token:", token.substring(0, 20) + "...");
+
       const response = await fetch('/api/clean-all', {
         method: 'POST',
         headers: {
@@ -4231,7 +4238,31 @@ function QuotePage() {
         },
       });
 
-      const result = await response.json();
+      console.log("响应状态:", response.status, response.statusText);
+      console.log("响应类型:", response.headers.get('content-type'));
+
+      // 检查响应状态
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("响应错误文本:", errorText);
+        alert(`❌ 清空失败: HTTP ${response.status} - ${errorText || response.statusText}`);
+        return;
+      }
+
+      // 尝试解析 JSON
+      let result;
+      const responseText = await response.text();
+      console.log("响应原始文本:", responseText);
+
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        console.error("JSON解析失败:", e);
+        alert(`❌ 清空失败: 无法解析服务器响应\n响应内容: ${responseText}`);
+        return;
+      }
+
+      console.log("解析后的结果:", result);
 
       if (result.success) {
         let message = "✅ 云端数据清空成功\n\n";
@@ -4240,7 +4271,7 @@ function QuotePage() {
         message += `  • 价格历史: ${result.results.historyDeleted} 条\n`;
         message += `  • 配置数据: ${result.results.configDeleted ? '已清空' : '失败'}\n`;
 
-        if (result.results.errors.length > 0) {
+        if (result.results.errors && result.results.errors.length > 0) {
           message += `\n⚠️ 遇到错误：\n`;
           result.results.errors.forEach((error: string) => {
             message += `  • ${error}\n`;
