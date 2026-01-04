@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
             // 确保可选字段有默认值
             orderChannel: product.orderChannel || null,
             shape: product.shape || null,
-            // 处理特殊系数
+            // 处理特殊系数（使用 ?? 而不是 ||，避免0被误认为null）
             specialMaterialLoss: product.specialMaterialLoss ?? null,
             specialMaterialCost: product.specialMaterialCost ?? null,
             specialProfitMargin: product.specialProfitMargin ?? null,
@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
             subCategory: history.subCategory || '',
             specification: history.specification || '',
             supplierCode: history.supplierCode || '',
+            goldColor: history.goldColor || '黄金',  // 确保 goldColor 有默认值
             // 确保数值字段有默认值
             weight: history.weight ?? 0,
             laborCost: history.laborCost ?? 0,
@@ -146,12 +147,12 @@ export async function POST(request: NextRequest) {
             // 确保可选字段有默认值
             orderChannel: history.orderChannel || null,
             shape: history.shape || null,
-            // 处理特殊系数
-            specialMaterialLoss: history.specialMaterialLoss || null,
-            specialMaterialCost: history.specialMaterialCost || null,
-            specialProfitMargin: history.specialProfitMargin || null,
-            specialLaborFactorRetail: history.specialLaborFactorRetail || null,
-            specialLaborFactorWholesale: history.specialLaborFactorWholesale || null,
+            // 处理特殊系数（使用 ?? 而不是 ||，避免0被误认为null）
+            specialMaterialLoss: history.specialMaterialLoss ?? null,
+            specialMaterialCost: history.specialMaterialCost ?? null,
+            specialProfitMargin: history.specialProfitMargin ?? null,
+            specialLaborFactorRetail: history.specialLaborFactorRetail ?? null,
+            specialLaborFactorWholesale: history.specialLaborFactorWholesale ?? null,
             // 确保时间戳格式正确
             laborCostDate: history.laborCostDate ? new Date(history.laborCostDate) : new Date(),
             accessoryCostDate: history.accessoryCostDate ? new Date(history.accessoryCostDate) : new Date(),

@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
     // 判断产品数据是否匹配
     let productsMatch = false;
     let productsMessage = '';
+    const productsDiff = localProductCount - dbProductCount;
+    
     if (dbProductCount === localProductCount) {
       productsMatch = true;
       productsMessage = '✅ 数据一致';
@@ -53,7 +55,8 @@ export async function POST(request: NextRequest) {
       productsMessage = `✅ 数据库有更多数据 (${dbProductCount} > ${localProductCount})`;
     } else {
       productsMatch = false;
-      productsMessage = `⚠️ 本地有未同步数据 (${dbProductCount} < ${localProductCount})，需要重新同步到数据库`;
+      const diffCount = localProductCount - dbProductCount;
+      productsMessage = `⚠️ 本地有 ${diffCount} 条未同步的产品数据，需要同步到数据库`;
     }
 
     console.log('产品数据验证:', {
@@ -70,6 +73,8 @@ export async function POST(request: NextRequest) {
     // 判断价格历史是否匹配
     let historyMatch = false;
     let historyMessage = '';
+    const historyDiff = localHistoryCount - dbHistoryCount;
+    
     if (dbHistoryCount === localHistoryCount) {
       historyMatch = true;
       historyMessage = '✅ 数据一致';
@@ -78,7 +83,8 @@ export async function POST(request: NextRequest) {
       historyMessage = `✅ 数据库有更多数据 (${dbHistoryCount} > ${localHistoryCount})`;
     } else {
       historyMatch = false;
-      historyMessage = `⚠️ 本地有未同步数据 (${dbHistoryCount} < ${localHistoryCount})，需要重新同步到数据库`;
+      const diffCount = localHistoryCount - dbHistoryCount;
+      historyMessage = `⚠️ 本地有 ${diffCount} 条未同步的价格历史，需要同步到数据库`;
     }
 
     console.log('价格历史验证:', {
@@ -187,11 +193,13 @@ export async function POST(request: NextRequest) {
     const recommendations = [];
 
     if (!productsMatch) {
-      recommendations.push('💡 建议：点击"🔄 同步到数据库"按钮，将本地未同步的数据同步到数据库');
+      const diffCount = localProductCount - dbProductCount;
+      recommendations.push(`💡 建议：本地有 ${diffCount} 条未同步的产品数据，点击"🔄 同步到数据库"按钮进行同步`);
     }
 
     if (!historyMatch) {
-      recommendations.push('💡 建议：点击"🔄 同步到数据库"按钮，将本地未同步的历史记录同步到数据库');
+      const diffCount = localHistoryCount - dbHistoryCount;
+      recommendations.push(`💡 建议：本地有 ${diffCount} 条未同步的价格历史，点击"🔄 同步到数据库"按钮进行同步`);
     }
 
     if (!goldPriceMatch && hasGoldPrice) {
@@ -203,11 +211,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!sampleProductsValid) {
-      recommendations.push('⚠️ 警告：发现产品数据质量问题，请检查数据完整性');
+      const issueCount = sampleIssues.length;
+      recommendations.push(`⚠️ 警告：发现 ${issueCount} 个产品数据质量问题，请检查数据完整性`);
     }
 
     if (!sampleHistoryValid) {
-      recommendations.push('⚠️ 警告：发现历史记录数据质量问题，请检查数据完整性');
+      const issueCount = historyIssues.length;
+      recommendations.push(`⚠️ 警告：发现 ${issueCount} 条历史记录数据质量问题，请检查数据完整性`);
     }
 
     if (allChecksPass) {
