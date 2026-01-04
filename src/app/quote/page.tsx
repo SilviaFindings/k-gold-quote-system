@@ -253,7 +253,7 @@ interface Product {
   weight: number;
   laborCost: number;
   karat: "10K" | "14K" | "18K";
-  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金";  // 金子颜色（支持多材质）
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -271,6 +271,7 @@ interface Product {
   specialProfitMargin?: number;     // 特殊关税系数
   specialLaborFactorRetail?: number;   // 特殊零售价工费系数
   specialLaborFactorWholesale?: number; // 特殊批发价工费系数
+  specialUsdExchangeRate?: number;  // 特殊美金汇率（仅用于US201订单）
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -293,7 +294,7 @@ interface PriceHistory {
   weight: number;
   laborCost: number;
   karat: "10K" | "14K" | "18K";
-  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金";  // 金子颜色（支持多材质）
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -311,6 +312,7 @@ interface PriceHistory {
   specialProfitMargin?: number;     // 特殊关税系数
   specialLaborFactorRetail?: number;   // 特殊零售价工费系数
   specialLaborFactorWholesale?: number; // 特殊批发价工费系数
+  specialUsdExchangeRate?: number;  // 特殊美金汇率（仅用于US201订单）
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -333,7 +335,7 @@ interface PriceHistory {
   weight: number;
   laborCost: number;
   karat: "10K" | "14K" | "18K";
-  goldColor: "黄金" | "白金" | "玫瑰金";  // 金子颜色
+  goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金";  // 金子颜色（支持多材质）
   goldPrice: number;
   wholesalePrice: number;
   retailPrice: number;
@@ -623,6 +625,9 @@ function QuotePage() {
     materialLossMode: "fixed" | "special";
     materialCostMode: "fixed" | "special";
     profitMarginMode: "fixed" | "special";
+    // 汇率相关
+    usdExchangeRate: number;  // 美金汇率（加币 x 汇率 = 美金）
+    usdExchangeRateMode: "fixed" | "special";  // 汇率模式
   }>(() => {
     if (typeof window === 'undefined') {
       return {
@@ -640,6 +645,8 @@ function QuotePage() {
         materialLossMode: "fixed",
         materialCostMode: "fixed",
         profitMarginMode: "fixed",
+        usdExchangeRate: 0.8,  // 默认美金汇率：加币 x 0.8 = 美金
+        usdExchangeRateMode: "fixed",
       };
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
@@ -661,6 +668,8 @@ function QuotePage() {
         materialLossMode: parsed.materialLossMode ?? "fixed",
         materialCostMode: parsed.materialCostMode ?? "fixed",
         profitMarginMode: parsed.profitMarginMode ?? "fixed",
+        usdExchangeRate: parsed.usdExchangeRate ?? 0.8,
+        usdExchangeRateMode: parsed.usdExchangeRateMode ?? "fixed",
       };
     }
     return {
@@ -678,6 +687,8 @@ function QuotePage() {
       materialLossMode: "fixed",
       materialCostMode: "fixed",
       profitMarginMode: "fixed",
+      usdExchangeRate: 0.8,
+      usdExchangeRateMode: "fixed",
     };
   });
 
@@ -692,119 +703,68 @@ function QuotePage() {
     return historyCount > 1;
   };
 
-  // 从货号智能识别K金材质类型
-  const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" } => {
+  // 从货号智能识别K金材质类型（支持多材质识别）
+  const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金" } => {
     const code = productCode.toUpperCase();
 
-    // 1. 检查白金（KW）- 如 KW10, KW14, KW18
-    const whiteGoldPrefixMatch = code.match(/^(KW10|KW14|KW18)/i);
-    if (whiteGoldPrefixMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "KW10": "10K",
-        "KW14": "14K",
-        "KW18": "18K"
-      };
-      return { karat: karatMap[whiteGoldPrefixMatch[1].toUpperCase()], goldColor: "白金" };
-    }
+    let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认成色
+    let colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
 
-    const whiteGoldSlashMatch = code.match(/\/(KW10|KW14|KW18)(?=\/|$|[^A-Z])/i);
-    if (whiteGoldSlashMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "KW10": "10K",
-        "KW14": "14K",
-        "KW18": "18K"
-      };
-      return { karat: karatMap[whiteGoldSlashMatch[1].toUpperCase()], goldColor: "白金" };
-    }
-
-    // 2. 检查玫瑰金（KR）- 如 10KR, 14KR, 18KR
-    const roseGoldSuffixMatch = code.match(/(10KR|14KR|18KR)$/i);
-    if (roseGoldSuffixMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "10KR": "10K",
-        "14KR": "14K",
-        "18KR": "18K"
-      };
-      return { karat: karatMap[roseGoldSuffixMatch[1].toUpperCase()], goldColor: "玫瑰金" };
-    }
-
-    const roseGoldSlashMatch = code.match(/\/(10KR|14KR|18KR)(?=\/|$|[^A-Z])/i);
-    if (roseGoldSlashMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "10KR": "10K",
-        "14KR": "14K",
-        "18KR": "18K"
-      };
-      return { karat: karatMap[roseGoldSlashMatch[1].toUpperCase()], goldColor: "玫瑰金" };
-    }
-
-    // 检查包含KR但不匹配标准格式的情况（如 K14KR, /14KR/ 等）
-    if (code.includes("KR")) {
-      // 尝试从货号中提取成色
-      let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认值
-
-      // 检查是否有 K10, K14, K18 前缀
-      const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
-      if (karatPrefixMatch) {
-        const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-          "K10": "10K",
-          "K14": "14K",
-          "K18": "18K"
-        };
-        detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
-      } else {
-        // 检查是否有 10K, 14K, 18K
-        const karatNumberMatch = code.match(/(10K|14K|18K)/i);
-        if (karatNumberMatch) {
-          const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-            "10K": "10K",
-            "14K": "14K",
-            "18K": "18K"
-          };
-          detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
-        }
-      }
-
-      // 如果找到了KR，就返回玫瑰金
-      return { karat: detectedKarat, goldColor: "玫瑰金" };
-    }
-
-    // 3. 检查黄金（K）- 如 K10, K14, K18, 10K, 14K, 18K
-    const goldPrefixMatch = code.match(/^(K10|K14|K18)/i);
-    if (goldPrefixMatch) {
+    // 检查成色（K10, K14, K18, 10K, 14K, 18K）
+    const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
+    if (karatPrefixMatch) {
       const karatMap: Record<string, "10K" | "14K" | "18K"> = {
         "K10": "10K",
         "K14": "14K",
         "K18": "18K"
       };
-      return { karat: karatMap[goldPrefixMatch[1].toUpperCase()], goldColor: "黄金" };
+      detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
+    } else {
+      const karatNumberMatch = code.match(/(10K|14K|18K)/i);
+      if (karatNumberMatch) {
+        const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+          "10K": "10K",
+          "14K": "14K",
+          "18K": "18K"
+        };
+        detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+      }
     }
 
-    const goldSuffixMatch = code.match(/(10K|14K|18K)$/i);
-    if (goldSuffixMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "10K": "10K",
-        "14K": "14K",
-        "18K": "18K"
-      };
-      return { karat: karatMap[goldSuffixMatch[1].toUpperCase()], goldColor: "黄金" };
+    // 检查白金（KW）- 支持多种格式
+    if (code.match(/^(KW10|KW14|KW18)/i) || code.match(/\/(KW10|KW14|KW18)(?=\/|$|[^A-Z])/i) || code.includes("KW")) {
+      colors.add("白金");
     }
 
-    const goldSlashMatch = code.match(/\/(K10|K14|K18|10K|14K|18K)(?=\/|$|[^A-Z])/i);
-    if (goldSlashMatch) {
-      const karatMap: Record<string, "10K" | "14K" | "18K"> = {
-        "K10": "10K",
-        "K14": "14K",
-        "K18": "18K",
-        "10K": "10K",
-        "14K": "14K",
-        "18K": "18K"
-      };
-      return { karat: karatMap[goldSlashMatch[1].toUpperCase()], goldColor: "黄金" };
+    // 检查玫瑰金（KR）- 支持多种格式
+    if (code.match(/(10KR|14KR|18KR)$/i) || code.match(/\/(10KR|14KR|18KR)(?=\/|$|[^A-Z])/i) || code.includes("KR")) {
+      colors.add("玫瑰金");
     }
 
-    // 默认返回 14K 黄金
-    return { karat: "14K", goldColor: "黄金" };
+    // 检查黄金（K）- 如果没有其他颜色，则默认为黄金；如果有其他颜色，也检查是否有明确标记
+    if (code.match(/^(K10|K14|K18)/i) || code.match(/(10K|14K|18K)$/i) ||
+        code.match(/\/(K10|K14|K18|10K|14K|18K)(?=\/|$|[^A-Z])/i) ||
+        (!colors.has("白金") && !colors.has("玫瑰金"))) {
+      colors.add("黄金");
+    }
+
+    // 如果同时有多个颜色，则返回组合材质
+    if (colors.size > 1) {
+      const colorArray = Array.from(colors);
+      if (colorArray.includes("黄金") && colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return { karat: detectedKarat, goldColor: "黄金/白金/玫瑰金" };
+      } else if (colorArray.includes("黄金") && colorArray.includes("白金")) {
+        return { karat: detectedKarat, goldColor: "黄金/白金" };
+      } else if (colorArray.includes("黄金") && colorArray.includes("玫瑰金")) {
+        return { karat: detectedKarat, goldColor: "黄金/玫瑰金" };
+      } else if (colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return { karat: detectedKarat, goldColor: "白金/玫瑰金" };
+      }
+    }
+
+    // 返回单个颜色
+    const singleColor = colors.size === 1 ? Array.from(colors)[0] : "黄金";
+    return { karat: detectedKarat, goldColor: singleColor as "黄金" | "白金" | "玫瑰金" };
   };
 
   // 根据货号查找产品（获取当前分类的最新记录）
@@ -1064,6 +1024,8 @@ function QuotePage() {
           profitMarginMode: coeff.profitMarginMode ?? "fixed",
           laborFactorRetailMode: coeff.laborFactorRetailMode ?? "fixed",
           laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
+          usdExchangeRate: coeff.usdExchangeRate ?? 0.8,
+          usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
         };
         console.log("设置系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1352,6 +1314,8 @@ function QuotePage() {
           profitMarginMode: coeff.profitMarginMode ?? "fixed",
           laborFactorRetailMode: coeff.laborFactorRetailMode ?? "fixed",
           laborFactorWholesaleMode: coeff.laborFactorWholesaleMode ?? "fixed",
+          usdExchangeRate: coeff.usdExchangeRate ?? 0.8,
+          usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
         };
         console.log("✅ 加载系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1731,12 +1695,14 @@ function QuotePage() {
     platingCost: number = 0,
     moldCost: number = 0,
     commission: number = 0,
+    orderChannel?: OrderChannel,  // 下单口（用于判断是否转换货币）
     // 特殊系数（可选，如果提供则优先使用）
     specialMaterialLoss?: number,
     specialMaterialCost?: number,
     specialProfitMargin?: number,
     specialLaborFactorRetail?: number,
-    specialLaborFactorWholesale?: number
+    specialLaborFactorWholesale?: number,
+    specialUsdExchangeRate?: number  // 特殊美金汇率
   ): number => {
     let goldFactor: number;
     if (karat === "10K") {
@@ -1774,7 +1740,16 @@ function QuotePage() {
     const basePrice = materialPrice + laborPrice + otherCosts;
     const totalPrice = basePrice * (1 + commission / 100) * profitMargin;
 
-    return Math.round(totalPrice * 100) / 100; // 保留两位小数
+    let finalPrice = Math.round(totalPrice * 100) / 100; // 保留两位小数
+
+    // 如果下单口是US201，则转换成美金
+    if (orderChannel === "US201") {
+      // 确定使用的汇率：优先使用特殊汇率，否则使用全局固定汇率
+      const usdRate = specialUsdExchangeRate !== undefined ? specialUsdExchangeRate : coefficients.usdExchangeRate;
+      finalPrice = Math.round(finalPrice * usdRate * 100) / 100;
+    }
+
+    return finalPrice;
   };
 
   // 从货号中提取基础货号（去掉副号）
@@ -1926,9 +1901,11 @@ function QuotePage() {
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
       currentProduct.commission || 0,
+      currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
-      currentProduct.specialProfitMargin
+      currentProduct.specialProfitMargin,
+      currentProduct.specialUsdExchangeRate
     );
 
     const retailPrice = calculatePrice(
@@ -1942,9 +1919,11 @@ function QuotePage() {
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
       currentProduct.commission || 0,
+      currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
-      currentProduct.specialProfitMargin
+      currentProduct.specialProfitMargin,
+      currentProduct.specialUsdExchangeRate
     );
 
     // 判断是否为更新操作
@@ -2124,9 +2103,11 @@ function QuotePage() {
         product.platingCost || 0,
         product.moldCost || 0,
         product.commission || 0,
+        product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
-        product.specialProfitMargin
+        product.specialProfitMargin,
+        product.specialUsdExchangeRate
       );
 
       const newRetailPrice = calculatePrice(
@@ -2140,9 +2121,11 @@ function QuotePage() {
         product.platingCost || 0,
         product.moldCost || 0,
         product.commission || 0,
+        product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
-        product.specialProfitMargin
+        product.specialProfitMargin,
+        product.specialUsdExchangeRate
       );
 
       // 创建新的产品记录
@@ -2429,9 +2412,11 @@ function QuotePage() {
         updatedProduct.platingCost,
         updatedProduct.moldCost,
         updatedProduct.commission,
+        updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
-        updatedProduct.specialProfitMargin
+        updatedProduct.specialProfitMargin,
+        updatedProduct.specialUsdExchangeRate
       );
 
       updatedProduct.retailPrice = calculatePrice(
@@ -2445,9 +2430,11 @@ function QuotePage() {
         updatedProduct.platingCost,
         updatedProduct.moldCost,
         updatedProduct.commission,
+        updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
-        updatedProduct.specialProfitMargin
+        updatedProduct.specialProfitMargin,
+        updatedProduct.specialUsdExchangeRate
       );
 
       updatedProduct.timestamp = new Date().toLocaleString("zh-CN");
@@ -3497,7 +3484,13 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
-            commission
+            commission,
+            validOrderChannel || undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
           );
 
           const retailPrice = calculatePrice(
@@ -3510,7 +3503,13 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
-            commission
+            commission,
+            validOrderChannel || undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
           );
 
           const newProduct: Product = {
@@ -5208,6 +5207,31 @@ function QuotePage() {
               />
               <div className="mt-1 text-xs text-black">默认: 5</div>
             </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="mb-2 block text-sm font-medium text-black">
+                  美金汇率（US201订单：加币×汇率=美金）
+                </label>
+                <select
+                  value={coefficients.usdExchangeRateMode}
+                  onChange={(e) => setCoefficients({...coefficients, usdExchangeRateMode: e.target.value as "fixed" | "special"})}
+                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
+                  suppressHydrationWarning
+                >
+                  <option value="fixed">固定</option>
+                  <option value="special">特殊</option>
+                </select>
+              </div>
+              <input
+                type="number"
+                value={coefficients.usdExchangeRate}
+                onChange={(e) => setCoefficients({...coefficients, usdExchangeRate: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 0.8 {coefficients.usdExchangeRateMode === "special" && "(可被产品特殊汇率覆盖)"}</div>
+            </div>
           </div>
         </div>
 
@@ -5459,6 +5483,25 @@ function QuotePage() {
                       className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
                       step="0.1"
                       placeholder={`默认: ${coefficients.laborFactorWholesale}`}
+                      suppressHydrationWarning
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black">
+                      特殊美金汇率（US201订单）
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProduct.specialUsdExchangeRate ?? ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          specialUsdExchangeRate: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                      step="0.01"
+                      placeholder={`默认: ${coefficients.usdExchangeRate}`}
                       suppressHydrationWarning
                     />
                   </div>
@@ -5718,7 +5761,7 @@ function QuotePage() {
                   onChange={(e) =>
                     setCurrentProduct({
                       ...currentProduct,
-                      goldColor: e.target.value as "黄金" | "白金" | "玫瑰金",
+                      goldColor: e.target.value as "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金",
                     })
                   }
                   className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
@@ -5727,6 +5770,10 @@ function QuotePage() {
                   <option value="黄金">黄金</option>
                   <option value="白金">白金</option>
                   <option value="玫瑰金">玫瑰金</option>
+                  <option value="黄金/白金">黄金/白金</option>
+                  <option value="黄金/玫瑰金">黄金/玫瑰金</option>
+                  <option value="白金/玫瑰金">白金/玫瑰金</option>
+                  <option value="黄金/白金/玫瑰金">黄金/白金/玫瑰金</option>
                 </select>
               </div>
 
