@@ -217,6 +217,13 @@ export const insertProductSchema = createCoercedInsertSchema(products).omit({
   updatedAt: true,
 });
 
+// 允许指定 id 的产品插入 schema（用于同步）
+export const insertProductWithIdSchema = createCoercedInsertSchema(products).omit({
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const updateProductSchema = createCoercedInsertSchema(products)
   .omit({
     id: true,
@@ -228,6 +235,12 @@ export const updateProductSchema = createCoercedInsertSchema(products)
 // PriceHistory
 export const insertPriceHistorySchema = createCoercedInsertSchema(priceHistory).omit({
   id: true,
+  userId: true,
+  createdAt: true,
+});
+
+// 允许指定 id 的价格历史插入 schema（用于同步）
+export const insertPriceHistoryWithIdSchema = createCoercedInsertSchema(priceHistory).omit({
   userId: true,
   createdAt: true,
 });

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { productManager } from '@/storage/database/productManager';
+import { ProductManager } from '@/storage/database/productManager';
+import { PriceHistoryManager } from '@/storage/database/priceHistoryManager';
 import { appConfigManager } from '@/storage/database/appConfigManager';
-import { priceHistoryManager } from '@/storage/database/priceHistoryManager';
 import type { Product, PriceHistory } from '@/storage/database/shared/schema';
+
+// 创建管理器实例
+const productManager = new ProductManager();
+const priceHistoryManager = new PriceHistoryManager();
 
 /**
  * POST /api/sync - 同步本地数据到数据库
@@ -101,11 +105,13 @@ export async function POST(request: NextRequest) {
             console.log(`  ✓ 更新产品: ${normalizedProduct.productCode}`);
           } else {
             // 不存在，创建
-            // 注意：创建时不要包含 id、userId、createdAt、updatedAt 等自动生成的字段
-            const { id: _id, userId: _userId, createdAt: _createdAt, updatedAt: _updatedAt, ...productToInsert } = normalizedProduct as any;
-            await productManager.createProduct(user.id, productToInsert);
+            // 注意：创建时需要保留 id，但要移除 userId、createdAt、updatedAt 等自动生成的字段
+            const { userId: _userId, createdAt: _createdAt, updatedAt: _updatedAt, ...productToInsert } = normalizedProduct as any;
+            // 保留 id 字段以便同步时使用本地生成的 ID
+            const dataToInsert = { ...productToInsert, id: product.id };
+            await productManager.createProductWithId(user.id, dataToInsert);
             newProducts++;
-            console.log(`  + 新建产品: ${normalizedProduct.productCode}`);
+            console.log(`  + 新建产品: ${normalizedProduct.productCode} (id: ${product.id})`);
           }
           syncedProducts++;
         } catch (e) {
@@ -183,11 +189,13 @@ export async function POST(request: NextRequest) {
           const existingHistory = await priceHistoryManager.getHistoryById(history.id, user.id);
           if (!existingHistory) {
             // 只同步不存在的历史记录
-            // 注意：创建时不要包含 id、userId、createdAt 等自动生成的字段
-            const { id: _id, userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
-            await priceHistoryManager.createPriceHistory(user.id, historyToInsert);
+            // 注意：创建时需要保留 id，但要移除 userId、createdAt 等自动生成的字段
+            const { userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
+            // 保留 id 字段以便同步时使用本地生成的 ID
+            const dataToInsert = { ...historyToInsert, id: history.id };
+            await priceHistoryManager.createPriceHistoryWithId(user.id, dataToInsert);
             syncedHistory++;
-            console.log(`  + 新建历史记录: ${normalizedHistory.productCode}`);
+            console.log(`  + 新建历史记录: ${normalizedHistory.productCode} (id: ${history.id})`);
           } else {
             skippedHistory++;
             console.log(`  - 跳过已存在的历史记录: ${normalizedHistory.productCode}`);

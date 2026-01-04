@@ -1,12 +1,22 @@
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "coze-coding-dev-sdk";
-import { priceHistory, insertPriceHistorySchema } from "./shared/schema";
+import { priceHistory, insertPriceHistorySchema, insertPriceHistoryWithIdSchema } from "./shared/schema";
 import type { PriceHistory, InsertPriceHistory } from "./shared/schema";
 
 export class PriceHistoryManager {
   async createPriceHistory(userId: string, data: InsertPriceHistory): Promise<PriceHistory> {
     const db = await getDb();
     const validated = insertPriceHistorySchema.parse({ ...data });
+    const [history] = await db.insert(priceHistory).values({ ...validated, userId }).returning();
+    return history;
+  }
+
+  // 创建价格历史并指定 ID（用于同步）
+  async createPriceHistoryWithId(userId: string, data: any): Promise<PriceHistory> {
+    const db = await getDb();
+    // 如果数据中包含 id，使用 insertPriceHistoryWithIdSchema，否则使用 insertPriceHistorySchema
+    const schema = data.id ? insertPriceHistoryWithIdSchema : insertPriceHistorySchema;
+    const validated = schema.parse({ ...data });
     const [history] = await db.insert(priceHistory).values({ ...validated, userId }).returning();
     return history;
   }

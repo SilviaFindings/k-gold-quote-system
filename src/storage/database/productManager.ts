@@ -1,12 +1,22 @@
 import { eq, and, SQL, like, sql } from "drizzle-orm";
 import { getDb } from "coze-coding-dev-sdk";
-import { products, insertProductSchema, updateProductSchema } from "./shared/schema";
+import { products, insertProductSchema, insertProductWithIdSchema, updateProductSchema } from "./shared/schema";
 import type { Product, InsertProduct, UpdateProduct } from "./shared/schema";
 
 export class ProductManager {
   async createProduct(userId: string, data: InsertProduct): Promise<Product> {
     const db = await getDb();
     const validated = insertProductSchema.parse({ ...data });
+    const [product] = await db.insert(products).values({ ...validated, userId }).returning();
+    return product;
+  }
+
+  // 创建产品并指定 ID（用于同步）
+  async createProductWithId(userId: string, data: any): Promise<Product> {
+    const db = await getDb();
+    // 如果数据中包含 id，使用 insertProductWithIdSchema，否则使用 insertProductSchema
+    const schema = data.id ? insertProductWithIdSchema : insertProductSchema;
+    const validated = schema.parse({ ...data });
     const [product] = await db.insert(products).values({ ...validated, userId }).returning();
     return product;
   }
