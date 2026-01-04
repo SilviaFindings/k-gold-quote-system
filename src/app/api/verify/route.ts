@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
       productsMatch = true;
       productsStatus = 'ℹ️ 暂无数据';
       productsMessage = 'ℹ️ 本地和数据库都没有产品数据';
-    } else if (localProductIds.length > 0 && localProductIds.length === localProductCount) {
-      // 如果前端传递了ID列表，进行详细的ID匹配检查
+    } else if (localProductIds.length > 0) {
+      // 如果前端传递了ID列表，进行详细的ID匹配检查（即使数量不一致也检查）
       const dbProductIds = dbProducts.map(p => p.id);
       const missingInDb = localProductIds.filter((id: string) => !dbProductIds.includes(id));
       const extraInDb = dbProductIds.filter(id => !localProductIds.includes(id));
 
-      if (missingInDb.length === 0 && extraInDb.length === 0) {
+      if (missingInDb.length === 0 && extraInDb.length === 0 && localProductCount === dbProductCount) {
         productsMatch = true;
         productsStatus = '✅ 完整';
         productsMessage = '✅ 数据完全一致';
@@ -76,6 +76,11 @@ export async function POST(request: NextRequest) {
         productsMatch = true;
         productsStatus = 'ℹ️ 数据库有额外数据';
         productsMessage = `ℹ️ 数据库有 ${extraInDb.length} 个产品是本地没有的`;
+      } else {
+        // ID匹配但数量不一致（说明有些本地产品没有ID）
+        productsMatch = false;
+        productsStatus = '⚠️ 数据不完整';
+        productsMessage = `⚠️ 本地有 ${localProductCount - dbProductCount} 个产品没有ID，需要检查数据完整性`;
       }
     } else if (dbProductCount === localProductCount) {
       // 没有传递ID列表，只检查数量
@@ -117,13 +122,13 @@ export async function POST(request: NextRequest) {
       historyMatch = true;
       historyStatus = 'ℹ️ 暂无数据';
       historyMessage = 'ℹ️ 本地和数据库都没有价格历史数据';
-    } else if (localHistoryIds.length > 0 && localHistoryIds.length === localHistoryCount) {
-      // 如果前端传递了ID列表，进行详细的ID匹配检查
+    } else if (localHistoryIds.length > 0) {
+      // 如果前端传递了ID列表，进行详细的ID匹配检查（即使数量不一致也检查）
       const dbHistoryIds = dbHistory.map(h => h.id);
       const missingInDb = localHistoryIds.filter((id: string) => !dbHistoryIds.includes(id));
       const extraInDb = dbHistoryIds.filter(id => !localHistoryIds.includes(id));
 
-      if (missingInDb.length === 0 && extraInDb.length === 0) {
+      if (missingInDb.length === 0 && extraInDb.length === 0 && localHistoryCount === dbHistoryCount) {
         historyMatch = true;
         historyStatus = '✅ 完整';
         historyMessage = '✅ 数据完全一致';
@@ -136,6 +141,11 @@ export async function POST(request: NextRequest) {
         historyMatch = true;
         historyStatus = 'ℹ️ 数据库有额外数据';
         historyMessage = `ℹ️ 数据库有 ${extraInDb.length} 条历史记录是本地没有的`;
+      } else {
+        // ID匹配但数量不一致（说明有些本地历史记录没有ID）
+        historyMatch = false;
+        historyStatus = '⚠️ 数据不完整';
+        historyMessage = `⚠️ 本地有 ${localHistoryCount - dbHistoryCount} 条历史记录没有ID，需要检查数据完整性`;
       }
     } else if (dbHistoryCount === localHistoryCount) {
       // 没有传递ID列表，只检查数量
