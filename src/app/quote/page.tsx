@@ -575,6 +575,37 @@ function QuotePage() {
       return { karat: karatMap[roseGoldSlashMatch[1].toUpperCase()], goldColor: "玫瑰金" };
     }
 
+    // 检查包含KR但不匹配标准格式的情况（如 K14KR, /14KR/ 等）
+    if (code.includes("KR")) {
+      // 尝试从货号中提取成色
+      let detectedKarat: "10K" | "14K" | "18K" = "14K"; // 默认值
+
+      // 检查是否有 K10, K14, K18 前缀
+      const karatPrefixMatch = code.match(/^(K10|K14|K18)/i);
+      if (karatPrefixMatch) {
+        const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+          "K10": "10K",
+          "K14": "14K",
+          "K18": "18K"
+        };
+        detectedKarat = karatMap[karatPrefixMatch[1].toUpperCase()];
+      } else {
+        // 检查是否有 10K, 14K, 18K
+        const karatNumberMatch = code.match(/(10K|14K|18K)/i);
+        if (karatNumberMatch) {
+          const karatMap: Record<string, "10K" | "14K" | "18K"> = {
+            "10K": "10K",
+            "14K": "14K",
+            "18K": "18K"
+          };
+          detectedKarat = karatMap[karatNumberMatch[1].toUpperCase()];
+        }
+      }
+
+      // 如果找到了KR，就返回玫瑰金
+      return { karat: detectedKarat, goldColor: "玫瑰金" };
+    }
+
     // 3. 检查黄金（K）- 如 K10, K14, K18, 10K, 14K, 18K
     const goldPrefixMatch = code.match(/^(K10|K14|K18)/i);
     if (goldPrefixMatch) {
@@ -2647,6 +2678,10 @@ function QuotePage() {
           return;
         }
 
+        // 提示当前金价设置
+        console.log(`当前金价设置: ¥${goldPrice}/克`);
+        console.log(`localStorage中的金价: ¥${localStorage.getItem("goldPrice")}/克`);
+
         const headers = jsonData[0] as string[];
         console.log("表头:", headers);
         const rows = jsonData.slice(1);
@@ -2665,7 +2700,8 @@ function QuotePage() {
           h && String(h).includes("重量")
         );
         const laborCostIndex = headers.findIndex(h =>
-          h && String(h).includes("人工") || h && String(h).includes("工费")
+          h && (String(h).includes("工费") || String(h).includes("人工") ||
+               String(h).includes("加工") || String(h).includes("手工"))
         );
         const karatIndex = headers.findIndex(h =>
           h && String(h).includes("成色")
@@ -2803,8 +2839,8 @@ function QuotePage() {
           // 如果Excel中有成色内容（非空）就用Excel的，否则使用智能识别的结果
           const karat = (karatRaw && karatRaw.trim() !== "") ? finalKarat : detectedMaterial.karat;
 
-          // 调试日志：输出成色识别结果
-          console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}"`);
+          // 调试日志：输出成色和金价识别结果
+          console.log(`产品 ${productCode}: Excel成色="${karatRaw}", 识别成色="${detectedMaterial.karat}", 最终使用="${karat}", 导入金价="${goldPrice}", 工费="${laborCost}"`);
 
           const wholesalePrice = calculatePrice(
             goldPrice,
