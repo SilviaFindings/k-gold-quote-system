@@ -3853,6 +3853,69 @@ function QuotePage() {
               🔧 修复数据库
             </button>
             <button
+              onClick={async () => {
+                if (!confirm('⚠️ 确定要强制修复数据库吗？\n\n这将强制修改数据库表结构，将ID字段长度增加到200字符。\n\n此操作是安全的，只会修改字段长度，不会删除任何数据。')) {
+                  return;
+                }
+
+                setIsVerifying(true);
+                try {
+                  console.log('🔧 开始强制修复数据库...');
+
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('/api/force-fix-db', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  });
+
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ 强制修复失败:', errorData);
+                    alert(`数据库强制修复失败！\n\n错误信息: ${errorData.message || errorData.error}`);
+                    return;
+                  }
+
+                  const result = await response.json();
+                  console.log('✅ 强制修复成功:', result);
+
+                  const details = result.details || {};
+                  let message = '✅ 数据库强制修复成功！\n\n';
+                  message += `当前ID字段长度:\n`;
+                  message += `  - products.id: ${details.productsIdLength || 'N/A'} 字符\n`;
+                  message += `  - price_history.id: ${details.priceHistoryIdLength || 'N/A'} 字符\n`;
+                  message += `  - price_history.product_id: ${details.priceHistoryProductIdLength || 'N/A'} 字符\n\n`;
+
+                  if (result.fixed) {
+                    message += '🎉 数据库已强制修复，现在可以正常同步数据了！\n\n';
+                    message += '💡 下一步：点击"🔄 同步到数据库"按钮';
+                  } else {
+                    message += '⚠️ 数据库可能仍有问题，请查看控制台详情\n\n';
+                    message += `修复详情:\n${JSON.stringify(result.after, null, 2)}`;
+                  }
+
+                  alert(message);
+
+                  // 修复成功后，自动验证数据完整性
+                  if (result.fixed) {
+                    setTimeout(async () => {
+                      await verifyDataIntegrity();
+                    }, 500);
+                  }
+                } catch (error: any) {
+                  console.error('❌ 强制修复失败:', error);
+                  alert(`数据库强制修复失败！\n\n错误信息: ${error.message}`);
+                } finally {
+                  setIsVerifying(false);
+                }
+              }}
+              className="rounded bg-red-700 px-4 py-2 text-white hover:bg-red-800"
+              suppressHydrationWarning
+            >
+              🔧🔧 强制修复
+            </button>
+            <button
               onClick={() => {
                 if (confirm("确定要修复子分类数据吗？这将根据产品的分类信息自动设置子分类。")) {
                   repairSubCategoryData();
