@@ -3207,19 +3207,24 @@ function QuotePage() {
           return;
         }
 
-        const newProducts: Product[] = [];
-        const newHistory: PriceHistory[] = [];
+        // 🔥 在循环之前检查用户是否选择了导入小类
+        if (!importSubCategory) {
+          alert("⚠️ 请先选择要导入的产品小类！\n\n在页面左侧的'导入选项'区域选择产品小类后再导入。");
+          e.target.value = ""; // 清空文件输入
+          return;
+        }
 
         // 根据用户选择的小类推断所属的大类（所有产品使用相同的大类）
         let importCategory: ProductCategory = "配件";
-        if (importSubCategory) {
-          for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
-            if (subList.includes(importSubCategory)) {
-              importCategory = cat as ProductCategory;
-              break;
-            }
+        for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
+          if (subList.includes(importSubCategory)) {
+            importCategory = cat as ProductCategory;
+            break;
           }
         }
+
+        const newProducts: Product[] = [];
+        const newHistory: PriceHistory[] = [];
 
         rows.forEach((row: any) => {
           const productCode = row[productCodeIndex];
@@ -3295,13 +3300,6 @@ function QuotePage() {
           }
 
           if (!productCode || !productName) return;
-
-          // 检查用户是否选择了导入小类
-          if (!importSubCategory) {
-            alert("⚠️ 请先选择要导入的产品小类！\n\n在'导入选项'区域选择产品小类后再导入。");
-            e.target.value = ""; // 清空文件输入
-            return;
-          }
 
           // 使用用户选择的小类和推断的大类
           const finalCategory = importCategory;
