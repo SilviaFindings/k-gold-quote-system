@@ -6651,10 +6651,69 @@ function QuotePage() {
                         建议：导出前先验证数据
                       </p>
                     </div>
+                  </div>
+                </section>
+
+                {/* 云端数据同步 */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-cyan-500 text-white rounded-full flex items-center justify-center text-sm">6</span>
+                    云端数据同步
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-bold text-black mb-2">☁️ 什么是云端同步？</h4>
+                      <p className="text-sm text-black">
+                        云端同步可以将您的产品数据、价格系数、金价设置等自动保存到云端数据库，支持多设备访问和数据备份。
+                      </p>
+                    </div>
 
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">🔄 同步到数据库</h4>
-                      <p className="text-sm text-black mb-2">将本地数据同步到云端数据库，支持多设备访问</p>
+                      <h4 className="font-bold text-black mb-2">📤 上传到云端</h4>
+                      <p className="text-sm text-black mb-2">将本地所有数据上传到云端数据库</p>
+                      <div className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        包含：所有产品、价格历史、金价设置、价格系数
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📥 合并下载（推荐）</h4>
+                      <p className="text-sm text-black mb-2">将云端数据与本地数据合并，云端数据优先</p>
+                      <div className="text-xs text-black bg-green-50 p-2 rounded mt-2">
+                        适用场景：在不同设备上操作过，想保留所有数据
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔄 替换下载</h4>
+                      <p className="text-sm text-black mb-2">完全使用云端数据替换本地数据</p>
+                      <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
+                        ⚠️ 会清空本地所有数据！请确保云端数据完整
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔍 检查云端数据</h4>
+                      <p className="text-sm text-black mb-2">快速检查云端是否有数据可以下载</p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">✅ 自动同步</h4>
+                      <p className="text-sm text-black mb-2">数据变更时自动上传到云端（默认开启）</p>
+                      <div className="text-xs text-black bg-cyan-50 p-2 rounded mt-2">
+                        包含：产品数据、历史记录、金价、系数（延迟3秒同步，避免频繁上传）
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">💡 使用建议</h4>
+                      <ul className="text-sm text-black space-y-1 list-disc list-inside">
+                        <li>首次使用时，建议先开启"自动同步"功能</li>
+                        <li>在多设备间同步时，优先使用"合并下载"</li>
+                        <li>换新设备时，使用"替换下载"导入云端数据</li>
+                        <li>替换下载前，建议先通过"备份数据"按钮备份本地数据</li>
+                        <li>可以关闭"自动同步"手动控制同步时机</li>
+                      </ul>
                     </div>
                   </div>
                 </section>
@@ -6662,7 +6721,7 @@ function QuotePage() {
                 {/* 高级工具 */}
                 <section>
                   <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-gray-500 text-white rounded-full flex items-center justify-center text-sm">6</span>
+                    <span className="w-8 h-8 bg-gray-500 text-white rounded-full flex items-center justify-center text-sm">7</span>
                     高级工具（更多工具菜单）
                   </h3>
                   <div className="space-y-3">
@@ -6720,7 +6779,7 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <h4 className="font-bold text-black mb-2">Q: 数据存储在哪里？</h4>
                       <p className="text-sm text-black">
-                        A: 数据存储在浏览器本地存储（localStorage）和云端数据库，支持多设备同步
+                        A: 数据同时存储在浏览器本地存储（localStorage）和云端数据库，支持多设备同步。本地数据可以离线使用，云端数据支持跨设备访问和备份。
                       </p>
                     </div>
 
@@ -6728,6 +6787,38 @@ function QuotePage() {
                       <h4 className="font-bold text-black mb-2">Q: 如何批量修改产品成本？</h4>
                       <p className="text-sm text-black">
                         A: 使用"批量操作" → "✏️ 批量修改价格系数"功能
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 合并下载和替换下载有什么区别？</h4>
+                      <p className="text-sm text-black">
+                        A: <strong>合并下载</strong>：将云端和本地数据融合，云端数据优先，适合在不同设备上操作后同步。<br/>
+                        <strong>替换下载</strong>：完全丢弃本地数据，使用云端数据，适合换新设备或本地数据损坏时恢复。⚠️ 替换前请确保云端数据完整。
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 自动同步会影响性能吗？</h4>
+                      <p className="text-sm text-black">
+                        A: 不会。自动同步使用3秒防抖机制，避免频繁上传。只有数据变更停止3秒后才会触发同步，同步在后台进行，不影响操作。
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 没有网络时可以使用系统吗？</h4>
+                      <p className="text-sm text-black">
+                        A: 可以。数据同时保存在本地浏览器，可以离线使用。但无法进行云端同步操作，网络恢复后会自动继续同步（如果开启自动同步）。
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 如何在多台电脑间同步数据？</h4>
+                      <p className="text-sm text-black">
+                        A: 1. 在电脑A上开启自动同步，确保数据已上传到云端<br/>
+                        2. 在电脑B登录账号，首次登录时会提示是否下载云端数据<br/>
+                        3. 选择"合并下载"保留两台电脑的数据<br/>
+                        4. 之后所有操作都会自动同步，保持两台电脑数据一致
                       </p>
                     </div>
                   </div>
