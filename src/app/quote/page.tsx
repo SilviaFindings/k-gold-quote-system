@@ -106,14 +106,8 @@ const CATEGORY_MAPPING: Record<string, ProductCategory> = {
 const detectCategoryFromName = (productName: string): ProductCategory | null => {
   const name = productName.toLowerCase();
 
-  // 配件类关键词
-  const accessoriesKeywords = [
-    "扣", "圈", "珠", "管", "针", "托珠", "包扣", "字印", "吊牌", "夹",
-    "耳逼", "耳夹", "定位珠", "短管", "圆珠", "车花", "金线",
-    "开口圈", "闭口圈", "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣"
-  ];
-
-  // 宝石托类关键词
+  // 🔥 重要：先检查更具体的关键词（优先级更高）
+  // 宝石托类关键词 - 必须放在前面，避免被其他关键词匹配
   const settingsKeywords = [
     "戒子托", "耳环托", "耳钉托", "吊坠托",
     "戒指托", "耳饰托", "吊饰托", "镶嵌托"
@@ -124,19 +118,39 @@ const detectCategoryFromName = (productName: string): ProductCategory | null => 
     "金链", "延长链", "项链", "手链", "链子"
   ];
 
-  // 检查配件类
-  if (accessoriesKeywords.some(keyword => name.includes(keyword))) {
-    return "配件";
-  }
+  // 配件类关键词 - 放在最后，使用更具体的关键词，避免误匹配
+  const accessoriesKeywords = [
+    "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣",
+    "开口圈", "闭口圈",
+    "圆珠", "车花珠", "车花",
+    "定位珠", "短管",
+    "包扣",
+    "字印", "吊牌",
+    "珠针",
+    "空心管",
+    "珠托", "托珠",
+    "镶嵌配件", "镶嵌",
+    "珍珠配件", "珍珠",
+    "金线",
+    "耳逼", "耳夹",
+    // 注意：简单的"扣"、"圈"、"珠"等单字关键词容易误匹配，不使用
+  ];
 
-  // 检查宝石托类
+  // 🔥 按优先级检查：宝石托 > 链条 > 配件
+
+  // 先检查宝石托类（优先级最高）
   if (settingsKeywords.some(keyword => name.includes(keyword))) {
     return "宝石托";
   }
 
-  // 检查链条类
+  // 再检查链条类
   if (chainKeywords.some(keyword => name.includes(keyword))) {
     return "链条";
+  }
+
+  // 最后检查配件类
+  if (accessoriesKeywords.some(keyword => name.includes(keyword))) {
+    return "配件";
   }
 
   return null;
@@ -146,39 +160,60 @@ const detectCategoryFromName = (productName: string): ProductCategory | null => 
 const detectSubCategoryFromName = (productName: string): string | null => {
   const name = productName.toLowerCase();
 
-  // 定义子分类关键词
-  const subCategoryKeywords: Record<string, string[]> = {
-    "耳环/耳逼": ["耳环", "耳逼", "耳夹"],
-    "扣子": ["扣", "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣"],
-    "开口圈/闭口圈": ["开口圈", "闭口圈", "圈"],
-    "圆珠": ["圆珠"],
-    "车花珠": ["车花珠", "车花"],
-    "定位珠/短管": ["定位珠", "短管"],
-    "包扣": ["包扣"],
-    "字印片/吊牌": ["字印", "吊牌"],
-    "珠针": ["珠针", "针"],
-    "空心管": ["空心管"],
-    "珠托": ["珠托", "托珠"],
-    "吊坠夹": ["吊坠夹", "夹"],
-    "镶嵌配件": ["镶嵌"],
-    "珍珠配件": ["珍珠"],
-    "金线": ["金线"],
-    "戒子托": ["戒子托", "戒指托"],
-    "耳环托": ["耳环托"],
-    "耳钉托": ["耳钉托"],
-    "吊坠托": ["吊坠托"],
-    "金链": ["金链", "链", "项链", "手链"],
-    "延长链": ["延长链"],
-  };
+  // 定义子分类关键词（按优先级排序：具体关键词优先）
+  const subCategoryKeywords: Array<{ subCat: string; keywords: string[] }> = [
+    // 宝石托类（优先级最高）
+    { subCat: "戒子托", keywords: ["戒子托", "戒指托"] },
+    { subCat: "耳环托", keywords: ["耳环托"] },
+    { subCat: "耳钉托", keywords: ["耳钉托"] },
+    { subCat: "吊坠托", keywords: ["吊坠托"] },
 
-  // 遍历查找匹配
-  for (const [subCategory, keywords] of Object.entries(subCategoryKeywords)) {
-    if (keywords.some(keyword => name.includes(keyword))) {
-      return subCategory;
+    // 配件类 - 使用更具体的关键词
+    { subCat: "扣子", keywords: ["水滴扣", "龙虾扣", "螺丝扣", "弹簧扣", "弹簧夹扣"] },
+    { subCat: "开口圈/闭口圈", keywords: ["开口圈", "闭口圈"] },
+    { subCat: "圆珠", keywords: ["圆珠"] },
+    { subCat: "车花珠", keywords: ["车花珠", "车花"] },
+    { subCat: "定位珠/短管", keywords: ["定位珠", "短管"] },
+    { subCat: "包扣", keywords: ["包扣"] },
+    { subCat: "字印片/吊牌", keywords: ["字印", "吊牌"] },
+    { subCat: "珠针", keywords: ["珠针"] },
+    { subCat: "空心管", keywords: ["空心管"] },
+    { subCat: "珠托", keywords: ["珠托", "托珠"] },
+    { subCat: "吊坠夹", keywords: ["吊坠夹"] },
+    { subCat: "镶嵌配件", keywords: ["镶嵌配件", "镶嵌"] },
+    { subCat: "珍珠配件", keywords: ["珍珠配件", "珍珠"] },
+    { subCat: "金线", keywords: ["金线"] },
+    { subCat: "耳环/耳逼", keywords: ["耳环", "耳逼", "耳夹"] },
+
+    // 链条类
+    { subCat: "金链", keywords: ["金链", "项链", "手链"] },
+    { subCat: "延长链", keywords: ["延长链"] },
+  ];
+
+  // 找出所有匹配的子分类及其匹配的关键词
+  const matches: Array<{ subCat: string; keyword: string; length: number }> = [];
+
+  for (const { subCat, keywords } of subCategoryKeywords) {
+    for (const keyword of keywords) {
+      if (name.includes(keyword)) {
+        matches.push({ subCat, keyword, length: keyword.length });
+      }
     }
   }
 
-  return null;
+  // 如果没有匹配，返回 null
+  if (matches.length === 0) {
+    return null;
+  }
+
+  // 如果只有一个匹配，直接返回
+  if (matches.length === 1) {
+    return matches[0].subCat;
+  }
+
+  // 如果有多个匹配，选择关键词最长的（最具体的）
+  matches.sort((a, b) => b.length - a.length);
+  return matches[0].subCat;
 };
 
 // 下单口列表
@@ -2916,9 +2951,20 @@ function QuotePage() {
           const detectedCategory = detectCategoryFromName(String(productName));
           const detectedSubCategory = detectSubCategoryFromName(String(productName));
 
-          // 如果智能识别成功，使用识别结果；否则使用当前选中的分类
-          const finalCategory = detectedCategory || currentCategory;
-          const finalSubCategory = detectedSubCategory || currentSubCategory;
+          // 🔥 智能推断：如果子分类识别成功但大类失败，根据子分类推断大类
+          let finalCategory = detectedCategory || currentCategory;
+          let finalSubCategory = detectedSubCategory || currentSubCategory;
+
+          if (detectedSubCategory && !detectedCategory) {
+            // 根据子分类查找所属的大类
+            for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
+              if (subList.includes(detectedSubCategory)) {
+                finalCategory = cat as ProductCategory;
+                console.log(`产品 ${productCode}: 根据子分类"${detectedSubCategory}"推断大类="${finalCategory}"`);
+                break;
+              }
+            }
+          }
 
           // 调试日志：输出分类识别结果
           console.log(`产品 ${productCode} (${productName}): 智能识别分类="${detectedCategory}", 使用分类="${finalCategory}", 智能识别子分类="${detectedSubCategory}", 使用子分类="${finalSubCategory}"`);
@@ -3415,9 +3461,20 @@ function QuotePage() {
       const detectedCategory = detectCategoryFromName(product.productName);
       const detectedSubCategory = detectSubCategoryFromName(product.productName);
 
-      // 如果识别成功，使用识别结果；否则保持原有分类
-      const newCategory = detectedCategory || product.category;
-      const newSubCategory = detectedSubCategory || product.subCategory;
+      // 🔥 智能推断：如果子分类识别成功但大类失败，根据子分类推断大类
+      let newCategory = detectedCategory || product.category;
+      let newSubCategory = detectedSubCategory || product.subCategory;
+
+      if (detectedSubCategory && !detectedCategory) {
+        // 根据子分类查找所属的大类
+        for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
+          if (subList.includes(detectedSubCategory)) {
+            newCategory = cat as ProductCategory;
+            console.log(`产品 ${product.productCode}: 根据子分类"${detectedSubCategory}"推断大类="${newCategory}"`);
+            break;
+          }
+        }
+      }
 
       // 如果分类发生变化，记录日志
       if (newCategory !== product.category || newSubCategory !== product.subCategory) {
@@ -3439,9 +3496,19 @@ function QuotePage() {
       const detectedCategory = detectCategoryFromName(history.productName);
       const detectedSubCategory = detectSubCategoryFromName(history.productName);
 
-      // 如果识别成功，使用识别结果；否则保持原有分类
-      const newCategory = detectedCategory || history.category;
-      const newSubCategory = detectedSubCategory || history.subCategory;
+      // 🔥 智能推断：如果子分类识别成功但大类失败，根据子分类推断大类
+      let newCategory = detectedCategory || history.category;
+      let newSubCategory = detectedSubCategory || history.subCategory;
+
+      if (detectedSubCategory && !detectedCategory) {
+        // 根据子分类查找所属的大类
+        for (const [cat, subList] of Object.entries(SUB_CATEGORIES)) {
+          if (subList.includes(detectedSubCategory)) {
+            newCategory = cat as ProductCategory;
+            break;
+          }
+        }
+      }
 
       return {
         ...history,
