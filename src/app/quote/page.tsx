@@ -360,9 +360,9 @@ interface PriceHistory {
 
 function QuotePage() {
   const [goldPrice, setGoldPrice] = useState<number>(() => {
-    if (typeof window === 'undefined') return 500;
+    if (typeof window === 'undefined') return 1000;
     const savedGoldPrice = localStorage.getItem("goldPrice");
-    return savedGoldPrice ? Number(savedGoldPrice) : 500;
+    return savedGoldPrice ? Number(savedGoldPrice) : 1000;
   });
 
   // 滚动同步ref
