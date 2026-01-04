@@ -5742,7 +5742,7 @@ function QuotePage() {
                       <h4 className="font-bold text-black mb-2">修改金价</h4>
                       <p className="text-sm text-black mb-2">在"金价设置"区域输入新的市场金价（人民币/克）</p>
                       <p className="text-xs text-black bg-amber-50 p-2 rounded">
-                        ⚠️ 修改金价后，需要点击"更新选中产品价格"按钮才会应用到产品
+                        ⚠️ <strong>重要提示：</strong>修改金价后，<strong>不会自动影响已导入的产品价格</strong>。已导入产品的价格保持不变，新导入的产品会使用新金价计算。如果需要根据新金价更新现有产品价格，请使用"批量操作"区域的"🔄 更新选中产品价格"按钮。
                       </p>
                     </div>
 
@@ -5913,6 +5913,13 @@ function QuotePage() {
                     常见问题
                   </h3>
                   <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 修改金价后，已导入的产品价格会自动更新吗？</h4>
+                      <p className="text-sm text-black">
+                        A: <strong>不会自动更新</strong>。已导入产品的价格是在导入时根据当时的金价计算的，保持不变。如果需要根据新金价更新现有产品价格，请在产品列表中勾选需要更新的产品，然后点击"批量操作"区域的"🔄 更新选中产品价格"按钮。新导入的产品会自动使用当前金价计算。
+                      </p>
+                    </div>
+
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <h4 className="font-bold text-black mb-2">Q: 价格计算公式是什么？</h4>
                       <p className="text-sm text-black">
