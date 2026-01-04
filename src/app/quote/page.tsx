@@ -1750,9 +1750,9 @@ function QuotePage() {
     // 其它成本 = (配件 + 石头 + 电镀) x 工费系数 / 汇率
     const otherCosts = (accessoryCost + stoneCost + platingCost) * laborFactor / coefficients.exchangeRate;
 
-    // 佣金 = 人民币工费 x 佣金率 / 5
+    // 佣金 = 人民币工费 x (佣金率 / 100) / 5 = 加币
     const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
-    const commissionAmount = laborCost * commissionRate / 5;
+    const commissionAmount = laborCost * (commissionRate / 100) / 5;
 
     // 总价 = (材料价 + 工费 + 其它成本 + 佣金) x 国际运输和关税系数
     const basePrice = materialPrice + laborPriceCAD + otherCosts + commissionAmount;
@@ -1773,8 +1773,8 @@ function QuotePage() {
   // 计算佣金金额
   const calculateCommissionAmount = (laborCost: number, specialCommissionRate?: number): number => {
     const commissionRate = specialCommissionRate !== undefined ? specialCommissionRate : coefficients.commissionRate;
-    // 佣金 = 工费 x 佣金率 / 5
-    return Math.round(laborCost * commissionRate / 5 * 100) / 100;
+    // 佣金 = 人民币工费 x (佣金率 / 100) / 5 = 加币
+    return Math.round(laborCost * (commissionRate / 100) / 5 * 100) / 100;
   };
 
   // 从货号中提取基础货号（去掉副号）
