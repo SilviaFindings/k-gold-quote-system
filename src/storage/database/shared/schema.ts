@@ -119,7 +119,7 @@ export const products = pgTable("products", {
 }));
 
 export const priceHistory = pgTable("price_history", {
-  id: varchar("id", { length: 36 })
+  id: varchar("id", { length: 100 })
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   userId: varchar("user_id", { length: 36 })
