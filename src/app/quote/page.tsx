@@ -412,6 +412,14 @@ function QuotePage() {
   const [currentCategory, setCurrentCategory] = useState<ProductCategory>("配件");
   const [currentSubCategory, setCurrentSubCategory] = useState<string>(""); // 当前选中的子分类
 
+  // 监听 currentSubCategory 的变化（用于调试）
+  useEffect(() => {
+    console.log("=== currentSubCategory 变化 ===");
+    console.log("新值:", currentSubCategory);
+    console.log("类型:", typeof currentSubCategory);
+    console.log("长度:", currentSubCategory?.length);
+  }, [currentSubCategory]);
+
   // 分类展开/折叠状态
   const [expandedCategories, setExpandedCategories] = useState<Set<ProductCategory>>(new Set(["配件"]));
 
@@ -3417,31 +3425,39 @@ function QuotePage() {
         const newProductCodes = new Set(newProducts.map(p => p.productCode));
         const filteredProducts = products.filter(p => !newProductCodes.has(p.productCode));
 
-        // 添加新产品
-        setProducts([...filteredProducts, ...newProducts]);
-        setPriceHistory([...priceHistory, ...newHistory]);
+        // 确保要设置的子分类不为空
+        const targetSubCategory = importSubCategory || newProducts[0]?.subCategory || "";
 
-        // 更新当前子分类，让列表显示刚导入的数据
-        console.log("导入成功，更新当前子分类为：", importSubCategory);
-        console.log("当前子分类值类型：", typeof importSubCategory);
-        console.log("当前子分类值长度：", importSubCategory?.length);
-        console.log("当前子分类值（JSON）：", JSON.stringify(importSubCategory));
+        console.log("=== 导入完成，准备更新状态 ===");
+        console.log("importSubCategory:", importSubCategory);
+        console.log("targetSubCategory:", targetSubCategory);
+        console.log("newProducts[0]?.subCategory:", newProducts[0]?.subCategory);
 
-        // 验证导入的产品数据
-        const importedProducts = newProducts.slice(0, 3);
-        console.log("前3个导入的产品：", importedProducts.map(p => ({
-          code: p.productCode,
-          name: p.productName,
-          subCategory: p.subCategory,
-          category: p.category
-        })));
+        // 使用回调函数确保状态更新
+        setProducts(prev => {
+          console.log("setProducts 被调用，当前产品数量:", prev.length);
+          return [...filteredProducts, ...newProducts];
+        });
 
-        setCurrentSubCategory(importSubCategory);
-        console.log("已调用 setCurrentSubCategory");
+        setPriceHistory(prev => {
+          console.log("setPriceHistory 被调用，当前历史记录数量:", prev.length);
+          return [...prev, ...newHistory];
+        });
 
-        // 延迟验证一下状态是否更新
+        // 使用回调函数更新当前子分类
+        setCurrentSubCategory(prev => {
+          console.log("setCurrentSubCategory 被调用");
+          console.log("  前一个值:", prev);
+          console.log("  新值:", targetSubCategory);
+          return targetSubCategory;
+        });
+
+        console.log("=== 状态更新函数调用完成 ===");
+
+        // 延迟验证
         setTimeout(() => {
-          console.log("延迟检查 - 应该的子分类：", importSubCategory);
+          console.log("=== 500ms 后的状态验证 ===");
+          console.log("期望的子分类:", targetSubCategory);
         }, 500);
 
         alert(`✅ 成功导入 ${newProducts.length} 个产品！\n\n📊 导入设置：\n  • 小类: ${importSubCategory}\n  • 大类: ${importCategory}\n\n💡 提示：产品已按照您选择的小类导入，系统不会进行自动分类识别。`);
