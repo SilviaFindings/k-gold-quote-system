@@ -2362,11 +2362,19 @@ function QuotePage() {
       message += '📦 产品数据：\n';
       message += `  - 本地: ${result.details.products.localCount} 个\n`;
       message += `  - 数据库: ${result.details.products.databaseCount} 个\n`;
-      message += `  - 状态: ${result.details.products.status}\n\n`;
+      message += `  - 状态: ${result.details.products.status}\n`;
+      if (result.details.products.message) {
+        message += `  - 说明: ${result.details.products.message}\n`;
+      }
+      message += '\n';
       message += '📈 价格历史：\n';
       message += `  - 本地: ${result.details.history.localCount} 条\n`;
       message += `  - 数据库: ${result.details.history.databaseCount} 条\n`;
-      message += `  - 状态: ${result.details.history.status}\n\n`;
+      message += `  - 状态: ${result.details.history.status}\n`;
+      if (result.details.history.message) {
+        message += `  - 说明: ${result.details.history.message}\n`;
+      }
+      message += '\n';
       message += '⚙️  系统配置：\n';
       message += `  - 金价: ${result.details.configs.goldPrice.status}\n`;
       message += `  - 价格系数: ${result.details.configs.coefficients.status}\n`;
@@ -2375,11 +2383,15 @@ function QuotePage() {
       message += `  - 产品数据: ${result.details.dataQuality.products.status}\n`;
       message += `  - 历史记录: ${result.details.dataQuality.history.status}\n\n`;
 
+      // 显示建议
       if (result.recommendations && result.recommendations.length > 0) {
-        message += '💡 建议：\n';
+        message += '💡 操作建议：\n';
+        message += '------------------\n';
         result.recommendations.forEach((rec: string) => {
           message += `${rec}\n`;
         });
+      } else {
+        message += '🎉 所有检查通过！\n';
       }
 
       alert(message);

@@ -41,23 +41,51 @@ export async function POST(request: NextRequest) {
     // 1. 检查产品数据
     const dbProducts = await productManager.getProducts(user.id, { limit: 10000 });
     const dbProductCount = dbProducts.length;
-    const productsMatch = dbProductCount >= localProductCount;
+
+    // 判断产品数据是否匹配
+    let productsMatch = false;
+    let productsMessage = '';
+    if (dbProductCount === localProductCount) {
+      productsMatch = true;
+      productsMessage = '✅ 数据一致';
+    } else if (dbProductCount > localProductCount) {
+      productsMatch = true;
+      productsMessage = `✅ 数据库有更多数据 (${dbProductCount} > ${localProductCount})`;
+    } else {
+      productsMatch = false;
+      productsMessage = `⚠️ 本地有未同步数据 (${dbProductCount} < ${localProductCount})，需要重新同步到数据库`;
+    }
 
     console.log('产品数据验证:', {
       localStorage: localProductCount,
       database: dbProductCount,
       match: productsMatch,
+      message: productsMessage,
     });
 
     // 2. 检查价格历史
     const dbHistory = await priceHistoryManager.getHistoryByUserId(user.id, { limit: 10000 });
     const dbHistoryCount = dbHistory.length;
-    const historyMatch = dbHistoryCount >= localHistoryCount;
+
+    // 判断价格历史是否匹配
+    let historyMatch = false;
+    let historyMessage = '';
+    if (dbHistoryCount === localHistoryCount) {
+      historyMatch = true;
+      historyMessage = '✅ 数据一致';
+    } else if (dbHistoryCount > localHistoryCount) {
+      historyMatch = true;
+      historyMessage = `✅ 数据库有更多数据 (${dbHistoryCount} > ${localHistoryCount})`;
+    } else {
+      historyMatch = false;
+      historyMessage = `⚠️ 本地有未同步数据 (${dbHistoryCount} < ${localHistoryCount})，需要重新同步到数据库`;
+    }
 
     console.log('价格历史验证:', {
       localStorage: localHistoryCount,
       database: dbHistoryCount,
       match: historyMatch,
+      message: historyMessage,
     });
 
     // 3. 检查配置数据
@@ -155,6 +183,37 @@ export async function POST(request: NextRequest) {
       sampleProductsValid &&
       sampleHistoryValid;
 
+    // 生成建议
+    const recommendations = [];
+
+    if (!productsMatch) {
+      recommendations.push('💡 建议：点击"🔄 同步到数据库"按钮，将本地未同步的数据同步到数据库');
+    }
+
+    if (!historyMatch) {
+      recommendations.push('💡 建议：点击"🔄 同步到数据库"按钮，将本地未同步的历史记录同步到数据库');
+    }
+
+    if (!goldPriceMatch && hasGoldPrice) {
+      recommendations.push('💡 建议：重新同步数据以同步金价配置');
+    }
+
+    if (!coefficientsMatch && hasCoefficients) {
+      recommendations.push('💡 建议：重新同步数据以同步价格系数配置');
+    }
+
+    if (!sampleProductsValid) {
+      recommendations.push('⚠️ 警告：发现产品数据质量问题，请检查数据完整性');
+    }
+
+    if (!sampleHistoryValid) {
+      recommendations.push('⚠️ 警告：发现历史记录数据质量问题，请检查数据完整性');
+    }
+
+    if (allChecksPass) {
+      recommendations.push('🎉 所有数据验证通过，可以放心导出！');
+    }
+
     const verificationResult = {
       success: allChecksPass,
       overallStatus: allChecksPass ? '✅ 数据完整性验证通过' : '⚠️ 数据完整性验证未通过',
@@ -165,12 +224,14 @@ export async function POST(request: NextRequest) {
           databaseCount: dbProductCount,
           match: productsMatch,
           status: productsMatch ? '✅ 完整' : '⚠️ 数量不匹配',
+          message: productsMessage,
         },
         history: {
           localCount: localHistoryCount,
           databaseCount: dbHistoryCount,
           match: historyMatch,
           status: historyMatch ? '✅ 完整' : '⚠️ 数量不匹配',
+          message: historyMessage,
         },
         configs: {
           goldPrice: {
@@ -203,15 +264,7 @@ export async function POST(request: NextRequest) {
           },
         },
       },
-      recommendations: generateRecommendations({
-        productsMatch,
-        historyMatch,
-        goldPriceMatch,
-        coefficientsMatch,
-        dataVersionMatch,
-        sampleProductsValid,
-        sampleHistoryValid,
-      }),
+      recommendations: recommendations,
     };
 
     console.log('✅ 数据完整性验证完成:', verificationResult.overallStatus);
@@ -224,42 +277,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function generateRecommendations(checks: any): string[] {
-  const recommendations: string[] = [];
-
-  if (!checks.productsMatch) {
-    recommendations.push('📦 产品数量不匹配，请重新同步数据');
-  }
-
-  if (!checks.historyMatch) {
-    recommendations.push('📈 价格历史数量不匹配，请重新同步数据');
-  }
-
-  if (!checks.goldPriceMatch) {
-    recommendations.push('💰 金价配置未同步，请重新同步数据');
-  }
-
-  if (!checks.coefficientsMatch) {
-    recommendations.push('⚙️  价格系数配置未同步，请重新同步数据');
-  }
-
-  if (!checks.dataVersionMatch) {
-    recommendations.push('🔢 数据版本号未同步，请重新同步数据');
-  }
-
-  if (!checks.sampleProductsValid) {
-    recommendations.push('⚠️ 部分产品数据存在字段缺失，建议检查原始数据');
-  }
-
-  if (!checks.sampleHistoryValid) {
-    recommendations.push('⚠️ 部分历史记录存在字段缺失，建议检查原始数据');
-  }
-
-  if (recommendations.length === 0) {
-    recommendations.push('✅ 所有数据完整，可以放心使用备份导出功能');
-  }
-
-  return recommendations;
 }
