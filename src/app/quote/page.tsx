@@ -343,6 +343,9 @@ function QuotePage() {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportBackupFormat, setExportBackupFormat] = useState<"excel" | "json">("excel");
 
+  // 数据同步相关状态
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
@@ -2180,6 +2183,72 @@ function QuotePage() {
     }
   };
 
+  // 同步本地数据到数据库
+  const syncToDatabase = async () => {
+    if (!confirm('确定要将本地数据同步到数据库吗？\n\n这将把浏览器中的产品、价格历史和配置上传到数据库，之后就可以使用"导出备份"功能了。')) {
+      return;
+    }
+
+    setIsSyncing(true);
+
+    try {
+      // 从 localStorage 获取数据
+      const localProducts = localStorage.getItem('goldProducts');
+      const localHistory = localStorage.getItem('goldPriceHistory');
+      const localGoldPrice = localStorage.getItem('goldPrice');
+      const localGoldPriceTimestamp = localStorage.getItem('goldPriceTimestamp');
+      const localCoefficients = localStorage.getItem('priceCoefficients');
+
+      if (!localProducts && !localHistory && !localGoldPrice) {
+        alert('本地没有数据，无需同步。');
+        setIsSyncing(false);
+        return;
+      }
+
+      // 准备同步数据
+      const syncData = {
+        products: localProducts ? JSON.parse(localProducts) : [],
+        priceHistory: localHistory ? JSON.parse(localHistory) : [],
+        configs: {
+          goldPrice: localGoldPrice,
+          goldPriceTimestamp: localGoldPriceTimestamp,
+          priceCoefficients: localCoefficients ? JSON.parse(localCoefficients) : null,
+        },
+      };
+
+      // 调用同步 API
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(syncData),
+      });
+
+      if (!response.ok) {
+        throw new Error('同步失败');
+      }
+
+      const result = await response.json();
+
+      // 显示同步结果
+      let message = '✅ 数据同步成功！\n\n';
+      message += `📦 同步产品: ${result.stats.syncedProducts} 个\n`;
+      message += `📈 同步历史记录: ${result.stats.syncedHistory} 条\n`;
+      message += `⚙️  同步配置: ${result.stats.syncedConfigs} 项\n\n`;
+      message += '现在可以使用"导出备份"功能了！';
+
+      alert(message);
+    } catch (error) {
+      console.error('同步失败:', error);
+      alert('同步失败，请重试。\n\n如果问题持续存在，请检查网络连接或联系管理员。');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // 删除产品（同时删除相关的历史记录）
   const deleteProduct = (id: string) => {
     // 从产品列表中删除
@@ -3611,6 +3680,27 @@ function QuotePage() {
                     <span>导出数据备份（含产品、历史、配置）</span>
                     <span className="text-purple-600 font-bold">✨ 新功能</span>
                   </div>
+
+                  {/* 同步提示 */}
+                  {products.length > 0 && (
+                    <div className="mb-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs">
+                      <p className="text-yellow-800">
+                        💡 提示：如果导出数据为空，请先点击"同步到数据库"
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={syncToDatabase}
+                      disabled={isSyncing}
+                      className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      suppressHydrationWarning
+                    >
+                      {isSyncing ? '同步中...' : '🔄 同步到数据库'}
+                    </button>
+                  </div>
+
                   <div className="flex gap-2">
                     <select
                       value={exportBackupFormat}
