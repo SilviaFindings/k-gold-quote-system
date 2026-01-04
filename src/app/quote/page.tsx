@@ -578,6 +578,34 @@ function QuotePage() {
   const [showSyncMenu, setShowSyncMenu] = useState<boolean>(false);
   const [cloudDataExists, setCloudDataExists] = useState<boolean>(false);
 
+  // 调试信息状态
+  const [debugInfo, setDebugInfo] = useState<{
+    localProducts: number;
+    localHistory: number;
+    uploadProducts: number;
+    uploadHistory: number;
+    lastUpload: string;
+  }>({
+    localProducts: 0,
+    localHistory: 0,
+    uploadProducts: 0,
+    uploadHistory: 0,
+    lastUpload: '',
+  });
+
+  // 更新调试信息
+  const updateDebugInfo = () => {
+    const localProducts = localStorage.getItem('goldProducts');
+    const localHistory = localStorage.getItem('goldPriceHistory');
+    setDebugInfo({
+      localProducts: localProducts ? JSON.parse(localProducts).length : 0,
+      localHistory: localHistory ? JSON.parse(localHistory).length : 0,
+      uploadProducts: 0,
+      uploadHistory: 0,
+      lastUpload: new Date().toLocaleTimeString(),
+    });
+  };
+
   // 价格系数配置
   const [coefficients, setCoefficients] = useState<{
     goldFactor10K: number;
@@ -1065,6 +1093,9 @@ function QuotePage() {
     }
 
     console.log("========== 数据加载完成 ==========");
+
+    // 更新调试信息
+    setTimeout(updateDebugInfo, 500);
   }, []);
 
   // ========== 云端数据同步逻辑 ==========
@@ -1419,6 +1450,15 @@ function QuotePage() {
         dataVersion: syncData.configs.dataVersion,
         productsSource: localProducts ? "localStorage" : "state",
         historySource: localHistory ? "localStorage" : "state",
+      });
+
+      // 更新调试信息
+      setDebugInfo({
+        localProducts: syncData.products.length,
+        localHistory: syncData.priceHistory.length,
+        uploadProducts: syncData.products.length,
+        uploadHistory: syncData.priceHistory.length,
+        lastUpload: new Date().toLocaleTimeString(),
       });
 
       const response = await fetch("/api/sync", {
@@ -4237,6 +4277,23 @@ function QuotePage() {
                   上次同步: {lastSyncTime}
                 </div>
               )}
+            </div>
+
+            {/* 调试信息面板 */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
+              <button
+                onClick={updateDebugInfo}
+                className="text-yellow-700 hover:text-yellow-900 font-medium"
+                suppressHydrationWarning
+              >
+                🔍 刷新数据
+              </button>
+              <span className="text-gray-600">
+                | 本地产品: <strong>{debugInfo.localProducts}</strong> 个
+                | 本地历史: <strong>{debugInfo.localHistory}</strong> 条
+                | 上传: <strong>{debugInfo.uploadProducts}</strong> 个
+                {debugInfo.lastUpload && ` (${debugInfo.lastUpload})`}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
