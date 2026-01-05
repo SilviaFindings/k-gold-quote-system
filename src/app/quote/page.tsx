@@ -4892,11 +4892,9 @@ function QuotePage() {
                       </button>
 
                       <button
-                        onClick={async () => {
-                          if (confirm("⚠️ 危险操作：确定要清空所有云端数据吗？\n\n此操作不可恢复，将删除：\n• 所有产品数据\n• 所有价格历史\n• 所有配置数据\n\n确定要继续吗？")) {
-                            setShowSyncMenu(false);
-                            await cleanAllCloudData();
-                          }
+                        onClick={() => {
+                          setShowSyncMenu(false);
+                          cleanAllCloudData();
                         }}
                         className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                         disabled={syncStatus === "syncing"}
