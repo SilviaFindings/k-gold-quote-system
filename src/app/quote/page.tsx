@@ -748,6 +748,57 @@ function QuotePage() {
     return { supplierCode, cleanedCode };
   };
 
+  // 从Excel中的金子颜色列解析颜色
+  // 支持格式：KR、KR（玫瑰金）、KY、KY（黄金）、KW、KW（白金）、KR/KY、KR（玫瑰金）/KY（黄金）等
+  const parseGoldColorFromExcel = (goldColorRaw: string): "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金" | null => {
+    if (!goldColorRaw || goldColorRaw.trim() === "") {
+      return null;
+    }
+
+    const colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
+    const text = goldColorRaw.toUpperCase();
+
+    // 检查 KR（玫瑰金）
+    if (text.includes("KR")) {
+      colors.add("玫瑰金");
+    }
+
+    // 检查 KY（黄金）
+    if (text.includes("KY")) {
+      colors.add("黄金");
+    }
+
+    // 检查 KW（白金）
+    if (text.includes("KW")) {
+      colors.add("白金");
+    }
+
+    // 如果没有识别到任何颜色，返回 null
+    if (colors.size === 0) {
+      console.log(`[金子颜色解析] 无法识别颜色: "${goldColorRaw}"`);
+      return null;
+    }
+
+    // 处理多材质情况
+    if (colors.size > 1) {
+      const colorArray = Array.from(colors);
+      if (colorArray.includes("黄金") && colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return "黄金/白金/玫瑰金";
+      } else if (colorArray.includes("黄金") && colorArray.includes("白金")) {
+        return "黄金/白金";
+      } else if (colorArray.includes("黄金") && colorArray.includes("玫瑰金")) {
+        return "黄金/玫瑰金";
+      } else if (colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return "白金/玫瑰金";
+      }
+    }
+
+    // 返回单个颜色
+    const singleColor = Array.from(colors)[0];
+    console.log(`[金子颜色解析] "${goldColorRaw}" -> ${singleColor}`);
+    return singleColor;
+  };
+
   // 从货号智能识别K金材质类型（支持多材质识别）
   const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金" } => {
     const code = productCode.toUpperCase();
@@ -3415,6 +3466,7 @@ function QuotePage() {
         const weightIndex = findColumnIndex("重量", "重量(g)", "重量(克)", "净重");
         const laborCostIndex = findColumnIndex("工费", "工费", "人工费", "加工费", "手工费");
         const karatIndex = findColumnIndex("成色", "成色", "K金", "材质");
+        const goldColorIndex = findColumnIndex("金子颜色", "金子颜色", "颜色", "材质颜色");
         const accessoryCostIndex = findColumnIndex("配件成本", "配件成本", "配件");
         const stoneCostIndex = findColumnIndex("石头成本", "石头成本", "石头");
         const platingCostIndex = findColumnIndex("电镀成本", "电镀成本", "电镀");
@@ -3618,6 +3670,19 @@ function QuotePage() {
             (["10K", "14K", "18K", "K10", "K14", "K18"].includes(String(karatRaw).trim().toUpperCase()));
           const karat = isExcelKaratValid ? validKarat : detectedMaterial.karat;
 
+          // 读取金子颜色：优先使用Excel中的金子颜色，如果没有则默认"黄金"
+          const goldColorRaw = goldColorIndex !== -1 ? String(row[goldColorIndex]) : "";
+          const excelGoldColor = goldColorRaw ? parseGoldColorFromExcel(goldColorRaw) : null;
+          const goldColor = excelGoldColor !== null ? excelGoldColor : "黄金";
+
+          if (excelGoldColor !== null) {
+            console.log(`[导入调试] Excel金子颜色: "${goldColorRaw}" -> ${excelGoldColor}`);
+          } else if (goldColorRaw && goldColorRaw.trim() !== "") {
+            console.log(`[导入调试] Excel金子颜色无法识别: "${goldColorRaw}"，使用默认值"黄金"`);
+          } else {
+            console.log(`[导入调试] Excel中没有金子颜色，使用默认值"黄金"`);
+          }
+
           const wholesalePrice = calculatePrice(
             goldPrice,
             weight,
@@ -3664,7 +3729,7 @@ function QuotePage() {
             weight,
             laborCost,
             karat: karat,
-            goldColor: detectedMaterial.goldColor,
+            goldColor: goldColor,
             wholesalePrice,
             retailPrice,
             goldPrice,
@@ -3699,7 +3764,7 @@ function QuotePage() {
             weight: newProduct.weight,
             laborCost: newProduct.laborCost,
             karat: newProduct.karat,
-            goldColor: "黄金",
+            goldColor: newProduct.goldColor,
             goldPrice,
             wholesalePrice,
             retailPrice,
