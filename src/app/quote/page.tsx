@@ -616,22 +616,14 @@ function QuotePage() {
     goldFactor18K: number;
     laborFactorRetail: number;
     laborFactorWholesale: number;
-    laborFactorRetailMode: "fixed" | "special";
-    laborFactorWholesaleMode: "fixed" | "special";
     materialLoss: number;
     materialCost: number;
     profitMargin: number;
     exchangeRate: number;
-    // 系数模式：fixed（固定）或 special（特殊）
-    materialLossMode: "fixed" | "special";
-    materialCostMode: "fixed" | "special";
-    profitMarginMode: "fixed" | "special";
     // 汇率相关
     usdExchangeRate: number;  // 美金汇率（加币 x 汇率 = 美金）
-    usdExchangeRateMode: "fixed" | "special";  // 汇率模式
     // 佣金相关
     commissionRate: number;  // 佣金率（默认10%）
-    commissionRateMode: "fixed" | "special";  // 佣金率模式
   }>(() => {
     if (typeof window === 'undefined') {
       return {
@@ -640,19 +632,12 @@ function QuotePage() {
         goldFactor18K: 0.755,
         laborFactorRetail: 5,
         laborFactorWholesale: 3,
-        laborFactorRetailMode: "fixed",
-        laborFactorWholesaleMode: "fixed",
         materialLoss: 1.15,
         materialCost: 1.1,
         profitMargin: 1.25,
         exchangeRate: 5,
-        materialLossMode: "fixed",
-        materialCostMode: "fixed",
-        profitMarginMode: "fixed",
         usdExchangeRate: 0.8,  // 默认美金汇率：加币 x 0.8 = 美金
-        usdExchangeRateMode: "fixed",
         commissionRate: 10,  // 默认佣金率：10%
-        commissionRateMode: "fixed",
       };
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
@@ -665,19 +650,12 @@ function QuotePage() {
         goldFactor18K: parsed.goldFactor18K ?? 0.755,
         laborFactorRetail: parsed.laborFactorRetail ?? 5,
         laborFactorWholesale: parsed.laborFactorWholesale ?? 3,
-        laborFactorRetailMode: parsed.laborFactorRetailMode ?? "fixed",
-        laborFactorWholesaleMode: parsed.laborFactorWholesaleMode ?? "fixed",
         materialLoss: parsed.materialLoss ?? 1.15,
         materialCost: parsed.materialCost ?? 1.1,
         profitMargin: parsed.profitMargin ?? 1.25,
         exchangeRate: parsed.exchangeRate ?? 5,
-        materialLossMode: parsed.materialLossMode ?? "fixed",
-        materialCostMode: parsed.materialCostMode ?? "fixed",
-        profitMarginMode: parsed.profitMarginMode ?? "fixed",
         usdExchangeRate: parsed.usdExchangeRate ?? 0.8,
-        usdExchangeRateMode: parsed.usdExchangeRateMode ?? "fixed",
         commissionRate: parsed.commissionRate ?? 10,
-        commissionRateMode: parsed.commissionRateMode ?? "fixed",
       };
     }
     return {
@@ -686,19 +664,12 @@ function QuotePage() {
       goldFactor18K: 0.755,
       laborFactorRetail: 5,
       laborFactorWholesale: 3,
-      laborFactorRetailMode: "fixed",
-      laborFactorWholesaleMode: "fixed",
       materialLoss: 1.15,
       materialCost: 1.1,
       profitMargin: 1.25,
       exchangeRate: 5,
-      materialLossMode: "fixed",
-      materialCostMode: "fixed",
-      profitMarginMode: "fixed",
       usdExchangeRate: 0.8,
-      usdExchangeRateMode: "fixed",
       commissionRate: 10,
-      commissionRateMode: "fixed",
     };
   });
 
@@ -5253,20 +5224,9 @@ function QuotePage() {
 
             {/* 工费系数 */}
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-black">
-                  零售价工费系数
-                </label>
-                <select
-                  value={coefficients.laborFactorRetailMode}
-                  onChange={(e) => setCoefficients({...coefficients, laborFactorRetailMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                零售价工费系数
+              </label>
               <input
                 type="number"
                 value={coefficients.laborFactorRetail}
@@ -5275,23 +5235,12 @@ function QuotePage() {
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 5 {coefficients.laborFactorRetailMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 5</div>
             </div>
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-black">
-                  批发价工费系数
-                </label>
-                <select
-                  value={coefficients.laborFactorWholesaleMode}
-                  onChange={(e) => setCoefficients({...coefficients, laborFactorWholesaleMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                批发价工费系数
+              </label>
               <input
                 type="number"
                 value={coefficients.laborFactorWholesale}
@@ -5300,25 +5249,14 @@ function QuotePage() {
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 3 {coefficients.laborFactorWholesaleMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 3</div>
             </div>
 
             {/* 材料系数 */}
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="block text-sm font-medium text-black">
-                  材料损耗系数
-                </label>
-                <select
-                  value={coefficients.materialLossMode}
-                  onChange={(e) => setCoefficients({...coefficients, materialLossMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材料损耗系数
+              </label>
               <input
                 type="number"
                 value={coefficients.materialLoss}
@@ -5327,23 +5265,12 @@ function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 1.15 {coefficients.materialLossMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.15</div>
             </div>
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-black">
-                  材料浮动系数
-                </label>
-                <select
-                  value={coefficients.materialCostMode}
-                  onChange={(e) => setCoefficients({...coefficients, materialCostMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材料浮动系数
+              </label>
               <input
                 type="number"
                 value={coefficients.materialCost}
@@ -5352,25 +5279,14 @@ function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 1.1 {coefficients.materialCostMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.1</div>
             </div>
 
             {/* 利润和汇率 */}
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-black">
-                  国际运输及关税系数
-                </label>
-                <select
-                  value={coefficients.profitMarginMode}
-                  onChange={(e) => setCoefficients({...coefficients, profitMarginMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                国际运输及关税系数
+              </label>
               <input
                 type="number"
                 value={coefficients.profitMargin}
@@ -5379,7 +5295,7 @@ function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 1.25 {coefficients.profitMarginMode === "special" && "(可被产品特殊系数覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 1.25</div>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
@@ -5396,20 +5312,9 @@ function QuotePage() {
               <div className="mt-1 text-xs text-black">默认: 5</div>
             </div>
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-black">
-                  美金汇率（US201订单：加币×汇率=美金）
-                </label>
-                <select
-                  value={coefficients.usdExchangeRateMode}
-                  onChange={(e) => setCoefficients({...coefficients, usdExchangeRateMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                美金汇率（加币×汇率=美金）
+              </label>
               <input
                 type="number"
                 value={coefficients.usdExchangeRate}
@@ -5418,23 +5323,12 @@ function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 0.8 {coefficients.usdExchangeRateMode === "special" && "(可被产品特殊汇率覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 0.8</div>
             </div>
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <label className="mb-2 block text-sm font-medium text-black">
-                  佣金率（佣金=工费×佣金率）
-                </label>
-                <select
-                  value={coefficients.commissionRateMode}
-                  onChange={(e) => setCoefficients({...coefficients, commissionRateMode: e.target.value as "fixed" | "special"})}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs text-black"
-                  suppressHydrationWarning
-                >
-                  <option value="fixed">固定</option>
-                  <option value="special">特殊</option>
-                </select>
-              </div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                佣金率（佣金=工费×佣金率）
+              </label>
               <input
                 type="number"
                 value={coefficients.commissionRate}
@@ -5443,7 +5337,7 @@ function QuotePage() {
                 step="0.1"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 10% {coefficients.commissionRateMode === "special" && "(可被产品特殊佣金率覆盖)"}</div>
+              <div className="mt-1 text-xs text-black">默认: 10%</div>
             </div>
           </div>
         </div>
@@ -5701,7 +5595,7 @@ function QuotePage() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-black">
-                      特殊美金汇率（US201订单）
+                      特殊美金汇率
                     </label>
                     <input
                       type="number"
