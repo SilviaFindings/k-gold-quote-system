@@ -7935,6 +7935,97 @@ function QuotePage() {
                     </div>
                   </div>
                 </section>
+
+                {/* Git 版本管理（开发人员） */}
+                <section>
+                  <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-gray-700 text-white rounded-full flex items-center justify-center text-sm">8</span>
+                    Git 版本管理（开发人员）
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-bold text-black mb-2">💻 什么是 Git？</h4>
+                      <p className="text-sm text-black">
+                        Git 是版本控制系统，用于管理代码的版本历史。本项目的代码托管在 GitHub，需要使用 Git 进行提交和推送。
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">📝 本地提交代码</h4>
+                      <p className="text-sm text-black mb-2">完成代码修改后，使用以下命令提交到本地仓库：</p>
+                      <div className="bg-gray-900 text-green-400 p-3 rounded text-xs font-mono overflow-x-auto">
+                        <div>git add .</div>
+                        <div>git commit -m "描述你的修改"</div>
+                      </div>
+                      <p className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        注意：commit 信息应该简洁明了，例如："修复了分类识别问题" 或 "添加了批量导入功能"
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🚀 推送到 GitHub</h4>
+                      <p className="text-sm text-black mb-2">将本地提交推送到 GitHub 远程仓库：</p>
+                      <div className="bg-gray-900 text-green-400 p-3 rounded text-xs font-mono overflow-x-auto mb-2">
+                        <div>git push</div>
+                      </div>
+                      <p className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        推送时会提示输入 GitHub 用户名和 Personal Access Token（不是密码）
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔑 创建 Personal Access Token</h4>
+                      <p className="text-sm text-black mb-2">第一次推送前需要创建 Token：</p>
+                      <div className="text-xs text-black bg-gray-50 p-3 rounded space-y-2">
+                        <p><strong>步骤 1：</strong>访问 GitHub Settings → Developer settings → Personal access tokens</p>
+                        <p><strong>步骤 2：</strong>点击 Generate new token (classic)</p>
+                        <p><strong>步骤 3：</strong>勾选权限 <code>repo</code>（完整仓库访问权限）</p>
+                        <p><strong>步骤 4：</strong>生成后立即复制保存（只显示一次）</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔄 拉取远程更新</h4>
+                      <p className="text-sm text-black mb-2">如果远程有新提交，需要先拉取再推送：</p>
+                      <div className="bg-gray-900 text-green-400 p-3 rounded text-xs font-mono overflow-x-auto">
+                        <div>git pull</div>
+                        <div>git push</div>
+                      </div>
+                      <p className="text-xs text-black bg-amber-50 p-2 rounded mt-2">
+                        ⚠️ 如果出现冲突，Git 会自动合并。如果有冲突，需要手动解决后再提交
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">💻 Windows 用户在本地执行</h4>
+                      <p className="text-sm text-black mb-2">在本地电脑上执行 Git 命令：</p>
+                      <div className="text-xs text-black bg-gray-50 p-3 rounded space-y-2">
+                        <p><strong>1.</strong> 打开命令提示符（按 Win+R，输入 <code>cmd</code>，回车）</p>
+                        <p><strong>2.</strong> 进入项目目录：<code>cd 你的项目路径</code></p>
+                        <p><strong>3.</strong> 执行 Git 命令：<code>git push</code></p>
+                        <p><strong>4.</strong> 输入用户名和 Token</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">💻 Mac / Linux 用户在本地执行</h4>
+                      <p className="text-sm text-black mb-2">在本地电脑上执行 Git 命令：</p>
+                      <div className="text-xs text-black bg-gray-50 p-3 rounded space-y-2">
+                        <p><strong>1.</strong> 打开终端（Terminal）</p>
+                        <p><strong>2.</strong> 进入项目目录：<code>cd 你的项目路径</code></p>
+                        <p><strong>3.</strong> 执行 Git 命令：<code>git push</code></p>
+                        <p><strong>4.</strong> 输入用户名和 Token</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔐 安全提示</h4>
+                      <p className="text-xs text-black bg-red-50 p-2 rounded mt-2">
+                        ⚠️ Personal Access Token 是敏感信息，不要分享给他人。如果 Token 泄露，请立即在 GitHub 上删除并创建新的 Token。
+                      </p>
+                    </div>
+                  </div>
+                </section>
               </div>
             </div>
 
