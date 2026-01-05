@@ -165,7 +165,17 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => router.push("/forgot-password")}
+                className="block w-full text-sm text-indigo-600 hover:text-indigo-500"
+                suppressHydrationWarning
+              >
+                忘记密码？
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {
