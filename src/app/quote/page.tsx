@@ -3166,6 +3166,9 @@ function QuotePage() {
 
       alert(message);
 
+      // 同步成功后，更新调试信息
+      updateDebugInfo();
+
       // 同步成功后，自动重新验证数据完整性
       console.log('🔄 同步完成后自动验证数据完整性...');
       setTimeout(async () => {
@@ -3971,6 +3974,11 @@ function QuotePage() {
     reader.readAsArrayBuffer(file);
   };
 
+  // 诊断数据库状态（别名函数）
+  const diagnoseDatabase = async () => {
+    await diagnoseData();
+  };
+
   // 诊断数据库状态
   const diagnoseData = async () => {
     setIsVerifying(true);
@@ -4646,6 +4654,15 @@ function QuotePage() {
           </h1>
 
           <div className="flex items-center gap-3">
+            {/* 操作指引按钮 */}
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+              suppressHydrationWarning
+            >
+              📚 操作指引
+            </button>
+
             {/* 测试按钮（仅在开发环境显示） */}
             <button
               onClick={addTestData}
@@ -4770,6 +4787,25 @@ function QuotePage() {
                         <span className="text-sm text-gray-700">自动同步（数据变更时）</span>
                       </label>
                     </div>
+
+                    {/* 同步信息显示 */}
+                    <div className="px-4 pt-2 border-t border-gray-200 bg-gray-50">
+                      <div className="text-xs font-medium text-gray-700 mb-2">同步信息</div>
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">本地产品:</span>
+                          <span className="font-medium text-black">{debugInfo.localProducts}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">历史记录:</span>
+                          <span className="font-medium text-black">{debugInfo.localHistory}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">最后同步:</span>
+                          <span className="font-medium text-black">{debugInfo.lastUpload}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -4802,6 +4838,57 @@ function QuotePage() {
               退出登录
             </button>
           </div>
+        </div>
+
+        {/* 调试信息面板 */}
+        <div className="mb-6 bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-black mb-3">📊 系统状态</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="bg-blue-50 rounded p-3">
+              <div className="text-blue-600 font-medium">本地产品数</div>
+              <div className="text-2xl font-bold text-black">{debugInfo.localProducts}</div>
+            </div>
+            <div className="bg-green-50 rounded p-3">
+              <div className="text-green-600 font-medium">历史记录数</div>
+              <div className="text-2xl font-bold text-black">{debugInfo.localHistory}</div>
+            </div>
+            <div className="bg-purple-50 rounded p-3">
+              <div className="text-purple-600 font-medium">云端产品数</div>
+              <div className="text-2xl font-bold text-black">{debugInfo.uploadProducts}</div>
+            </div>
+            <div className="bg-orange-50 rounded p-3">
+              <div className="text-orange-600 font-medium">最后同步</div>
+              <div className="text-sm font-medium text-black">{debugInfo.lastUpload}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 诊断修复工具 */}
+        <div className="mb-6 bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-black mb-3">🔧 诊断修复工具</h3>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={diagnoseDatabase}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+              suppressHydrationWarning
+            >
+              🔍 诊断数据
+            </button>
+            <button
+              onClick={verifyDataIntegrity}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"
+              disabled={isVerifying}
+              suppressHydrationWarning
+            >
+              {isVerifying ? '⏳ 验证中...' : '✅ 验证数据'}
+            </button>
+          </div>
+          {verificationResult && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold text-black mb-2">验证结果</h4>
+              <pre className="text-sm text-black whitespace-pre-wrap">{verificationResult}</pre>
+            </div>
+          )}
         </div>
 
         {/* 数据问题提示 */}
