@@ -4669,7 +4669,7 @@ function QuotePage() {
             {/* 测试按钮（仅在开发环境显示） */}
             <button
               onClick={addTestData}
-              className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
             >
               🧪 测试
             </button>
