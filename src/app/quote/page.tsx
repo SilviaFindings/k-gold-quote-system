@@ -687,7 +687,7 @@ function QuotePage() {
   // 从货号中提取供应商代码（支持前缀和后缀）
   // 前缀格式：E1-KEW001/18K -> E1
   // 后缀格式：KEW001/K18-J5 -> J5
-  const extractSupplierCodeFromCode = (productCode: string): { supplierCode: string, cleanedCode: string } => {
+  const extractSupplierCodeFromCode = (productCode: string, defaultKarat: string): { supplierCode: string, cleanedCode: string } => {
     const code = String(productCode).trim().toUpperCase();
     let supplierCode = "";
     let cleanedCode = code;
@@ -714,23 +714,28 @@ function QuotePage() {
     }
 
     // 3. 检查另一种后缀格式（没有斜杠的材质代码）
-    // 例如：KEW001-10KR-J5 -> 提取 J5，清理后为 KEW001-10KR
+    // 例如：KEW001-10KR-J5 -> 提取 J5，清理后为 KEW001/10KR（横杠替换为斜杠）
     const suffixMatch2 = code.match(/(.+)-(10KR?|14KR?|18KR?)-([A-Z0-9]{1,5})$/);
     if (suffixMatch2) {
       supplierCode = suffixMatch2[3];
-      cleanedCode = suffixMatch2[1] + '-' + suffixMatch2[2];
+      cleanedCode = suffixMatch2[1] + '/' + suffixMatch2[2];
       console.log(`[供应商代码提取] 后缀供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
       return { supplierCode, cleanedCode };
     }
 
     // 4. 检查末尾简单的 -供应商代码 格式（没有材质代码）
-    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250
-    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H
-    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A
+    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250/K18（默认材质为18K时）
+    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H/K18（默认材质为18K时）
+    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A/K18（默认材质为18K时）
+    // 如果默认材质不是18K，则不添加材质后缀
     const suffixMatch3 = code.match(/(.+)-([A-Z][0-9]|[A-Z]{1,2})$/);
     if (suffixMatch3) {
       supplierCode = suffixMatch3[2];
       cleanedCode = suffixMatch3[1];
+      // 如果默认材质是18K，则添加材质后缀
+      if (defaultKarat === '18K') {
+        cleanedCode = cleanedCode + '/K18';
+      }
       console.log(`[供应商代码提取] 末尾供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
       return { supplierCode, cleanedCode };
     }
@@ -3462,7 +3467,7 @@ function QuotePage() {
           }
 
           // 🔥 从货号中提取供应商代码并清理货号（必须在调试日志之前）
-          const { supplierCode: extractedSupplierCode, cleanedCode: cleanedProductCode } = extractSupplierCodeFromCode(String(productCode));
+          const { supplierCode: extractedSupplierCode, cleanedCode: cleanedProductCode } = extractSupplierCodeFromCode(String(productCode), defaultKarat);
           
           console.log(`[货号处理] 原始货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 清理后货号: ${cleanedProductCode}`);
 
