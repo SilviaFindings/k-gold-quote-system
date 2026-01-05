@@ -3374,7 +3374,7 @@ function QuotePage() {
   const clearAllData = async () => {
     // 先弹出密码验证模态框
     setClearActionType("cloud");
-    setPendingClearAction(() => clearAllDataInternal);
+    setPendingClearAction(clearAllDataInternal);
     setPasswordInput("");
     setPasswordError("");
     setShowPasswordModal(true);
@@ -3469,7 +3469,7 @@ function QuotePage() {
   const clearLocalData = async () => {
     // 先弹出密码验证模态框
     setClearActionType("local");
-    setPendingClearAction(() => clearLocalDataInternal);
+    setPendingClearAction(clearLocalDataInternal);
     setPasswordInput("");
     setPasswordError("");
     setShowPasswordModal(true);
@@ -8636,8 +8636,8 @@ function QuotePage() {
               </button>
               <button
                 onClick={() => {
-                  if (passwordInput.length !== 6) {
-                    setPasswordError("请输入6位数字密码");
+                  if (passwordInput.length === 0) {
+                    setPasswordError("请输入密码");
                     return;
                   }
 
