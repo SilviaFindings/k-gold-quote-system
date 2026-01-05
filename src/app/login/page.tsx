@@ -54,23 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <style jsx global>{`
-        input[type="password"]::-webkit-input-placeholder {
-          color: #9ca3af !important;
-        }
-        input[type="password"]::placeholder {
-          color: #9ca3af !important;
-        }
-        input[type="password"] {
-          color: #000000 !important;
-          -webkit-text-fill-color: #000000 !important;
-        }
-        input[type="password"]::-ms-reveal {
-          filter: invert(1);
-        }
-      `}</style>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -145,15 +129,9 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="密码"
                 suppressHydrationWarning
-                style={{
-                  color: '#000000 !important',
-                  WebkitTextFillColor: '#000000 !important',
-                  caretColor: '#000000',
-                  opacity: 1
-                }}
               />
             </div>
           </div>
@@ -186,7 +164,6 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
