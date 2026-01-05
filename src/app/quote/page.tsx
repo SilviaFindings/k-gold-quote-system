@@ -493,7 +493,7 @@ function QuotePage() {
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
-  const [pendingClearAction, setPendingClearAction] = useState<(() => void) | null>(null);
+  const [pendingClearAction, setPendingClearAction] = useState<(() => Promise<void> | void) | null>(null);
   const [clearActionType, setClearActionType] = useState<"local" | "cloud">("local");
 
   // 批量更新供应商代码相关状态
@@ -7681,7 +7681,13 @@ function QuotePage() {
                     setShowPasswordModal(false);
                     // 执行待处理的清空操作
                     if (pendingClearAction) {
-                      pendingClearAction();
+                      const result = pendingClearAction();
+                      // 如果是 Promise，等待它完成
+                      if (result instanceof Promise) {
+                        result.catch((err) => {
+                          console.error('执行清空操作失败:', err);
+                        });
+                      }
                       setPendingClearAction(null);
                     }
                   }
@@ -8648,7 +8654,13 @@ function QuotePage() {
                     setShowPasswordModal(false);
                     setPasswordInput("");
                     setPasswordError("");
-                    pendingClearAction();
+                    const result = pendingClearAction();
+                    // 如果是 Promise，等待它完成
+                    if (result instanceof Promise) {
+                      result.catch((err) => {
+                        console.error('执行清空操作失败:', err);
+                      });
+                    }
                     setPendingClearAction(null);
                   }
                 }}
