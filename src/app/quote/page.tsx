@@ -6454,94 +6454,96 @@ function QuotePage() {
               </div>
             </div>
 
-            {/* 数据诊断按钮 */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-black">数据诊断：</span>
-              {(() => {
-                const emptyCategoryCount = products.filter(p => !p.category || (p.category as string).trim() === "").length;
-                const diagnoseSubCategories = () => {
-                  const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
-                  products.forEach(product => {
-                    if (!product.subCategory) return;
-                    const cat = product.category as ProductCategory;
-                    const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
-                    if (!validSubCats.includes(product.subCategory)) {
-                      if (!diagnosis[product.subCategory]) {
-                        diagnosis[product.subCategory] = [];
-                      }
-                      diagnosis[product.subCategory].push({ product, suggested: "" });
-                    }
-                  });
-                  return Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
-                };
-                const subCategoryErrorCount = diagnoseSubCategories();
-                const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
-                const hasIssues = emptyCategoryCount > 0 || subCategoryErrorCount > 0 || emptyOrderChannelCount > 0;
-                
-                return (
-                  <>
-                    <button
-                      onClick={() => setExpandedWarning(expandedWarning === "emptyCategory" ? null : "emptyCategory")}
-                      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                        emptyCategoryCount > 0
-                          ? "bg-red-600 text-white hover:bg-red-700"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                      suppressHydrationWarning
-                    >
-                      缺少分类 ({emptyCategoryCount})
-                    </button>
-                    <button
-                      onClick={() => setExpandedWarning(expandedWarning === "subCategoryError" ? null : "subCategoryError")}
-                      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                        subCategoryErrorCount > 0
-                          ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                      suppressHydrationWarning
-                    >
-                      子分类错误 ({subCategoryErrorCount})
-                    </button>
-                    <button
-                      onClick={() => setExpandedWarning(expandedWarning === "emptyOrderChannel" ? null : "emptyOrderChannel")}
-                      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                        emptyOrderChannelCount > 0
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                      suppressHydrationWarning
-                    >
-                      缺少下单口 ({emptyOrderChannelCount})
-                    </button>
-                    {hasIssues && (
-                      <button
-                        onClick={() => {
-                          fixEmptyCategories();
-                          fixSubCategoryErrors();
-                          fixEmptyOrderChannels();
-                        }}
-                        className="ml-2 px-4 py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 transition-colors"
-                        suppressHydrationWarning
-                      >
-                        ✨ 一键全部修正
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-
             <div
               ref={tableContainerRef}
               className="overflow-x-auto"
               style={{ maxHeight: '70vh' }}
               onScroll={handleTableScroll}
             >
-              <table 
+              <table
                 className="border-collapse border border-gray-200 text-sm sticky-header-table"
                 style={{ minWidth: '100%', tableLayout: 'auto' }}
               >
                 <thead className="bg-gray-100 sticky top-0 z-10" style={{ position: 'sticky' }}>
+                  <tr>
+                    <th colSpan={20} className="border border-gray-200 px-3 py-2 bg-gray-50">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-black">数据诊断：</span>
+                        {(() => {
+                          const emptyCategoryCount = products.filter(p => !p.category || (p.category as string).trim() === "").length;
+                          const diagnoseSubCategories = () => {
+                            const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
+                            products.forEach(product => {
+                              if (!product.subCategory) return;
+                              const cat = product.category as ProductCategory;
+                              const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
+                              if (!validSubCats.includes(product.subCategory)) {
+                                if (!diagnosis[product.subCategory]) {
+                                  diagnosis[product.subCategory] = [];
+                                }
+                                diagnosis[product.subCategory].push({ product, suggested: "" });
+                              }
+                            });
+                            return Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
+                          };
+                          const subCategoryErrorCount = diagnoseSubCategories();
+                          const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
+                          const hasIssues = emptyCategoryCount > 0 || subCategoryErrorCount > 0 || emptyOrderChannelCount > 0;
+
+                          return (
+                            <>
+                              <button
+                                onClick={() => setExpandedWarning(expandedWarning === "emptyCategory" ? null : "emptyCategory")}
+                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                                  emptyCategoryCount > 0
+                                    ? "bg-red-600 text-white hover:bg-red-700"
+                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                }`}
+                                suppressHydrationWarning
+                              >
+                                缺少分类 ({emptyCategoryCount})
+                              </button>
+                              <button
+                                onClick={() => setExpandedWarning(expandedWarning === "subCategoryError" ? null : "subCategoryError")}
+                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                                  subCategoryErrorCount > 0
+                                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                }`}
+                                suppressHydrationWarning
+                              >
+                                子分类错误 ({subCategoryErrorCount})
+                              </button>
+                              <button
+                                onClick={() => setExpandedWarning(expandedWarning === "emptyOrderChannel" ? null : "emptyOrderChannel")}
+                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                                  emptyOrderChannelCount > 0
+                                    ? "bg-green-600 text-white hover:bg-green-700"
+                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                }`}
+                                suppressHydrationWarning
+                              >
+                                缺少下单口 ({emptyOrderChannelCount})
+                              </button>
+                              {hasIssues && (
+                                <button
+                                  onClick={() => {
+                                    fixEmptyCategories();
+                                    fixSubCategoryErrors();
+                                    fixEmptyOrderChannels();
+                                  }}
+                                  className="ml-2 px-4 py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 transition-colors"
+                                  suppressHydrationWarning
+                                >
+                                  ✨ 一键全部修正
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </th>
+                  </tr>
                   <tr>
                     <th className="border border-gray-200 px-3 py-2 text-center text-black w-12 bg-gray-100">
                       <input
