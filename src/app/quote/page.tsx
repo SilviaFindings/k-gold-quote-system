@@ -486,6 +486,9 @@ function QuotePage() {
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [helpSearchQuery, setHelpSearchQuery] = useState<string>("");
 
+  // 数据诊断模态框状态
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState<boolean>(false);
+
   // 批量更新供应商代码相关状态
   const [showBatchUpdateModal, setShowBatchUpdateModal] = useState<boolean>(false);
   const [batchUpdateRules, setBatchUpdateRules] = useState<{
@@ -4771,6 +4774,15 @@ function QuotePage() {
               🧪 测试
             </button>
 
+            {/* 数据诊断按钮 */}
+            <button
+              onClick={() => setShowDiagnosticModal(true)}
+              className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors"
+              suppressHydrationWarning
+            >
+              🔍 数据诊断
+            </button>
+
             {/* 同步按钮组 */}
             <div className="relative">
               <button
@@ -6466,85 +6478,6 @@ function QuotePage() {
               >
                 <thead className="bg-gray-100 sticky top-0 z-10" style={{ position: 'sticky' }}>
                   <tr>
-                    <th colSpan={20} className="border border-gray-200 px-3 py-2 bg-gray-50">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium text-black">数据诊断：</span>
-                        {(() => {
-                          const emptyCategoryCount = products.filter(p => !p.category || (p.category as string).trim() === "").length;
-                          const diagnoseSubCategories = () => {
-                            const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
-                            products.forEach(product => {
-                              if (!product.subCategory) return;
-                              const cat = product.category as ProductCategory;
-                              const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
-                              if (!validSubCats.includes(product.subCategory)) {
-                                if (!diagnosis[product.subCategory]) {
-                                  diagnosis[product.subCategory] = [];
-                                }
-                                diagnosis[product.subCategory].push({ product, suggested: "" });
-                              }
-                            });
-                            return Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
-                          };
-                          const subCategoryErrorCount = diagnoseSubCategories();
-                          const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
-                          const hasIssues = emptyCategoryCount > 0 || subCategoryErrorCount > 0 || emptyOrderChannelCount > 0;
-
-                          return (
-                            <>
-                              <button
-                                onClick={() => setExpandedWarning(expandedWarning === "emptyCategory" ? null : "emptyCategory")}
-                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                                  emptyCategoryCount > 0
-                                    ? "bg-red-600 text-white hover:bg-red-700"
-                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                }`}
-                                suppressHydrationWarning
-                              >
-                                缺少分类 ({emptyCategoryCount})
-                              </button>
-                              <button
-                                onClick={() => setExpandedWarning(expandedWarning === "subCategoryError" ? null : "subCategoryError")}
-                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                                  subCategoryErrorCount > 0
-                                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                }`}
-                                suppressHydrationWarning
-                              >
-                                子分类错误 ({subCategoryErrorCount})
-                              </button>
-                              <button
-                                onClick={() => setExpandedWarning(expandedWarning === "emptyOrderChannel" ? null : "emptyOrderChannel")}
-                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                                  emptyOrderChannelCount > 0
-                                    ? "bg-green-600 text-white hover:bg-green-700"
-                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                }`}
-                                suppressHydrationWarning
-                              >
-                                缺少下单口 ({emptyOrderChannelCount})
-                              </button>
-                              {hasIssues && (
-                                <button
-                                  onClick={() => {
-                                    fixEmptyCategories();
-                                    fixSubCategoryErrors();
-                                    fixEmptyOrderChannels();
-                                  }}
-                                  className="ml-2 px-4 py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 transition-colors"
-                                  suppressHydrationWarning
-                                >
-                                  ✨ 一键全部修正
-                                </button>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </th>
-                  </tr>
-                  <tr>
                     <th className="border border-gray-200 px-3 py-2 text-center text-black w-12 bg-gray-100">
                       <input
                         type="checkbox"
@@ -6958,6 +6891,249 @@ function QuotePage() {
               >
                 确认批量更新
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 数据诊断模态框 */}
+      {showDiagnosticModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 标题栏 */}
+            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">🔍 数据诊断</h2>
+              <button
+                onClick={() => setShowDiagnosticModal(false)}
+                className="text-white hover:text-gray-200 text-3xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* 内容区域 */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {(() => {
+                const emptyCategoryCount = products.filter(p => !p.category || (p.category as string).trim() === "").length;
+                const diagnoseSubCategories = () => {
+                  const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
+                  products.forEach(product => {
+                    if (!product.subCategory) return;
+                    const cat = product.category as ProductCategory;
+                    const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
+                    if (!validSubCats.includes(product.subCategory)) {
+                      if (!diagnosis[product.subCategory]) {
+                        diagnosis[product.subCategory] = [];
+                      }
+                      diagnosis[product.subCategory].push({ product, suggested: "" });
+                    }
+                  });
+                  return Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
+                };
+                const subCategoryErrorCount = diagnoseSubCategories();
+                const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
+                const hasIssues = emptyCategoryCount > 0 || subCategoryErrorCount > 0 || emptyOrderChannelCount > 0;
+                const noIssues = emptyCategoryCount === 0 && subCategoryErrorCount === 0 && emptyOrderChannelCount === 0;
+
+                if (noIssues) {
+                  return (
+                    <div className="text-center py-8">
+                      <div className="text-6xl mb-4">✅</div>
+                      <h3 className="text-xl font-semibold text-black mb-2">数据完整，未发现问题！</h3>
+                      <p className="text-gray-600">所有产品数据都填写完整，无需修正。</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    {/* 缺少分类 */}
+                    {emptyCategoryCount > 0 && (
+                      <div className="border border-red-200 rounded-lg overflow-hidden">
+                        <div
+                          className="py-3 px-4 bg-red-50 flex items-center justify-between cursor-pointer hover:bg-red-100 transition-colors"
+                          onClick={() => setExpandedWarning(expandedWarning === "emptyCategory" ? null : "emptyCategory")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-red-600 text-xl">⚠️</span>
+                            <div>
+                              <div className="font-semibold text-red-800">缺少分类</div>
+                              <div className="text-xs text-red-600">{emptyCategoryCount} 个产品</div>
+                            </div>
+                          </div>
+                          <span className="text-red-600">{expandedWarning === "emptyCategory" ? "▼" : "▶"}</span>
+                        </div>
+                        {expandedWarning === "emptyCategory" && (
+                          <div className="p-4 bg-white border-t border-red-200">
+                            <div className="text-sm text-gray-600 space-y-2 mb-3 max-h-40 overflow-y-auto">
+                              {products.filter(p => !p.category || (p.category as string).trim() === "").map((p, idx) => (
+                                <div key={p.id} className="flex gap-2 items-start">
+                                  <span className="font-medium text-red-600">{idx + 1}.</span>
+                                  <span className="text-black">
+                                    货号: <span className="font-mono">{p.productCode}</span> |
+                                    名称: {p.productName}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fixEmptyCategories();
+                              }}
+                              className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                            >
+                              ✨ 智能修正分类
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 子分类错误 */}
+                    {subCategoryErrorCount > 0 && (
+                      <div className="border border-blue-200 rounded-lg overflow-hidden">
+                        <div
+                          className="py-3 px-4 bg-blue-50 flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-colors"
+                          onClick={() => setExpandedWarning(expandedWarning === "subCategoryError" ? null : "subCategoryError")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-blue-600 text-xl">⚠️</span>
+                            <div>
+                              <div className="font-semibold text-blue-800">子分类错误</div>
+                              <div className="text-xs text-blue-600">{subCategoryErrorCount} 个产品</div>
+                            </div>
+                          </div>
+                          <span className="text-blue-600">{expandedWarning === "subCategoryError" ? "▼" : "▶"}</span>
+                        </div>
+                        {expandedWarning === "subCategoryError" && (
+                          <div className="p-4 bg-white border-t border-blue-200">
+                            <div className="text-sm text-gray-600 space-y-2 mb-3 max-h-40 overflow-y-auto">
+                              {(() => {
+                                const diagnosis = (() => {
+                                  const result: { [key: string]: { product: Product, suggested: string }[] } = {};
+                                  products.forEach(product => {
+                                    if (!product.subCategory) return;
+                                    const cat = product.category as ProductCategory;
+                                    const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
+                                    if (!validSubCats.includes(product.subCategory)) {
+                                      if (!result[product.subCategory]) {
+                                        result[product.subCategory] = [];
+                                      }
+                                      let suggested = "";
+                                      const code = product.productCode.toLowerCase();
+                                      const name = (product.productName || "").toLowerCase();
+                                      if (code.includes("ear") || name.includes("ear") || name.includes("耳环") || name.includes("耳逼")) {
+                                        suggested = "耳环/耳逼";
+                                      } else if (code.includes("ring") || name.includes("ring") || name.includes("戒")) {
+                                        suggested = "戒子托";
+                                      } else if (code.includes("chain") || name.includes("chain") || name.includes("链")) {
+                                        suggested = "金链";
+                                      } else if (code.includes("open") || name.includes("open") || name.includes("开口")) {
+                                        suggested = "开口圈/闭口圈";
+                                      } else if (code.includes("bead") || name.includes("bead") || name.includes("珠")) {
+                                        suggested = "圆珠";
+                                      } else if (code.includes("button") || name.includes("button") || name.includes("扣")) {
+                                        suggested = "扣子";
+                                      }
+                                      result[product.subCategory].push({ product, suggested });
+                                    }
+                                  });
+                                  return result;
+                                })();
+
+                                return Object.entries(diagnosis).map(([subCat, items]) => (
+                                  <div key={subCat} className="space-y-1 mb-2">
+                                    <div className="font-medium text-blue-700">
+                                      错误子分类: <span className="font-mono">{subCat}</span> ({items.length}个产品)
+                                    </div>
+                                    {items.map(({ product, suggested }, idx) => (
+                                      <div key={product.id} className="flex gap-2 pl-3 text-sm">
+                                        <span className="font-medium text-gray-500">{idx + 1}.</span>
+                                        <span className="text-black">
+                                          货号: <span className="font-mono">{product.productCode}</span> |
+                                          名称: {product.productName} |
+                                          建议改为: <span className="text-green-600 font-medium">{suggested || "?"}</span>
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ));
+                              })()}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fixSubCategoryErrors();
+                              }}
+                              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                            >
+                              ✨ 批量修正子分类
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 缺少下单口 */}
+                    {emptyOrderChannelCount > 0 && (
+                      <div className="border border-green-200 rounded-lg overflow-hidden">
+                        <div
+                          className="py-3 px-4 bg-green-50 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors"
+                          onClick={() => setExpandedWarning(expandedWarning === "emptyOrderChannel" ? null : "emptyOrderChannel")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-600 text-xl">⚠️</span>
+                            <div>
+                              <div className="font-semibold text-green-800">缺少下单口</div>
+                              <div className="text-xs text-green-600">{emptyOrderChannelCount} 个产品</div>
+                            </div>
+                          </div>
+                          <span className="text-green-600">{expandedWarning === "emptyOrderChannel" ? "▼" : "▶"}</span>
+                        </div>
+                        {expandedWarning === "emptyOrderChannel" && (
+                          <div className="p-4 bg-white border-t border-green-200">
+                            <div className="text-sm text-gray-600 space-y-2 mb-3 max-h-40 overflow-y-auto">
+                              {products.filter(p => !p.orderChannel).map((p, idx) => (
+                                <div key={p.id} className="flex gap-2">
+                                  <span className="font-medium text-green-600">{idx + 1}.</span>
+                                  <span className="text-black">
+                                    货号: <span className="font-mono">{p.productCode}</span> |
+                                    名称: {p.productName}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fixEmptyOrderChannels();
+                              }}
+                              className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              ✨ 设置默认下单口
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 一键全部修正 */}
+                    {hasIssues && (
+                      <button
+                        onClick={() => {
+                          fixEmptyCategories();
+                          fixSubCategoryErrors();
+                          fixEmptyOrderChannels();
+                        }}
+                        className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-lg"
+                      >
+                        ✨ 一键全部修正
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
