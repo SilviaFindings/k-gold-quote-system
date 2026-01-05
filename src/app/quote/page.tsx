@@ -4886,7 +4886,9 @@ function QuotePage() {
           {verificationResult && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <h4 className="font-semibold text-black mb-2">验证结果</h4>
-              <pre className="text-sm text-black whitespace-pre-wrap">{verificationResult}</pre>
+              <pre className="text-sm text-black whitespace-pre-wrap">
+                {JSON.stringify(verificationResult, null, 2)}
+              </pre>
             </div>
           )}
         </div>
