@@ -724,17 +724,22 @@ function QuotePage() {
     }
 
     // 4. 检查末尾简单的 -供应商代码 格式（没有材质代码）
+    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250/K14（默认材质为14K时）
     // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250/K18（默认材质为18K时）
-    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H/K18（默认材质为18K时）
-    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A/K18（默认材质为18K时）
-    // 如果默认材质不是18K，则不添加材质后缀
+    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H/K14（默认材质为14K时）
+    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A/K14（默认材质为14K时）
     const suffixMatch3 = code.match(/(.+)-([A-Z][0-9]|[A-Z]{1,2})$/);
     if (suffixMatch3) {
       supplierCode = suffixMatch3[2];
       cleanedCode = suffixMatch3[1];
-      // 如果默认材质是18K，则添加材质后缀
-      if (defaultKarat === '18K') {
+      // 根据默认材质添加对应的材质后缀
+      if (defaultKarat === '14K') {
+        cleanedCode = cleanedCode + '/K14';
+      } else if (defaultKarat === '18K') {
         cleanedCode = cleanedCode + '/K18';
+      } else {
+        // 10K 的情况
+        cleanedCode = cleanedCode + '/K10';
       }
       console.log(`[供应商代码提取] 末尾供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
       return { supplierCode, cleanedCode };
