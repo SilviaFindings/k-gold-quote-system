@@ -4974,28 +4974,6 @@ function QuotePage() {
           </div>
         </div>
 
-        {/* 诊断修复工具 */}
-        <div className="mb-6 bg-white rounded-lg shadow p-3">
-          <h3 className="text-sm font-semibold text-black mb-2">🔧 诊断修复工具</h3>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={diagnoseDatabase}
-              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
-              suppressHydrationWarning
-            >
-              🔍 诊断数据
-            </button>
-            <button
-              onClick={verifyDataIntegrity}
-              className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-2"
-              disabled={isVerifying}
-              suppressHydrationWarning
-            >
-              {isVerifying ? '⏳ 验证中...' : '✅ 验证数据'}
-            </button>
-          </div>
-        </div>
-
         {/* 数据问题提示 */}
         <div className="mb-6 space-y-3">
           {/* 产品缺少分类提示 - 红色 */}
