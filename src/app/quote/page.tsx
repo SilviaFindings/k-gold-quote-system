@@ -8030,10 +8030,18 @@ function QuotePage() {
             </div>
 
             {/* 底部 */}
-            <div className="border-t px-6 py-4 bg-gray-50 flex justify-between items-center">
-              <p className="text-sm text-black">
-                💡 需要更多帮助？请联系技术支持
-              </p>
+            <div className="border-t px-6 py-4 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="text-sm text-black">
+                <p>💡 需要更多帮助？请联系技术支持</p>
+                <a
+                  href="https://github.com/SilviaFindings/k-gold-quote-system"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline mt-1 inline-block"
+                >
+                  📂 查看项目代码 (GitHub)
+                </a>
+              </div>
               <button
                 onClick={() => setShowHelpModal(false)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
