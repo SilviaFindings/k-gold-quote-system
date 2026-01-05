@@ -4774,21 +4774,6 @@ function QuotePage() {
     // 先弹出密码验证
     setClearActionType("local");
     setPendingClearAction(() => {
-      // 确认操作
-      const confirmed = window.confirm(
-        "确定要清空所有本地数据吗？\n\n" +
-        "清空后不可恢复！\n" +
-        "如果云端有数据，可以重新从云端同步。\n\n" +
-        `当前数据：\n` +
-        `- 本地产品：${products.length} 个\n` +
-        `- 本地历史：${priceHistory.length} 条`
-      );
-
-      if (!confirmed) {
-        console.log("用户取消清空操作");
-        return;
-      }
-
       try {
         // 清空 localStorage 中的数据
         localStorage.removeItem("goldProducts");
