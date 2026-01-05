@@ -4654,11 +4654,11 @@ function QuotePage() {
 
   // 清空所有云端数据
   const cleanAllCloudData = async () => {
-    console.log("========== 开始清空云端数据 ==========");
-
     // 先弹出密码验证
     setClearActionType("cloud");
     setPendingClearAction(async () => {
+      console.log("========== 开始清空云端数据 ==========");
+
       try {
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -4742,12 +4742,12 @@ function QuotePage() {
 
   // 清空所有本地数据
   const clearAllLocalData = () => {
-    console.log("========== 开始清空本地数据 ==========");
-
     // 先弹出密码验证
     setClearActionType("local");
     setPendingClearAction(() => {
       try {
+        console.log("========== 开始清空本地数据 ==========");
+
         // 清空 localStorage 中的数据
         localStorage.removeItem("goldProducts");
         localStorage.removeItem("goldPriceHistory");
@@ -7572,8 +7572,9 @@ function QuotePage() {
             {/* 内容区域 */}
             <div className="p-6 space-y-4">
               <div className="text-sm text-black">
-                <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，这是一个<strong>危险操作</strong>，需要输入密码确认。</p>
-                <p className="text-red-600">⚠️ 此操作不可恢复，请谨慎操作！</p>
+                <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，需要输入密码验证身份。</p>
+                <p className="mb-2 text-gray-600">⚠️ 此操作不可恢复，请谨慎操作！</p>
+                <p className="text-blue-600 font-medium">📌 请先输入密码，验证通过后才会执行清空操作。</p>
               </div>
 
               <div>
