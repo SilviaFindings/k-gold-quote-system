@@ -54,22 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <style jsx global>{`
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus,
-        input:-webkit-autofill:active {
-          -webkit-box-shadow: 0 0 0 30px white inset !important;
-          -webkit-text-fill-color: black !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-        input[type="password"] {
-          -webkit-text-fill-color: black !important;
-          color: black !important;
-        }
-      `}</style>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -102,7 +87,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-black rounded-t-md focus:border-blue-500 focus:outline-none sm:text-sm"
                 placeholder="邮箱地址"
                 suppressHydrationWarning
               />
@@ -123,7 +108,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-black focus:border-blue-500 focus:outline-none sm:text-sm"
                   placeholder="姓名"
                   suppressHydrationWarning
                 />
@@ -144,7 +129,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-black rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-black rounded-b-md focus:border-blue-500 focus:outline-none sm:text-sm"
                 placeholder="密码"
                 suppressHydrationWarning
               />
@@ -179,7 +164,6 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
