@@ -3477,13 +3477,6 @@ function QuotePage() {
 
   // 实际的清理本地数据函数
   const clearLocalDataInternal = async () => {
-    const confirmed = confirm('确定要清理本地数据吗？\n\n这将删除所有localStorage中的数据，然后你可以从数据库重新加载或导入新数据。\n\n⚠️ 警告：此操作不可撤销！');
-
-    if (!confirmed) {
-      setShowPasswordModal(false);
-      return;
-    }
-
     // 清理本地数据
     localStorage.removeItem('goldProducts');
     localStorage.removeItem('goldPriceHistory');
