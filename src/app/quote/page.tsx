@@ -723,6 +723,18 @@ function QuotePage() {
       return { supplierCode, cleanedCode };
     }
 
+    // 4. 检查末尾简单的 -供应商代码 格式（没有材质代码）
+    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250
+    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H
+    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A
+    const suffixMatch3 = code.match(/(.+)-([A-Z][0-9]|[A-Z]{1,2})$/);
+    if (suffixMatch3) {
+      supplierCode = suffixMatch3[2];
+      cleanedCode = suffixMatch3[1];
+      console.log(`[供应商代码提取] 末尾供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
     return { supplierCode, cleanedCode };
   };
 
