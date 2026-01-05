@@ -4897,15 +4897,15 @@ function QuotePage() {
               return (
                 <div className="border border-red-200 rounded-lg overflow-hidden">
                   <div
-                    className="p-3 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors"
+                    className="py-1.5 px-2 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors"
                     onClick={() => setExpandedWarning(isExpanded ? null : "emptyCategory")}
                   >
-                    <p className="text-sm text-red-800">
+                    <p className="text-xs text-red-800">
                       {isExpanded ? "▼" : "▶"} ⚠️ 发现 {emptyCategoryProducts.length} 个产品缺少分类
                     </p>
                   </div>
                   {isExpanded && (
-                    <div className="p-3 bg-white border-t border-red-200">
+                    <div className="py-1.5 px-2 bg-white border-t border-red-200">
                       <div className="text-xs text-gray-600 space-y-1">
                         {emptyCategoryProducts.map((p, idx) => (
                           <div key={p.id} className="flex gap-2">
@@ -4925,7 +4925,7 @@ function QuotePage() {
             return null;
           })()}
 
-          {/* 子分类错误提示 - 橙色 */}
+          {/* 子分类错误提示 - 浅蓝色 */}
           {products.length > 0 && (() => {
             const diagnoseSubCategories = () => {
               const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
@@ -4966,21 +4966,21 @@ function QuotePage() {
             if (totalIssues > 0) {
               const isExpanded = expandedWarning === "subCategoryError";
               return (
-                <div className="border border-orange-200 rounded-lg overflow-hidden">
+                <div className="border border-blue-200 rounded-lg overflow-hidden">
                   <div
-                    className="p-3 bg-orange-50 cursor-pointer hover:bg-orange-100 transition-colors"
+                    className="py-1.5 px-2 bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors"
                     onClick={() => setExpandedWarning(isExpanded ? null : "subCategoryError")}
                   >
-                    <p className="text-sm text-orange-800">
+                    <p className="text-xs text-blue-800">
                       {isExpanded ? "▼" : "▶"} ⚠️ 发现 {totalIssues} 个产品的子分类可能存在错误
                     </p>
                   </div>
                   {isExpanded && (
-                    <div className="p-3 bg-white border-t border-orange-200">
+                    <div className="py-1.5 px-2 bg-white border-t border-blue-200">
                       <div className="text-xs text-gray-600 space-y-2">
                         {Object.entries(diagnosis).map(([subCat, items]) => (
                           <div key={subCat} className="space-y-1">
-                            <div className="font-medium text-orange-700">
+                            <div className="font-medium text-blue-700">
                               错误子分类: <span className="font-mono">{subCat}</span> ({items.length}个产品)
                             </div>
                             {items.map(({ product, suggested }, idx) => (
@@ -5004,27 +5004,27 @@ function QuotePage() {
             return null;
           })()}
 
-          {/* 缺少下单口提示 - 黄色 */}
+          {/* 缺少下单口提示 - 浅绿色 */}
           {products.length > 0 && (() => {
             const emptyOrderChannelProducts = products.filter(p => !p.orderChannel);
             if (emptyOrderChannelProducts.length > 0) {
               const isExpanded = expandedWarning === "emptyOrderChannel";
               return (
-                <div className="border border-yellow-200 rounded-lg overflow-hidden">
+                <div className="border border-green-200 rounded-lg overflow-hidden">
                   <div
-                    className="p-3 bg-yellow-50 cursor-pointer hover:bg-yellow-100 transition-colors"
+                    className="py-1.5 px-2 bg-green-50 cursor-pointer hover:bg-green-100 transition-colors"
                     onClick={() => setExpandedWarning(isExpanded ? null : "emptyOrderChannel")}
                   >
-                    <p className="text-sm text-black">
+                    <p className="text-xs text-green-800">
                       {isExpanded ? "▼" : "▶"} ⚠️ 发现 {emptyOrderChannelProducts.length} 个产品缺少下单口
                     </p>
                   </div>
                   {isExpanded && (
-                    <div className="p-3 bg-white border-t border-yellow-200">
+                    <div className="py-1.5 px-2 bg-white border-t border-green-200">
                       <div className="text-xs text-gray-600 space-y-1">
                         {emptyOrderChannelProducts.map((p, idx) => (
                           <div key={p.id} className="flex gap-2">
-                            <span className="font-medium text-yellow-700">{idx + 1}.</span>
+                            <span className="font-medium text-green-600">{idx + 1}.</span>
                             <span className="text-black">
                               货号: <span className="font-mono">{p.productCode}</span> |
                               名称: {p.productName}
