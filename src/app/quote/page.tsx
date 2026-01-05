@@ -4533,54 +4533,10 @@ function QuotePage() {
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-black">
-              K金产品报价计算表
-            </h1>
-            {/* 同步状态显示 */}
-            <div className="flex items-center gap-2">
-              {syncStatus === "syncing" && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span>同步中...</span>
-                </div>
-              )}
-              {syncStatus === "success" && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                  <span>✓</span>
-                  <span>{syncMessage || "同步成功"}</span>
-                </div>
-              )}
-              {syncStatus === "error" && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                  <span>✗</span>
-                  <span>{syncMessage || "同步失败"}</span>
-                </div>
-              )}
-              {syncStatus === "idle" && lastSyncTime && (
-                <div className="text-xs text-gray-600">
-                  上次同步: {lastSyncTime}
-                </div>
-              )}
-            </div>
+          <h1 className="text-3xl font-bold text-black">
+            K 金产品报价计算表
+          </h1>
 
-            {/* 调试信息面板 */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
-              <button
-                onClick={updateDebugInfo}
-                className="text-yellow-700 hover:text-yellow-900 font-medium"
-                suppressHydrationWarning
-              >
-                🔍 刷新数据
-              </button>
-              <span className="text-gray-600">
-                | 本地产品: <strong>{debugInfo.localProducts}</strong> 个
-                | 本地历史: <strong>{debugInfo.localHistory}</strong> 条
-                | 上传: <strong>{debugInfo.uploadProducts}</strong> 个
-                {debugInfo.lastUpload && ` (${debugInfo.lastUpload})`}
-              </span>
-            </div>
-          </div>
           <div className="flex items-center gap-3">
             {/* 同步按钮组 */}
             <div className="relative">
@@ -4704,12 +4660,6 @@ function QuotePage() {
             </div>
 
             <button
-              onClick={() => setShowHelpModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              ❓ 操作指引
-            </button>
-            <button
               onClick={async () => {
                 try {
                   const response = await fetch('/api/auth/logout', {
@@ -4733,105 +4683,27 @@ function QuotePage() {
               }}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
             >
-              登出
+              退出登录
             </button>
           </div>
         </div>
 
-        {/* 数据状态显示 */}
-        <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-lg font-semibold text-blue-900">
-                📊 当前数据状态：
-              </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                products.length > 0
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {products.length > 0 ? `共有 ${products.length} 个产品` : "暂无数据"}
-              </span>
-              {products.length > 0 && (
-                <span className="text-sm text-blue-700">
-                  分布在 {[...new Set(products.map(p => p.category))].length} 个分类
-                </span>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                console.log("当前 products state:", products);
-                console.log("当前 priceHistory state:", priceHistory);
-                console.log("LocalStorage products:", localStorage.getItem("goldProducts"));
-                console.log("LocalStorage history:", localStorage.getItem("goldPriceHistory"));
-                alert(`当前 products 长度: ${products.length}\n当前 priceHistory 长度: ${priceHistory.length}\n\n详细信息请查看控制台 (F12)`);
-              }}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-              suppressHydrationWarning
-            >
-              调试状态
-            </button>
-          </div>
-        </div>
-
-        {/* 分类导航区域 */}
-        <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-black">产品分类</h2>
-
-          {/* 显示没有分类的产品修复工具 */}
+        {/* 数据问题提示 */}
+        <div className="mb-6 space-y-3">
+          {/* 产品缺少分类提示 - 红色 */}
           {products.length > 0 && (() => {
             const emptyCategoryCount = products.filter(p => !p.category).length;
             if (emptyCategoryCount > 0) {
               return (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800 font-semibold mb-2">⚠️ 发现 {emptyCategoryCount} 个产品没有分类！</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="text-xs text-red-700">批量设置为:</label>
-                    <select
-                      value={currentCategory}
-                      onChange={(e) => setCurrentCategory(e.target.value as ProductCategory)}
-                      className="px-2 py-1 text-xs border border-red-300 rounded"
-                      suppressHydrationWarning
-                    >
-                      {PRODUCT_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => {
-                        if (!confirm(`确定将这 ${emptyCategoryCount} 个没有分类的产品批量设置为 "${currentCategory}" 吗？`)) return;
-
-                        const updatedProducts = products.map(p => {
-                          if (!p.category) {
-                            return { ...p, category: currentCategory };
-                          }
-                          return p;
-                        });
-
-                        const updatedHistory = priceHistory.map(h => {
-                          if (!h.category) {
-                            return { ...h, category: currentCategory };
-                          }
-                          return h;
-                        });
-
-                        setProducts(updatedProducts);
-                        setPriceHistory(updatedHistory);
-                        alert(`✅ 成功将 ${emptyCategoryCount} 个产品和对应的历史记录设置为 "${currentCategory}" 分类！`);
-                      }}
-                      className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                      suppressHydrationWarning
-                    >
-                      批量修复分类
-                    </button>
-                  </div>
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">⚠️ 发现 {emptyCategoryCount} 个产品缺少分类</p>
                 </div>
               );
             }
             return null;
           })()}
 
-          {/* 子分类诊断和修复工具 */}
+          {/* 子分类错误提示 - 橙色 */}
           {products.length > 0 && (() => {
             const diagnoseSubCategories = () => {
               const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
@@ -4843,11 +4715,9 @@ function QuotePage() {
                   if (!diagnosis[product.subCategory]) {
                     diagnosis[product.subCategory] = [];
                   }
-                  // 建议根据货号或产品名称推断正确的子分类
                   let suggested = "";
                   const code = product.productCode.toLowerCase();
                   const name = (product.productName || "").toLowerCase();
-
                   if (code.includes("ear") || name.includes("ear") || name.includes("耳环") || name.includes("耳逼")) {
                     suggested = "耳环/耳逼";
                   } else if (code.includes("ring") || name.includes("ring") || name.includes("戒")) {
@@ -4869,155 +4739,35 @@ function QuotePage() {
             };
 
             const diagnosis = diagnoseSubCategories();
-            const hasIssues = Object.keys(diagnosis).length > 0;
+            const totalIssues = Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
 
-            if (hasIssues) {
-              const totalIssues = Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
+            if (totalIssues > 0) {
               return (
-                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-sm text-orange-800 font-semibold mb-2">🔍 发现 {totalIssues} 个产品的子分类可能存在错误！</p>
-                  <p className="text-xs text-orange-700 mb-2">这些产品的子分类不属于当前大类的子分类列表。</p>
-
-                  <details className="mb-3">
-                    <summary className="cursor-pointer text-xs font-semibold text-orange-800 hover:text-orange-900">
-                      点击查看详细信息 ({Object.keys(diagnosis).length} 个错误子分类)
-                    </summary>
-                    <div className="mt-2 pl-2">
-                      {Object.entries(diagnosis).map(([wrongSubCat, items]) => (
-                        <div key={wrongSubCat} className="mb-2 p-2 bg-white rounded border border-orange-200">
-                          <p className="text-xs font-bold text-black mb-1">错误子分类: "{wrongSubCat}" ({items.length} 个产品)</p>
-                          <div className="max-h-32 overflow-y-auto">
-                            {items.slice(0, 10).map(({ product, suggested }) => (
-                              <div key={product.id} className="text-xs text-black mb-1">
-                                <span className="font-mono">{product.productCode}</span>
-                                {suggested && <span className="ml-2 text-green-600">→ 建议: {suggested}</span>}
-                              </div>
-                            ))}
-                            {items.length > 10 && <p className="text-xs text-gray-600">...还有 {items.length - 10} 个产品</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="text-xs text-orange-700">批量修复为:</label>
-                    <select
-                      id="subCategoryFixSelect"
-                      className="px-2 py-1 text-xs border border-orange-300 rounded"
-                      suppressHydrationWarning
-                    >
-                      <option value="">选择正确的子分类...</option>
-                      {Object.entries(SUB_CATEGORIES).map(([cat, subCats]) => (
-                        <optgroup key={cat} label={cat}>
-                          {subCats.map(subCat => (
-                            <option key={subCat} value={subCat}>{subCat}</option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => {
-                        const select = document.getElementById("subCategoryFixSelect") as HTMLSelectElement;
-                        const targetSubCat = select?.value;
-                        if (!targetSubCat) {
-                          alert("请先选择要修复成的子分类！");
-                          return;
-                        }
-                        if (!confirm(`确定将所有错误子分类的产品修复为 "${targetSubCat}" 吗？\n\n这将影响 ${totalIssues} 个产品。`)) return;
-
-                        let fixedCount = 0;
-                        const updatedProducts = products.map(p => {
-                          const cat = p.category as ProductCategory;
-                          const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
-                          if (p.subCategory && !validSubCats.includes(p.subCategory)) {
-                            fixedCount++;
-                            return { ...p, subCategory: targetSubCat };
-                          }
-                          return p;
-                        });
-
-                        const updatedHistory = priceHistory.map(h => {
-                          const cat = h.category as ProductCategory;
-                          const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
-                          if (h.subCategory && !validSubCats.includes(h.subCategory)) {
-                            return { ...h, subCategory: targetSubCat };
-                          }
-                          return h;
-                        });
-
-                        setProducts(updatedProducts);
-                        setPriceHistory(updatedHistory);
-                        alert(`已将 ${fixedCount} 个产品的子分类修复为 "${targetSubCat}"`);
-                      }}
-                      className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
-                      suppressHydrationWarning
-                    >
-                      批量修复子分类
-                    </button>
-                  </div>
+                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-800">⚠️ 发现 {totalIssues} 个产品的子分类可能存在错误</p>
                 </div>
               );
             }
             return null;
           })()}
 
-          {/* 显示没有下单口的产品修复工具 */}
+          {/* 缺少下单口提示 - 黄色 */}
           {products.length > 0 && (() => {
             const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
             if (emptyOrderChannelCount > 0) {
               return (
-                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-black font-semibold mb-2">⚠️ 发现 {emptyOrderChannelCount} 个产品没有下单口！</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="text-xs text-black">批量设置为:</label>
-                    <select
-                      id="batchOrderChannelSelect"
-                      defaultValue="Van"
-                      className="px-2 py-1 text-xs border border-yellow-300 rounded"
-                      style={{ color: "black" }}
-                      suppressHydrationWarning
-                    >
-                      {ORDER_CHANNELS.map(channel => (
-                        <option key={channel.code} value={channel.code} style={{ color: "black" }}>{channel.code}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => {
-                        const select = document.getElementById("batchOrderChannelSelect") as HTMLSelectElement;
-                        const channelCode = select?.value || "Van";
-
-                        if (!confirm(`确定将这 ${emptyOrderChannelCount} 个没有下单口的产品批量设置为 "${channelCode}" 吗？`)) return;
-
-                        const updatedProducts = products.map(p => {
-                          if (!p.orderChannel) {
-                            return { ...p, orderChannel: channelCode as OrderChannel };
-                          }
-                          return p;
-                        });
-
-                        const updatedHistory = priceHistory.map(h => {
-                          if (!h.orderChannel) {
-                            return { ...h, orderChannel: channelCode as OrderChannel };
-                          }
-                          return h;
-                        });
-
-                        setProducts(updatedProducts);
-                        setPriceHistory(updatedHistory);
-                        alert(`✅ 成功将 ${emptyOrderChannelCount} 个产品和对应的历史记录设置为 "${channelCode}" 下单口！`);
-                      }}
-                      className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
-                      suppressHydrationWarning
-                    >
-                      批量修复下单口
-                    </button>
-                  </div>
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-black">⚠️ 发现 {emptyOrderChannelCount} 个产品缺少下单口</p>
                 </div>
               );
             }
             return null;
           })()}
+        </div>
+
+        {/* 分类导航区域 */}
+        <div className="mb-6 rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-black">产品分类</h2>
 
           <div className="space-y-4">
             {PRODUCT_CATEGORIES.map((category) => {
