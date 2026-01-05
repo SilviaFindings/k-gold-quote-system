@@ -4841,42 +4841,44 @@ function QuotePage() {
         </div>
 
         {/* 调试信息面板 */}
-        <div className="mb-6 bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-black mb-3">📊 系统状态</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-blue-50 rounded p-3">
-              <div className="text-blue-600 font-medium">本地产品数</div>
-              <div className="text-2xl font-bold text-black">{debugInfo.localProducts}</div>
+        <div className="mb-3 bg-white rounded-lg shadow p-3">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-black">📊 系统状态</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div className="bg-blue-50 rounded p-2">
+              <div className="text-blue-600 text-xs">本地产品</div>
+              <div className="text-lg font-bold text-black">{debugInfo.localProducts}</div>
             </div>
-            <div className="bg-green-50 rounded p-3">
-              <div className="text-green-600 font-medium">历史记录数</div>
-              <div className="text-2xl font-bold text-black">{debugInfo.localHistory}</div>
+            <div className="bg-green-50 rounded p-2">
+              <div className="text-green-600 text-xs">历史记录</div>
+              <div className="text-lg font-bold text-black">{debugInfo.localHistory}</div>
             </div>
-            <div className="bg-purple-50 rounded p-3">
-              <div className="text-purple-600 font-medium">云端产品数</div>
-              <div className="text-2xl font-bold text-black">{debugInfo.uploadProducts}</div>
+            <div className="bg-purple-50 rounded p-2">
+              <div className="text-purple-600 text-xs">云端产品</div>
+              <div className="text-lg font-bold text-black">{debugInfo.uploadProducts}</div>
             </div>
-            <div className="bg-orange-50 rounded p-3">
-              <div className="text-orange-600 font-medium">最后同步</div>
-              <div className="text-sm font-medium text-black">{debugInfo.lastUpload}</div>
+            <div className="bg-orange-50 rounded p-2">
+              <div className="text-orange-600 text-xs">最后同步</div>
+              <div className="text-xs font-medium text-black">{debugInfo.lastUpload}</div>
             </div>
           </div>
         </div>
 
         {/* 诊断修复工具 */}
-        <div className="mb-6 bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-black mb-3">🔧 诊断修复工具</h3>
-          <div className="flex flex-wrap gap-3">
+        <div className="mb-6 bg-white rounded-lg shadow p-3">
+          <h3 className="text-sm font-semibold text-black mb-2">🔧 诊断修复工具</h3>
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={diagnoseDatabase}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
               suppressHydrationWarning
             >
               🔍 诊断数据
             </button>
             <button
               onClick={verifyDataIntegrity}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-2"
               disabled={isVerifying}
               suppressHydrationWarning
             >
