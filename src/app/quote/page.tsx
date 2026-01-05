@@ -7829,12 +7829,17 @@ function QuotePage() {
                 <section>
                   <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-gray-500 text-white rounded-full flex items-center justify-center text-sm">7</span>
-                    高级工具（更多工具菜单）
+                    高级工具
                   </h3>
                   <div className="space-y-3">
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <h4 className="font-bold text-black mb-2">🔍 诊断数据</h4>
-                      <p className="text-sm text-black">检查数据中的异常和问题，提供修复建议</p>
+                      <h4 className="font-bold text-black mb-2">🔍 数据诊断</h4>
+                      <p className="text-sm text-black mb-2">检查数据中的异常和问题，提供智能修复建议</p>
+                      <p className="text-xs text-black bg-blue-50 p-2 rounded mt-2">
+                        使用方法：点击页面顶部的"🔍 数据诊断"按钮打开诊断模态框<br/>
+                        功能：诊断并修正缺少分类、子分类错误、缺少下单口等问题<br/>
+                        特点：支持一键全部修正，智能识别产品分类
+                      </p>
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
