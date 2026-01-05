@@ -4840,28 +4840,25 @@ function QuotePage() {
           </div>
         </div>
 
-        {/* 调试信息面板 */}
-        <div className="mb-3 bg-white rounded-lg shadow p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-black">📊 系统状态</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-            <div className="bg-blue-50 rounded p-2">
-              <div className="text-blue-600 text-xs">本地产品</div>
-              <div className="text-lg font-bold text-black">{debugInfo.localProducts}</div>
-            </div>
-            <div className="bg-green-50 rounded p-2">
-              <div className="text-green-600 text-xs">历史记录</div>
-              <div className="text-lg font-bold text-black">{debugInfo.localHistory}</div>
-            </div>
-            <div className="bg-purple-50 rounded p-2">
-              <div className="text-purple-600 text-xs">云端产品</div>
-              <div className="text-lg font-bold text-black">{debugInfo.uploadProducts}</div>
-            </div>
-            <div className="bg-orange-50 rounded p-2">
-              <div className="text-orange-600 text-xs">最后同步</div>
-              <div className="text-xs font-medium text-black">{debugInfo.lastUpload}</div>
-            </div>
+        {/* 系统状态信息 - 表头下方小字显示 */}
+        <div className="mb-6 bg-white rounded-lg shadow px-4 py-2">
+          <div className="flex items-center gap-6 text-xs text-gray-600">
+            <span className="flex items-center gap-1">
+              <span className="text-blue-600">本地产品:</span>
+              <span className="font-medium text-black">{debugInfo.localProducts}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-green-600">历史记录:</span>
+              <span className="font-medium text-black">{debugInfo.localHistory}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-purple-600">云端产品:</span>
+              <span className="font-medium text-black">{debugInfo.uploadProducts}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-orange-600">最后同步:</span>
+              <span className="font-medium text-black">{debugInfo.lastUpload}</span>
+            </span>
           </div>
         </div>
 
