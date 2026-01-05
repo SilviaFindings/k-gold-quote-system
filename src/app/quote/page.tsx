@@ -7637,20 +7637,19 @@ function QuotePage() {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
-                  请输入6位数密码
+                  请输入密码
                 </label>
                 <input
                   type="password"
                   value={passwordInput}
                   onChange={(e) => {
-                    // 限制只能输入数字，最多6位
-                    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    // 允许输入字母和数字
+                    const value = e.target.value;
                     setPasswordInput(value);
                     if (passwordError) setPasswordError("");
                   }}
-                  placeholder="例如：123456"
+                  placeholder="请输入密码"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none text-center text-2xl tracking-widest"
-                  maxLength={6}
                   autoFocus
                   suppressHydrationWarning
                 />
@@ -7661,7 +7660,7 @@ function QuotePage() {
 
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600">
-                  💡 提示：默认密码为 <strong>123456</strong>
+                  💡 提示：默认密码为 <strong>v6v2k3</strong>
                 </p>
               </div>
             </div>
@@ -7677,6 +7676,11 @@ function QuotePage() {
               </button>
               <button
                 onClick={() => {
+                  if (passwordInput.length === 0) {
+                    setPasswordError("请输入密码");
+                    return;
+                  }
+
                   if (verifyPassword()) {
                     setShowPasswordModal(false);
                     // 执行待处理的清空操作
@@ -7692,9 +7696,9 @@ function QuotePage() {
                     }
                   }
                 }}
-                disabled={passwordInput.length !== 6}
+                disabled={passwordInput.length === 0}
                 className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                  passwordInput.length !== 6
+                  passwordInput.length === 0
                     ? "bg-red-300 text-gray-500 cursor-not-allowed"
                     : "bg-red-600 text-white hover:bg-red-700"
                 }`}
@@ -8572,104 +8576,7 @@ function QuotePage() {
         </div>
       )}
 
-      {/* 密码验证模态框 */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-black">
-                {clearActionType === "cloud" ? "🔐 清空云端数据" : "🔐 清空本地数据"}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setPasswordInput("");
-                  setPasswordError("");
-                  setPendingClearAction(null);
-                }}
-                className="text-black hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-black mb-2">
-                请输入6位数字密码：
-              </label>
-              <input
-                type="text"
-                maxLength={6}
-                value={passwordInput}
-                onChange={(e) => {
-                  // 允许输入字母和数字
-                  const value = e.target.value;
-                  setPasswordInput(value);
-                  setPasswordError("");
-                }}
-                className="w-full rounded border border-gray-300 px-4 py-3 text-center text-2xl tracking-widest focus:border-blue-500 focus:outline-none text-black"
-                placeholder="******"
-                autoFocus
-              />
-              {passwordError && (
-                <p className="text-red-600 text-sm mt-2">{passwordError}</p>
-              )}
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-black">
-                💡 <strong>提示：</strong>请输入6位密码
-              </p>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setPasswordInput("");
-                  setPasswordError("");
-                  setPendingClearAction(null);
-                }}
-                className="px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={() => {
-                  if (passwordInput.length === 0) {
-                    setPasswordError("请输入密码");
-                    return;
-                  }
-
-                  if (!verifyPassword()) {
-                    setPasswordError("密码错误，请重新输入");
-                    setPasswordInput("");
-                    return;
-                  }
-
-                  // 密码验证成功，执行待处理的操作
-                  if (pendingClearAction) {
-                    setShowPasswordModal(false);
-                    setPasswordInput("");
-                    setPasswordError("");
-                    const result = pendingClearAction();
-                    // 如果是 Promise，等待它完成
-                    if (result instanceof Promise) {
-                      result.catch((err) => {
-                        console.error('执行清空操作失败:', err);
-                      });
-                    }
-                    setPendingClearAction(null);
-                  }
-                }}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                确认
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
