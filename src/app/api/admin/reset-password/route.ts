@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword } from '@/lib/auth';
-import { userManager } from '@/storage/database';
+import { getDb } from 'coze-coding-dev-sdk';
+import { users } from '@/storage/database/shared/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * POST /api/admin/reset-password - 重置用户密码（仅用于开发/调试）
@@ -28,8 +30,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = await getDb();
+
     // 查找用户
-    const user = await userManager.getUserByEmail(email);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -41,9 +46,11 @@ export async function POST(request: NextRequest) {
     const newPassword = 'admin123';
     const hashedPassword = await hashPassword(newPassword);
 
-    await userManager.updateUser(user.id, {
-      password: hashedPassword,
-    });
+    // 直接更新密码（绕过 schema 验证，因为这是管理操作）
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, user.id));
 
     return NextResponse.json({
       success: true,
@@ -65,10 +72,11 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const users = await userManager.getUsers();
+    const db = await getDb();
+    const allUsers = await db.select().from(users);
 
     // 不返回密码
-    const safeUsers = users.map(user => ({
+    const safeUsers = allUsers.map(user => ({
       id: user.id,
       email: user.email,
       name: user.name,

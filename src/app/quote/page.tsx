@@ -4837,8 +4837,8 @@ function QuotePage() {
               const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
               products.forEach(product => {
                 if (!product.subCategory) return;
-                const cat = product.category;
-                const validSubCats = SUB_CATEGORIES[cat] || [];
+                const cat = product.category as ProductCategory;
+                const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
                 if (!validSubCats.includes(product.subCategory)) {
                   if (!diagnosis[product.subCategory]) {
                     diagnosis[product.subCategory] = [];
@@ -4928,8 +4928,8 @@ function QuotePage() {
 
                         let fixedCount = 0;
                         const updatedProducts = products.map(p => {
-                          const cat = p.category;
-                          const validSubCats = SUB_CATEGORIES[cat] || [];
+                          const cat = p.category as ProductCategory;
+                          const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
                           if (p.subCategory && !validSubCats.includes(p.subCategory)) {
                             fixedCount++;
                             return { ...p, subCategory: targetSubCat };
@@ -4938,8 +4938,8 @@ function QuotePage() {
                         });
 
                         const updatedHistory = priceHistory.map(h => {
-                          const cat = h.category;
-                          const validSubCats = SUB_CATEGORIES[cat] || [];
+                          const cat = h.category as ProductCategory;
+                          const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
                           if (h.subCategory && !validSubCats.includes(h.subCategory)) {
                             return { ...h, subCategory: targetSubCat };
                           }
