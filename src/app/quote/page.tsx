@@ -3372,6 +3372,16 @@ function QuotePage() {
 
   // 彻底清除所有数据（数据库+本地）
   const clearAllData = async () => {
+    // 先弹出密码验证模态框
+    setClearActionType("cloud");
+    setPendingClearAction(() => clearAllDataInternal);
+    setPasswordInput("");
+    setPasswordError("");
+    setShowPasswordModal(true);
+  };
+
+  // 实际的清除数据函数
+  const clearAllDataInternal = async () => {
     // 二次确认
     const confirmed = confirm(
       '⚠️ 警告：此操作将彻底清除所有数据！\n\n' +
@@ -3385,6 +3395,7 @@ function QuotePage() {
     );
 
     if (!confirmed) {
+      setShowPasswordModal(false);
       return;
     }
 
@@ -3395,6 +3406,7 @@ function QuotePage() {
 
     if (verifyInput !== 'DELETE') {
       alert('操作已取消');
+      setShowPasswordModal(false);
       return;
     }
 
@@ -3449,8 +3461,40 @@ function QuotePage() {
       }, 1000);
     } catch (error: any) {
       console.error('清除数据失败:', error);
-      alert('清除数据失败，请重试。\n\n错误信息: ' + (error.message || '未知错误'));
+      alert('清除数据失败：' + error.message);
     }
+  };
+
+  // 清理本地数据函数
+  const clearLocalData = async () => {
+    // 先弹出密码验证模态框
+    setClearActionType("local");
+    setPendingClearAction(() => clearLocalDataInternal);
+    setPasswordInput("");
+    setPasswordError("");
+    setShowPasswordModal(true);
+  };
+
+  // 实际的清理本地数据函数
+  const clearLocalDataInternal = async () => {
+    const confirmed = confirm('确定要清理本地数据吗？\n\n这将删除所有localStorage中的数据，然后你可以从数据库重新加载或导入新数据。\n\n⚠️ 警告：此操作不可撤销！');
+
+    if (!confirmed) {
+      setShowPasswordModal(false);
+      return;
+    }
+
+    // 清理本地数据
+    localStorage.removeItem('goldProducts');
+    localStorage.removeItem('goldPriceHistory');
+    localStorage.removeItem('goldPrice');
+    localStorage.removeItem('goldPriceTimestamp');
+    localStorage.removeItem('priceCoefficients');
+    localStorage.removeItem('dataVersion');
+    localStorage.removeItem('appSettings');
+
+    // 重新加载页面
+    window.location.reload();
   };
 
   // 验证导出数据的准确性
@@ -8493,21 +8537,7 @@ function QuotePage() {
                verificationResult.details.products.mismatchedIds.length > 0 && (
                 <>
                   <button
-                    onClick={async () => {
-                      if (confirm('确定要清理本地数据吗？\n\n这将删除所有localStorage中的数据，然后你可以从数据库重新加载或导入新数据。\n\n⚠️ 警告：此操作不可撤销！')) {
-                        // 清理本地数据
-                        localStorage.removeItem('goldProducts');
-                        localStorage.removeItem('goldPriceHistory');
-                        localStorage.removeItem('goldPrice');
-                        localStorage.removeItem('goldPriceTimestamp');
-                        localStorage.removeItem('priceCoefficients');
-                        localStorage.removeItem('dataVersion');
-                        localStorage.removeItem('appSettings');
-
-                        // 重新加载页面
-                        window.location.reload();
-                      }
-                    }}
+                    onClick={clearLocalData}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     🗑️ 清理本地数据
@@ -8530,6 +8560,101 @@ function QuotePage() {
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 密码验证模态框 */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-black">
+                {clearActionType === "cloud" ? "🔐 清空云端数据" : "🔐 清空本地数据"}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordInput("");
+                  setPasswordError("");
+                  setPendingClearAction(null);
+                }}
+                className="text-black hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-black mb-2">
+                请输入6位数字密码：
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={passwordInput}
+                onChange={(e) => {
+                  // 只允许输入数字
+                  const value = e.target.value.replace(/\D/g, '');
+                  setPasswordInput(value);
+                  setPasswordError("");
+                }}
+                className="w-full rounded border border-gray-300 px-4 py-3 text-center text-2xl tracking-widest focus:border-blue-500 focus:outline-none text-black"
+                placeholder="******"
+                autoFocus
+              />
+              {passwordError && (
+                <p className="text-red-600 text-sm mt-2">{passwordError}</p>
+              )}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-black">
+                💡 <strong>提示：</strong>默认密码是 <code className="bg-blue-100 px-2 py-1 rounded">123456</code>
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordInput("");
+                  setPasswordError("");
+                  setPendingClearAction(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  if (passwordInput.length !== 6) {
+                    setPasswordError("请输入6位数字密码");
+                    return;
+                  }
+
+                  if (!verifyPassword()) {
+                    setPasswordError("密码错误，请重新输入");
+                    setPasswordInput("");
+                    return;
+                  }
+
+                  // 密码验证成功，执行待处理的操作
+                  if (pendingClearAction) {
+                    setShowPasswordModal(false);
+                    setPasswordInput("");
+                    setPasswordError("");
+                    pendingClearAction();
+                    setPendingClearAction(null);
+                  }
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                确认
               </button>
             </div>
           </div>
