@@ -5176,7 +5176,12 @@ function QuotePage() {
 
         {/* 系数设置区域 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-black">价格系数设置</h2>
+          <div className="mb-4">
+            <h2 className="mb-1 text-xl font-semibold text-black">价格系数设置</h2>
+            <p className="text-sm text-black">
+              全局默认系数（所有产品默认使用此设置，单个产品可在下方特殊系数区单独设置）
+            </p>
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
             {/* 金含量系数 */}
             <div>
@@ -5491,10 +5496,10 @@ function QuotePage() {
               <div className="rounded-lg border-2 border-gray-200 p-4">
                 <div className="mb-3">
                   <label className="block text-sm font-semibold text-black">
-                    特殊系数设置（可选，留空则使用全局固定系数）
+                    特殊系数设置（仅影响当前产品）
                   </label>
                   <p className="text-xs text-black">
-                    为此产品单独设置不同的系数，覆盖全局固定系数
+                    为此产品单独设置不同的系数，留空则使用上面"价格系数设置"区的全局默认值
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
