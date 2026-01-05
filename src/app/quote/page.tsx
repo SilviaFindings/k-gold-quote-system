@@ -3372,16 +3372,18 @@ function QuotePage() {
 
   // 彻底清除所有数据（数据库+本地）
   const clearAllData = async () => {
-    // 先弹出密码验证模态框（立即显示，不等待状态更新）
+    // 先设置清空操作
+    setPendingClearAction(() => clearAllDataInternal);
+
+    // 然后设置其他状态
     setClearActionType("cloud");
     setPasswordInput("");
     setPasswordError("");
-    setShowPasswordModal(true);
 
-    // 延迟设置清空操作，确保模态框已经显示
-    setTimeout(() => {
-      setPendingClearAction(() => clearAllDataInternal);
-    }, 0);
+    // 最后显示密码框（确保清空操作已经设置好了）
+    requestAnimationFrame(() => {
+      setShowPasswordModal(true);
+    });
   };
 
   // 实际的清除数据函数
@@ -3444,16 +3446,18 @@ function QuotePage() {
 
   // 清理本地数据函数
   const clearLocalData = async () => {
-    // 先弹出密码验证模态框（立即显示，不等待状态更新）
+    // 先设置清空操作
+    setPendingClearAction(() => clearLocalDataInternal);
+
+    // 然后设置其他状态
     setClearActionType("local");
     setPasswordInput("");
     setPasswordError("");
-    setShowPasswordModal(true);
 
-    // 延迟设置清空操作，确保模态框已经显示
-    setTimeout(() => {
-      setPendingClearAction(() => clearLocalDataInternal);
-    }, 0);
+    // 最后显示密码框（确保清空操作已经设置好了）
+    requestAnimationFrame(() => {
+      setShowPasswordModal(true);
+    });
   };
 
   // 实际的清理本地数据函数
@@ -4662,135 +4666,145 @@ function QuotePage() {
 
   // 清空所有云端数据
   const cleanAllCloudData = async () => {
-    // 先弹出密码验证模态框（立即显示，不等待状态更新）
+    // 设置清空操作（在密码验证通过后执行）
+    const clearAction = async () => {
+      console.log("========== 开始清空云端数据 ==========");
+
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          alert("❌ 清空失败: 未登录，请先登录");
+          return;
+        }
+
+        console.log("Token:", token.substring(0, 20) + "...");
+
+        const response = await fetch('/api/clean-all', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        console.log("响应状态:", response.status, response.statusText);
+        console.log("响应类型:", response.headers.get('content-type'));
+
+        // 检查响应状态
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("响应错误文本:", errorText);
+          alert(`❌ 清空失败: HTTP ${response.status} - ${errorText || response.statusText}`);
+          return;
+        }
+
+        // 尝试解析 JSON
+        let result;
+        const responseText = await response.text();
+        console.log("响应原始文本:", responseText);
+
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          console.error("JSON解析失败:", e);
+          alert(`❌ 清空失败: 无法解析服务器响应\n响应内容: ${responseText}`);
+          return;
+        }
+
+        console.log("解析后的结果:", result);
+
+        if (result.success) {
+          let message = "✅ 云端数据清空成功\n\n";
+          message += `清空内容：\n`;
+          message += `  • 产品数据: ${result.results.productsDeleted} 条\n`;
+          message += `  • 价格历史: ${result.results.historyDeleted} 条\n`;
+          message += `  • 配置数据: ${result.results.configDeleted ? '已清空' : '失败'}\n`;
+
+          if (result.results.errors && result.results.errors.length > 0) {
+            message += `\n⚠️ 遇到错误：\n`;
+            result.results.errors.forEach((error: string) => {
+              message += `  • ${error}\n`;
+            });
+          }
+
+          message += "\n💡 提示：\n";
+          message += "1. 云端数据已清空\n";
+          message += "2. 可以重新从本地数据导入到云端\n";
+          message += "3. 建议先点击\"修复表结构\"确保数据库支持长ID\n";
+
+          alert(message);
+          console.log("清空结果:", result);
+        } else {
+          alert("❌ 清空失败: " + (result.error || "未知错误"));
+          console.error("清空失败:", result);
+        }
+      } catch (error: any) {
+        console.error("❌ 清空失败:", error);
+        alert("❌ 清空失败: " + error.message);
+      }
+
+      console.log("========== 云端数据清空结束 ==========");
+    };
+
+    // 先设置清空操作
+    setPendingClearAction(() => clearAction);
+
+    // 然后设置其他状态
     setClearActionType("cloud");
     setPasswordInput("");
     setPasswordError("");
-    setShowPasswordModal(true);
 
-    // 延迟设置清空操作，确保模态框已经显示
-    setTimeout(() => {
-      setPendingClearAction(async () => {
-        console.log("========== 开始清空云端数据 ==========");
-
-        try {
-          const token = localStorage.getItem('auth_token');
-          if (!token) {
-            alert("❌ 清空失败: 未登录，请先登录");
-            return;
-          }
-
-          console.log("Token:", token.substring(0, 20) + "...");
-
-          const response = await fetch('/api/clean-all', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-
-          console.log("响应状态:", response.status, response.statusText);
-          console.log("响应类型:", response.headers.get('content-type'));
-
-          // 检查响应状态
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error("响应错误文本:", errorText);
-            alert(`❌ 清空失败: HTTP ${response.status} - ${errorText || response.statusText}`);
-            return;
-          }
-
-          // 尝试解析 JSON
-          let result;
-          const responseText = await response.text();
-          console.log("响应原始文本:", responseText);
-
-          try {
-            result = JSON.parse(responseText);
-          } catch (e) {
-            console.error("JSON解析失败:", e);
-            alert(`❌ 清空失败: 无法解析服务器响应\n响应内容: ${responseText}`);
-            return;
-          }
-
-          console.log("解析后的结果:", result);
-
-          if (result.success) {
-            let message = "✅ 云端数据清空成功\n\n";
-            message += `清空内容：\n`;
-            message += `  • 产品数据: ${result.results.productsDeleted} 条\n`;
-            message += `  • 价格历史: ${result.results.historyDeleted} 条\n`;
-            message += `  • 配置数据: ${result.results.configDeleted ? '已清空' : '失败'}\n`;
-
-            if (result.results.errors && result.results.errors.length > 0) {
-              message += `\n⚠️ 遇到错误：\n`;
-              result.results.errors.forEach((error: string) => {
-                message += `  • ${error}\n`;
-              });
-            }
-
-            message += "\n💡 提示：\n";
-            message += "1. 云端数据已清空\n";
-            message += "2. 可以重新从本地数据导入到云端\n";
-            message += "3. 建议先点击\"修复表结构\"确保数据库支持长ID\n";
-
-            alert(message);
-            console.log("清空结果:", result);
-          } else {
-            alert("❌ 清空失败: " + (result.error || "未知错误"));
-            console.error("清空失败:", result);
-          }
-        } catch (error: any) {
-          console.error("❌ 清空失败:", error);
-          alert("❌ 清空失败: " + error.message);
-        }
-
-        console.log("========== 云端数据清空结束 ==========");
-      });
-    }, 0);
+    // 最后显示密码框（确保清空操作已经设置好了）
+    requestAnimationFrame(() => {
+      setShowPasswordModal(true);
+    });
   };
 
   // 清空所有本地数据
   const clearAllLocalData = () => {
-    // 先弹出密码验证模态框（立即显示，不等待状态更新）
+    // 设置清空操作（在密码验证通过后执行）
+    const clearAction = () => {
+      try {
+        console.log("========== 开始清空本地数据 ==========");
+
+        // 清空 localStorage 中的数据
+        localStorage.removeItem("goldProducts");
+        localStorage.removeItem("goldPriceHistory");
+        localStorage.removeItem("goldPrice");
+        localStorage.removeItem("goldPriceTimestamp");
+        localStorage.removeItem("priceCoefficients");
+        localStorage.removeItem("dataVersion");
+        // 注意：不清除登录状态 (auth_token)，方便用户继续操作
+
+        // 清空 state
+        setProducts([]);
+        setPriceHistory([]);
+
+        // 显示成功消息
+        alert("✅ 本地数据已清空\n\n" +
+          "- 产品数据：已清空\n" +
+          "- 历史记录：已清空\n" +
+          "- 金价配置：已重置\n" +
+          "- 价格系数：已重置");
+
+        console.log("========== 本地数据清空结束 ==========");
+      } catch (error: any) {
+        console.error("❌ 清空失败:", error);
+        alert("❌ 清空失败: " + error.message);
+      }
+    };
+
+    // 先设置清空操作
+    setPendingClearAction(() => clearAction);
+
+    // 然后设置其他状态
     setClearActionType("local");
     setPasswordInput("");
     setPasswordError("");
-    setShowPasswordModal(true);
 
-    // 延迟设置清空操作，确保模态框已经显示
-    setTimeout(() => {
-      setPendingClearAction(() => {
-        try {
-          console.log("========== 开始清空本地数据 ==========");
-
-          // 清空 localStorage 中的数据
-          localStorage.removeItem("goldProducts");
-          localStorage.removeItem("goldPriceHistory");
-          localStorage.removeItem("goldPrice");
-          localStorage.removeItem("goldPriceTimestamp");
-          localStorage.removeItem("priceCoefficients");
-          localStorage.removeItem("dataVersion");
-          // 注意：不清除登录状态 (auth_token)，方便用户继续操作
-
-          // 清空 state
-          setProducts([]);
-          setPriceHistory([]);
-
-          // 显示成功消息
-          alert("✅ 本地数据已清空\n\n" +
-            "- 产品数据：已清空\n" +
-            "- 历史记录：已清空\n" +
-            "- 金价配置：已重置\n" +
-            "- 价格系数：已重置");
-
-          console.log("========== 本地数据清空结束 ==========");
-        } catch (error: any) {
-          console.error("❌ 清空失败:", error);
-          alert("❌ 清空失败: " + error.message);
-        }
-      });
-    }, 0);
+    // 最后显示密码框（确保清空操作已经设置好了）
+    requestAnimationFrame(() => {
+      setShowPasswordModal(true);
+    });
   };
 
   return (
