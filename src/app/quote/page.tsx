@@ -2151,7 +2151,104 @@ function QuotePage() {
     };
 
     setProducts([...products, testProduct1, testProduct2, testProduct3]);
-    alert("✅ 已添加3个测试产品！\n\n现在您应该能看到三种颜色的提示框：\n• 红色：缺少分类\n• 橙色：子分类错误\n• 黄色：缺少下单口");
+    alert("✅ 已添加3个测试产品！\n\n现在您应该能看到三种颜色的提示框：\n• 红色：缺少分类\n• 浅蓝色：子分类错误\n• 浅绿色：缺少下单口");
+  };
+
+  // 批量修正缺少分类的产品
+  const fixEmptyCategories = () => {
+    const updatedProducts = products.map(p => {
+      if (!p.category || (p.category as string).trim() === "") {
+        const detectedCategory = detectCategoryFromName(p.productName);
+        const detectedSubCategory = detectSubCategoryFromName(p.productName);
+        const category = detectedCategory || "配件";
+        const subCategory = detectedSubCategory || SUB_CATEGORIES[category][0];
+
+        return {
+          ...p,
+          category,
+          subCategory,
+        };
+      }
+      return p;
+    });
+
+    setProducts(updatedProducts);
+    alert(`✅ 已自动修正 ${products.filter(p => !p.category || (p.category as string).trim() === "").length} 个产品的分类！`);
+  };
+
+  // 批量修正子分类错误的产品
+  const fixSubCategoryErrors = () => {
+    const diagnoseSubCategories = () => {
+      const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
+      products.forEach(product => {
+        if (!product.subCategory) return;
+        const cat = product.category as ProductCategory;
+        const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
+        if (!validSubCats.includes(product.subCategory)) {
+          if (!diagnosis[product.subCategory]) {
+            diagnosis[product.subCategory] = [];
+          }
+          let suggested = "";
+          const code = product.productCode.toLowerCase();
+          const name = (product.productName || "").toLowerCase();
+          if (code.includes("ear") || name.includes("ear") || name.includes("耳环") || name.includes("耳逼")) {
+            suggested = "耳环/耳逼";
+          } else if (code.includes("ring") || name.includes("ring") || name.includes("戒")) {
+            suggested = "戒子托";
+          } else if (code.includes("chain") || name.includes("chain") || name.includes("链")) {
+            suggested = "金链";
+          } else if (code.includes("open") || name.includes("open") || name.includes("开口")) {
+            suggested = "开口圈/闭口圈";
+          } else if (code.includes("bead") || name.includes("bead") || name.includes("珠")) {
+            suggested = "圆珠";
+          } else if (code.includes("button") || name.includes("button") || name.includes("扣")) {
+            suggested = "扣子";
+          }
+
+          diagnosis[product.subCategory].push({ product, suggested });
+        }
+      });
+      return diagnosis;
+    };
+
+    const diagnosis = diagnoseSubCategories();
+    const updatedProducts = products.map(p => {
+      const cat = p.category as ProductCategory;
+      const validSubCats = cat && SUB_CATEGORIES[cat] ? SUB_CATEGORIES[cat] : [];
+
+      // 检查是否需要修正
+      for (const [subCat, items] of Object.entries(diagnosis)) {
+        const item = items.find(i => i.product.id === p.id);
+        if (item && item.suggested) {
+          return {
+            ...p,
+            subCategory: item.suggested,
+          };
+        }
+      }
+      return p;
+    });
+
+    const fixedCount = Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
+    setProducts(updatedProducts);
+    alert(`✅ 已自动修正 ${fixedCount} 个产品的子分类！`);
+  };
+
+  // 批量修正缺少下单口的产品
+  const fixEmptyOrderChannels = () => {
+    const updatedProducts = products.map(p => {
+      if (!p.orderChannel) {
+        return {
+          ...p,
+          orderChannel: "Van" as OrderChannel,
+        };
+      }
+      return p;
+    });
+
+    const fixedCount = products.filter(p => !p.orderChannel).length;
+    setProducts(updatedProducts);
+    alert(`✅ 已为 ${fixedCount} 个产品设置默认下单口"Van"！`);
   };
 
   const addProduct = () => {
@@ -4906,7 +5003,7 @@ function QuotePage() {
                   </div>
                   {isExpanded && (
                     <div className="py-1.5 px-2 bg-white border-t border-red-200">
-                      <div className="text-xs text-gray-600 space-y-1">
+                      <div className="text-xs text-gray-600 space-y-1 mb-2">
                         {emptyCategoryProducts.map((p, idx) => (
                           <div key={p.id} className="flex gap-2">
                             <span className="font-medium text-red-600">{idx + 1}.</span>
@@ -4917,6 +5014,15 @@ function QuotePage() {
                           </div>
                         ))}
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fixEmptyCategories();
+                        }}
+                        className="w-full mt-2 px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                      >
+                        ✨ 一键智能修正
+                      </button>
                     </div>
                   )}
                 </div>
@@ -4977,7 +5083,7 @@ function QuotePage() {
                   </div>
                   {isExpanded && (
                     <div className="py-1.5 px-2 bg-white border-t border-blue-200">
-                      <div className="text-xs text-gray-600 space-y-2">
+                      <div className="text-xs text-gray-600 space-y-2 mb-2">
                         {Object.entries(diagnosis).map(([subCat, items]) => (
                           <div key={subCat} className="space-y-1">
                             <div className="font-medium text-blue-700">
@@ -4996,6 +5102,15 @@ function QuotePage() {
                           </div>
                         ))}
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fixSubCategoryErrors();
+                        }}
+                        className="w-full mt-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                      >
+                        ✨ 一键批量修正
+                      </button>
                     </div>
                   )}
                 </div>
@@ -5021,7 +5136,7 @@ function QuotePage() {
                   </div>
                   {isExpanded && (
                     <div className="py-1.5 px-2 bg-white border-t border-green-200">
-                      <div className="text-xs text-gray-600 space-y-1">
+                      <div className="text-xs text-gray-600 space-y-1 mb-2">
                         {emptyOrderChannelProducts.map((p, idx) => (
                           <div key={p.id} className="flex gap-2">
                             <span className="font-medium text-green-600">{idx + 1}.</span>
@@ -5032,6 +5147,15 @@ function QuotePage() {
                           </div>
                         ))}
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fixEmptyOrderChannels();
+                        }}
+                        className="w-full mt-2 px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                      >
+                        ✨ 一键设置下单口
+                      </button>
                     </div>
                   )}
                 </div>
