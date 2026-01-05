@@ -3374,7 +3374,7 @@ function QuotePage() {
   const clearAllData = async () => {
     // 先弹出密码验证模态框
     setClearActionType("cloud");
-    setPendingClearAction(clearAllDataInternal);
+    setPendingClearAction(() => clearAllDataInternal);
     setPasswordInput("");
     setPasswordError("");
     setShowPasswordModal(true);
@@ -3442,7 +3442,7 @@ function QuotePage() {
   const clearLocalData = async () => {
     // 先弹出密码验证模态框
     setClearActionType("local");
-    setPendingClearAction(clearLocalDataInternal);
+    setPendingClearAction(() => clearLocalDataInternal);
     setPasswordInput("");
     setPasswordError("");
     setShowPasswordModal(true);
@@ -7625,7 +7625,7 @@ function QuotePage() {
                   if (verifyPassword()) {
                     setShowPasswordModal(false);
                     // 执行待处理的清空操作
-                    if (pendingClearAction) {
+                    if (pendingClearAction && typeof pendingClearAction === 'function') {
                       const result = pendingClearAction();
                       // 如果是 Promise，等待它完成
                       if (result instanceof Promise) {
@@ -7634,6 +7634,9 @@ function QuotePage() {
                         });
                       }
                       setPendingClearAction(null);
+                    } else {
+                      console.error('pendingClearAction 不是一个函数:', pendingClearAction);
+                      alert('操作失败：未找到清空操作');
                     }
                   }
                 }}
