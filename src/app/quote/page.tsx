@@ -3382,33 +3382,6 @@ function QuotePage() {
 
   // 实际的清除数据函数
   const clearAllDataInternal = async () => {
-    // 二次确认
-    const confirmed = confirm(
-      '⚠️ 警告：此操作将彻底清除所有数据！\n\n' +
-      '这将删除：\n' +
-      '  • 数据库中的所有产品数据\n' +
-      '  • 数据库中的所有价格历史\n' +
-      '  • 数据库中的所有配置\n' +
-      '  • 本地localStorage中的所有数据\n\n' +
-      '❗ 此操作不可撤销！\n\n' +
-      '确定要继续吗？'
-    );
-
-    if (!confirmed) {
-      setShowPasswordModal(false);
-      return;
-    }
-
-    // 三次确认，需要输入 "DELETE"
-    const verifyInput = prompt(
-      '为了防止误操作，请输入 "DELETE" 以确认清除所有数据：'
-    );
-
-    if (verifyInput !== 'DELETE') {
-      alert('操作已取消');
-      setShowPasswordModal(false);
-      return;
-    }
 
     try {
       const token = localStorage.getItem('auth_token');
@@ -5418,15 +5391,7 @@ function QuotePage() {
                     <button
                       onClick={() => {
                         setShowMoreToolsMenu(false);
-                        if (confirm("⚠️ 警告：这将清除所有数据！\n\n确定要清除所有 localStorage 数据吗？\n建议在清除前先备份数据。")) {
-                          localStorage.removeItem("goldProducts");
-                          localStorage.removeItem("goldPriceHistory");
-                          localStorage.removeItem("goldPrice");
-                          localStorage.removeItem("goldPriceTimestamp");
-                          localStorage.removeItem("priceCoefficients");
-                          alert("所有数据已清除，请刷新页面");
-                          location.reload();
-                        }
+                        clearAllLocalData();
                       }}
                       className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                       suppressHydrationWarning
