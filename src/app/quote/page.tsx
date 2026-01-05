@@ -4675,8 +4675,8 @@ function QuotePage() {
 
   // 密码验证函数
   const verifyPassword = (): boolean => {
-    // 默认密码：123456
-    const DEFAULT_PASSWORD = "123456";
+    // 默认密码：v6v2k3
+    const DEFAULT_PASSWORD = "v6v2k3";
 
     if (passwordInput === DEFAULT_PASSWORD) {
       return true;
@@ -8599,13 +8599,11 @@ function QuotePage() {
               </label>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
                 maxLength={6}
                 value={passwordInput}
                 onChange={(e) => {
-                  // 只允许输入数字
-                  const value = e.target.value.replace(/\D/g, '');
+                  // 允许输入字母和数字
+                  const value = e.target.value;
                   setPasswordInput(value);
                   setPasswordError("");
                 }}
@@ -8620,7 +8618,7 @@ function QuotePage() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-black">
-                💡 <strong>提示：</strong>默认密码是 <code className="bg-blue-100 px-2 py-1 rounded">123456</code>
+                💡 <strong>提示：</strong>请输入6位密码
               </p>
             </div>
 
