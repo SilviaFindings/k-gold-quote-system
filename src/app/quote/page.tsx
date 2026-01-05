@@ -4831,6 +4831,137 @@ function QuotePage() {
             return null;
           })()}
 
+          {/* 子分类诊断和修复工具 */}
+          {products.length > 0 && (() => {
+            const diagnoseSubCategories = () => {
+              const diagnosis: { [key: string]: { product: Product, suggested: string }[] } = {};
+              products.forEach(product => {
+                if (!product.subCategory) return;
+                const cat = product.category;
+                const validSubCats = SUB_CATEGORIES[cat] || [];
+                if (!validSubCats.includes(product.subCategory)) {
+                  if (!diagnosis[product.subCategory]) {
+                    diagnosis[product.subCategory] = [];
+                  }
+                  // 建议根据货号或产品名称推断正确的子分类
+                  let suggested = "";
+                  const code = product.productCode.toLowerCase();
+                  const name = (product.productName || "").toLowerCase();
+
+                  if (code.includes("ear") || name.includes("ear") || name.includes("耳环") || name.includes("耳逼")) {
+                    suggested = "耳环/耳逼";
+                  } else if (code.includes("ring") || name.includes("ring") || name.includes("戒")) {
+                    suggested = "戒子托";
+                  } else if (code.includes("chain") || name.includes("chain") || name.includes("链")) {
+                    suggested = "金链";
+                  } else if (code.includes("open") || name.includes("open") || name.includes("开口")) {
+                    suggested = "开口圈/闭口圈";
+                  } else if (code.includes("bead") || name.includes("bead") || name.includes("珠")) {
+                    suggested = "圆珠";
+                  } else if (code.includes("button") || name.includes("button") || name.includes("扣")) {
+                    suggested = "扣子";
+                  }
+
+                  diagnosis[product.subCategory].push({ product, suggested });
+                }
+              });
+              return diagnosis;
+            };
+
+            const diagnosis = diagnoseSubCategories();
+            const hasIssues = Object.keys(diagnosis).length > 0;
+
+            if (hasIssues) {
+              const totalIssues = Object.values(diagnosis).reduce((sum, arr) => sum + arr.length, 0);
+              return (
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-800 font-semibold mb-2">🔍 发现 {totalIssues} 个产品的子分类可能存在错误！</p>
+                  <p className="text-xs text-orange-700 mb-2">这些产品的子分类不属于当前大类的子分类列表。</p>
+
+                  <details className="mb-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-orange-800 hover:text-orange-900">
+                      点击查看详细信息 ({Object.keys(diagnosis).length} 个错误子分类)
+                    </summary>
+                    <div className="mt-2 pl-2">
+                      {Object.entries(diagnosis).map(([wrongSubCat, items]) => (
+                        <div key={wrongSubCat} className="mb-2 p-2 bg-white rounded border border-orange-200">
+                          <p className="text-xs font-bold text-black mb-1">错误子分类: "{wrongSubCat}" ({items.length} 个产品)</p>
+                          <div className="max-h-32 overflow-y-auto">
+                            {items.slice(0, 10).map(({ product, suggested }) => (
+                              <div key={product.id} className="text-xs text-black mb-1">
+                                <span className="font-mono">{product.productCode}</span>
+                                {suggested && <span className="ml-2 text-green-600">→ 建议: {suggested}</span>}
+                              </div>
+                            ))}
+                            {items.length > 10 && <p className="text-xs text-gray-600">...还有 {items.length - 10} 个产品</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="text-xs text-orange-700">批量修复为:</label>
+                    <select
+                      id="subCategoryFixSelect"
+                      className="px-2 py-1 text-xs border border-orange-300 rounded"
+                      suppressHydrationWarning
+                    >
+                      <option value="">选择正确的子分类...</option>
+                      {Object.entries(SUB_CATEGORIES).map(([cat, subCats]) => (
+                        <optgroup key={cat} label={cat}>
+                          {subCats.map(subCat => (
+                            <option key={subCat} value={subCat}>{subCat}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const select = document.getElementById("subCategoryFixSelect") as HTMLSelectElement;
+                        const targetSubCat = select?.value;
+                        if (!targetSubCat) {
+                          alert("请先选择要修复成的子分类！");
+                          return;
+                        }
+                        if (!confirm(`确定将所有错误子分类的产品修复为 "${targetSubCat}" 吗？\n\n这将影响 ${totalIssues} 个产品。`)) return;
+
+                        let fixedCount = 0;
+                        const updatedProducts = products.map(p => {
+                          const cat = p.category;
+                          const validSubCats = SUB_CATEGORIES[cat] || [];
+                          if (p.subCategory && !validSubCats.includes(p.subCategory)) {
+                            fixedCount++;
+                            return { ...p, subCategory: targetSubCat };
+                          }
+                          return p;
+                        });
+
+                        const updatedHistory = priceHistory.map(h => {
+                          const cat = h.category;
+                          const validSubCats = SUB_CATEGORIES[cat] || [];
+                          if (h.subCategory && !validSubCats.includes(h.subCategory)) {
+                            return { ...h, subCategory: targetSubCat };
+                          }
+                          return h;
+                        });
+
+                        setProducts(updatedProducts);
+                        setPriceHistory(updatedHistory);
+                        alert(`已将 ${fixedCount} 个产品的子分类修复为 "${targetSubCat}"`);
+                      }}
+                      className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
+                      suppressHydrationWarning
+                    >
+                      批量修复子分类
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* 显示没有下单口的产品修复工具 */}
           {products.length > 0 && (() => {
             const emptyOrderChannelCount = products.filter(p => !p.orderChannel).length;
