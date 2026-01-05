@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18K金产品报价计算单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">18K金产品报价计算单</h1>
+
+        <!-- 金价设置区域 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">金价设置</h2>
+            <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col">
+                    <label class="mb-2 text-sm font-medium text-gray-700">市场金价（人民币/克）</label>
+                    <input
+                        type="number"
+                        id="goldPrice"
+                        value="500"
+                        class="w-48 border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                        step="0.01"
+                    />
+                </div>
+                <div class="flex items-end">
+                    <button
+                        onclick="updatePrices()"
+                        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                    >
+                        更新所有产品价格
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+            <!-- 产品录入区域 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">产品信息录入</h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">产品货号 *</label>
+                            <input
+                                type="text"
+                                id="productCode"
+                                class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                            />
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">产品名称 *</label>
+                            <input
+                                type="text"
+                                id="productName"
+                                class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700">产品规格</label>
+                        <input
+                            type="text"
+                            id="specification"
+                            class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">重量（克）</label>
+                            <input
+                                type="number"
+                                id="weight"
+                                class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                                step="0.01"
+                            />
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">人工成本（人民币）</label>
+                            <input
+                                type="number"
+                                id="laborCost"
+                                class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                                step="0.01"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700">金成色</label>
+                        <select
+                            id="karat"
+                            class="w-full border border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                        >
+                            <option value="14K">14K金</option>
+                            <option value="18K" selected>18K金</option>
+                        </select>
+                    </div>
+
+                    <button
+                        onclick="addProduct()"
+                        class="w-full bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
+                    >
+                        添加产品
+                    </button>
+                </div>
+            </div>
+
+            <!-- 当前产品列表 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-gray-800">当前产品列表</h2>
+                    <button
+                        onclick="exportToExcel('current')"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                    >
+                        导出Excel
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="w-full border-collapse border border-gray-200 text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border border-gray-200 px-3 py-2 text-left">货号</th>
+                                <th class="border border-gray-200 px-3 py-2 text-left">名称</th>
+                                <th class="border border-gray-200 px-3 py-2 text-left">成色</th>
+                                <th class="border border-gray-200 px-3 py-2 text-right">重量</th>
+                                <th class="border border-gray-200 px-3 py-2 text-right">批发价</th>
+                                <th class="border border-gray-200 px-3 py-2 text-right">零售价</th>
+                                <th class="border border-gray-200 px-3 py-2 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                            <tr>
+                                <td colspan="7" class="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                                    暂无产品数据
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="bg-white rounded-lg shadow p-6 mt-6">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-800">价格历史记录</h2>
+                <button
+                    onclick="exportToExcel('history')"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                >
+                    导出历史
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="w-full border-collapse border border-gray-200 text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border border-gray-200 px-3 py-2 text-left">时间</th>
+                            <th class="border border-gray-200 px-3 py-2 text-left">货号</th>
+                            <th class="border border-gray-200 px-3 py-2 text-left">名称</th>
+                            <th class="border border-gray-200 px-3 py-2 text-left">成色</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">重量</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">市场金价（人民币/克）</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">批发价</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">零售价</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="8" class="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                                暂无历史记录
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let priceHistory = [];
+
+        // 从 localStorage 加载数据
+        function loadData() {
+            const savedProducts = localStorage.getItem('goldProducts');
+            const savedHistory = localStorage.getItem('goldPriceHistory');
+            if (savedProducts) products = JSON.parse(savedProducts);
+            if (savedHistory) priceHistory = JSON.parse(savedHistory);
+            renderProducts();
+            renderHistory();
+        }
+
+        // 保存数据到 localStorage
+        function saveData() {
+            localStorage.setItem('goldProducts', JSON.stringify(products));
+            localStorage.setItem('goldPriceHistory', JSON.stringify(priceHistory));
+        }
+
+        // 计算价格函数
+        function calculatePrice(marketGoldPrice, weight, laborCost, karat, isRetail) {
+            const goldFactor = karat === '14K' ? 0.586 : 0.755;
+            const laborFactor = isRetail ? 5 : 3;
+
+            // 材料价 = 市场金价 x 金含量 x 1.15 x 1.1 / 5
+            const materialPrice = marketGoldPrice * goldFactor * 1.15 * 1.1 / 5;
+
+            // 工费 = 人工成本 x 系数 / 5
+            const laborPrice = laborCost * laborFactor / 5;
+
+            // 总价 = (材料价 + 工费) x 1.25
+            const totalPrice = (materialPrice + laborPrice) * 1.25;
+
+            return Math.round(totalPrice * 100) / 100;
+        }
+
+        // 添加产品
+        function addProduct() {
+            const productCode = document.getElementById('productCode').value;
+            const productName = document.getElementById('productName').value;
+            const specification = document.getElementById('specification').value;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const laborCost = parseFloat(document.getElementById('laborCost').value) || 0;
+            const karat = document.getElementById('karat').value;
+            const goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
+
+            if (!productCode || !productName) {
+                alert('请填写产品货号和名称');
+                return;
+            }
+
+            const wholesalePrice = calculatePrice(goldPrice, weight, laborCost, karat, false);
+            const retailPrice = calculatePrice(goldPrice, weight, laborCost, karat, true);
+
+            const newProduct = {
+                id: Date.now().toString(),
+                productCode,
+                productName,
+                specification,
+                weight,
+                laborCost,
+                karat,
+                wholesalePrice,
+                retailPrice,
+                timestamp: new Date().toLocaleString('zh-CN')
+            };
+
+            products.push(newProduct);
+
+            // 添加到历史记录
+            const historyRecord = {
+                id: Date.now().toString() + '_hist',
+                productId: newProduct.id,
+                productCode,
+                productName,
+                specification,
+                weight,
+                laborCost,
+                karat,
+                goldPrice,
+                wholesalePrice,
+                retailPrice,
+                timestamp: new Date().toLocaleString('zh-CN')
+            };
+            priceHistory.push(historyRecord);
+
+            saveData();
+            renderProducts();
+            renderHistory();
+
+            // 清空表单
+            document.getElementById('productCode').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('specification').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('laborCost').value = '';
+            document.getElementById('karat').value = '18K';
+        }
+
+        // 删除产品
+        function deleteProduct(id) {
+            if (confirm('确定要删除这个产品吗？')) {
+                products = products.filter(p => p.id !== id);
+                saveData();
+                renderProducts();
+            }
+        }
+
+        // 更新产品价格
+        function updatePrices() {
+            const goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
+
+            products.forEach(product => {
+                const newWholesalePrice = calculatePrice(goldPrice, product.weight, product.laborCost, product.karat, false);
+                const newRetailPrice = calculatePrice(goldPrice, product.weight, product.laborCost, product.karat, true);
+
+                // 添加到历史记录
+                const historyRecord = {
+                    id: Date.now().toString() + '_update',
+                    productId: product.id,
+                    productCode: product.productCode,
+                    productName: product.productName,
+                    specification: product.specification,
+                    weight: product.weight,
+                    laborCost: product.laborCost,
+                    karat: product.karat,
+                    goldPrice,
+                    wholesalePrice: newWholesalePrice,
+                    retailPrice: newRetailPrice,
+                    timestamp: new Date().toLocaleString('zh-CN')
+                };
+                priceHistory.push(historyRecord);
+
+                product.wholesalePrice = newWholesalePrice;
+                product.retailPrice = newRetailPrice;
+                product.timestamp = new Date().toLocaleString('zh-CN');
+            });
+
+            saveData();
+            renderProducts();
+            renderHistory();
+            alert('价格已更新！');
+        }
+
+        // 渲染产品列表
+        function renderProducts() {
+            const tbody = document.getElementById('productTableBody');
+
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                            暂无产品数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.productCode}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.productName}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${product.karat}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">${product.weight}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right font-medium text-green-600">
+                        CAD$${product.wholesalePrice.toFixed(2)}
+                    </td>
+                    <td class="border border-gray-200 px-3 py-2 text-right font-medium text-red-600">
+                        CAD$${product.retailPrice.toFixed(2)}
+                    </td>
+                    <td class="border border-gray-200 px-3 py-2 text-center">
+                        <button
+                            onclick="deleteProduct('${product.id}')"
+                            class="text-red-500 hover:text-red-700"
+                        >
+                            删除
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+
+            if (priceHistory.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="border border-gray-200 px-3 py-4 text-center text-gray-500">
+                            暂无历史记录
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const reversedHistory = [...priceHistory].reverse();
+            tbody.innerHTML = reversedHistory.map(history => `
+                <tr>
+                    <td class="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-900">${history.timestamp}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.productCode}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.productName}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-gray-900">${history.karat}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">${history.weight}</td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-gray-900">
+                        ¥${history.goldPrice.toFixed(2)}
+                    </td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-green-600">
+                        CAD$${history.wholesalePrice.toFixed(2)}
+                    </td>
+                    <td class="border border-gray-200 px-3 py-2 text-right text-red-600">
+                        CAD$${history.retailPrice.toFixed(2)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 导出 Excel（CSV 格式）
+        function exportToExcel(type) {
+            let data;
+            let filename;
+
+            if (type === 'current') {
+                data = products;
+                filename = `当前报价单_${new Date().toLocaleDateString('zh-CN')}.csv`;
+            } else {
+                data = [...priceHistory].reverse();
+                filename = `价格历史记录_${new Date().toLocaleDateString('zh-CN')}.csv`;
+            }
+
+            if (data.length === 0) {
+                alert('没有数据可导出');
+                return;
+            }
+
+            const headers = Object.keys(data[0]).join(',');
+            const rows = data.map(item => Object.values(item).join(','));
+            const csv = [headers, ...rows].join('\n');
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
