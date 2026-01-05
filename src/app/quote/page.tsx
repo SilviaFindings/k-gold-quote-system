@@ -2043,6 +2043,114 @@ function QuotePage() {
   };
 
   // 添加/更新产品（覆盖模式：每个货号只保留最新一条记录）
+  // 添加测试数据（用于演示提示框）
+  const addTestData = () => {
+    if (!confirm("确定要添加测试数据吗？\n\n这将添加一些有问题的产品来展示彩色提示框功能。")) {
+      return;
+    }
+
+    const now = new Date().toLocaleString("zh-CN");
+
+    // 测试产品1：缺少分类
+    const testProduct1: Product = {
+      id: Date.now().toString() + "_test1",
+      category: "",
+      subCategory: "",
+      productCode: "TEST001",
+      productName: "测试产品-缺分类",
+      specification: "测试规格",
+      weight: 5.0,
+      laborCost: 50,
+      karat: "14K",
+      goldColor: "黄金",
+      goldPrice: goldPrice,
+      wholesalePrice: 1000,
+      retailPrice: 1200,
+      accessoryCost: 10,
+      stoneCost: 0,
+      platingCost: 5,
+      moldCost: 0,
+      commission: 0,
+      supplierCode: "K14",
+      orderChannel: "Van",
+      shape: "",
+      laborCostDate: now,
+      accessoryCostDate: now,
+      stoneCostDate: now,
+      platingCostDate: now,
+      moldCostDate: now,
+      commissionDate: now,
+      timestamp: now,
+    };
+
+    // 测试产品2：子分类错误
+    const testProduct2: Product = {
+      id: Date.now().toString() + "_test2",
+      category: "配件",
+      subCategory: "错误的子分类", // 故意使用错误的子分类
+      productCode: "TEST002",
+      productName: "测试产品-子分类错误",
+      specification: "测试规格",
+      weight: 5.0,
+      laborCost: 50,
+      karat: "14K",
+      goldColor: "黄金",
+      goldPrice: goldPrice,
+      wholesalePrice: 1000,
+      retailPrice: 1200,
+      accessoryCost: 10,
+      stoneCost: 0,
+      platingCost: 5,
+      moldCost: 0,
+      commission: 0,
+      supplierCode: "K14",
+      orderChannel: "Van",
+      shape: "",
+      laborCostDate: now,
+      accessoryCostDate: now,
+      stoneCostDate: now,
+      platingCostDate: now,
+      moldCostDate: now,
+      commissionDate: now,
+      timestamp: now,
+    };
+
+    // 测试产品3：缺少下单口
+    const testProduct3: Product = {
+      id: Date.now().toString() + "_test3",
+      category: "配件",
+      subCategory: "圆珠",
+      productCode: "TEST003",
+      productName: "测试产品-缺下单口",
+      specification: "测试规格",
+      weight: 5.0,
+      laborCost: 50,
+      karat: "14K",
+      goldColor: "黄金",
+      goldPrice: goldPrice,
+      wholesalePrice: 1000,
+      retailPrice: 1200,
+      accessoryCost: 10,
+      stoneCost: 0,
+      platingCost: 5,
+      moldCost: 0,
+      commission: 0,
+      supplierCode: "K14",
+      orderChannel: "", // 故意不设置下单口
+      shape: "",
+      laborCostDate: now,
+      accessoryCostDate: now,
+      stoneCostDate: now,
+      platingCostDate: now,
+      moldCostDate: now,
+      commissionDate: now,
+      timestamp: now,
+    };
+
+    setProducts([...products, testProduct1, testProduct2, testProduct3]);
+    alert("✅ 已添加3个测试产品！\n\n现在您应该能看到三种颜色的提示框：\n• 红色：缺少分类\n• 橙色：子分类错误\n• 黄色：缺少下单口");
+  };
+
   const addProduct = () => {
     if (!currentProduct.productCode || !currentProduct.productName) {
       alert("请填写产品货号和名称");
@@ -4538,6 +4646,14 @@ function QuotePage() {
           </h1>
 
           <div className="flex items-center gap-3">
+            {/* 测试按钮（仅在开发环境显示） */}
+            <button
+              onClick={addTestData}
+              className="px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+            >
+              🧪 测试提示框
+            </button>
+
             {/* 同步按钮组 */}
             <div className="relative">
               <button
@@ -4692,7 +4808,7 @@ function QuotePage() {
         <div className="mb-6 space-y-3">
           {/* 产品缺少分类提示 - 红色 */}
           {products.length > 0 && (() => {
-            const emptyCategoryCount = products.filter(p => !p.category).length;
+            const emptyCategoryCount = products.filter(p => !p.category || (p.category as string).trim() === "").length;
             if (emptyCategoryCount > 0) {
               return (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
