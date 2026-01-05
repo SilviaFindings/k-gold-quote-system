@@ -684,6 +684,121 @@ function QuotePage() {
     return historyCount > 1;
   };
 
+  // 从货号中提取供应商代码（支持前缀和后缀）
+  // 前缀格式：E1-KEW001/18K -> E1
+  // 后缀格式：KEW001/K18-J5 -> J5
+  const extractSupplierCodeFromCode = (productCode: string, defaultKarat: string): { supplierCode: string, cleanedCode: string } => {
+    const code = String(productCode).trim().toUpperCase();
+    let supplierCode = "";
+    let cleanedCode = code;
+
+    // 1. 检查前缀供应商代码（格式：XX-货号...）
+    // 例如：E1-KEW001/18K -> 提取 E1，清理后为 KEW001/18K
+    const prefixMatch = code.match(/^([A-Z0-9]{1,5})-(.+)/);
+    if (prefixMatch) {
+      supplierCode = prefixMatch[1];
+      cleanedCode = prefixMatch[2];
+      console.log(`[供应商代码提取] 前缀供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
+    // 2. 检查后缀供应商代码（格式：.../材质-XX）
+    // 例如：KEW001/K18-J5 -> 提取 J5，清理后为 KEW001/K18
+    // 注意：需要排除材质代码中的 -，如 10KR-14KR
+    const suffixMatch = code.match(/(.+?)\/(10KR?|14KR?|18KR?|K10R?|K14R?|K18R?)-([A-Z0-9]{1,5})$/);
+    if (suffixMatch) {
+      supplierCode = suffixMatch[3];
+      cleanedCode = suffixMatch[1] + '/' + suffixMatch[2];
+      console.log(`[供应商代码提取] 后缀供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
+    // 3. 检查另一种后缀格式（没有斜杠的材质代码）
+    // 例如：KEW001-10KR-J5 -> 提取 J5，清理后为 KEW001/10KR（横杠替换为斜杠）
+    const suffixMatch2 = code.match(/(.+)-(10KR?|14KR?|18KR?)-([A-Z0-9]{1,5})$/);
+    if (suffixMatch2) {
+      supplierCode = suffixMatch2[3];
+      cleanedCode = suffixMatch2[1] + '/' + suffixMatch2[2];
+      console.log(`[供应商代码提取] 后缀供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
+    // 4. 检查末尾简单的 -供应商代码 格式（没有材质代码）
+    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250/K14（默认材质为14K时）
+    // 例如：KBD250-K2 -> 提取 K2，清理后为 KBD250/K18（默认材质为18K时）
+    // 例如：KBD250H-J5 -> 提取 J5，清理后为 KBD250H/K14（默认材质为14K时）
+    // 例如：KBD300/A-K2 -> 提取 K2，清理后为 KBD300/A/K14（默认材质为14K时）
+    const suffixMatch3 = code.match(/(.+)-([A-Z][0-9]|[A-Z]{1,2})$/);
+    if (suffixMatch3) {
+      supplierCode = suffixMatch3[2];
+      cleanedCode = suffixMatch3[1];
+      // 根据默认材质添加对应的材质后缀
+      if (defaultKarat === '14K') {
+        cleanedCode = cleanedCode + '/K14';
+      } else if (defaultKarat === '18K') {
+        cleanedCode = cleanedCode + '/K18';
+      } else {
+        // 10K 的情况
+        cleanedCode = cleanedCode + '/K10';
+      }
+      console.log(`[供应商代码提取] 末尾供应商代码: ${supplierCode}, 清理后货号: ${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
+    return { supplierCode, cleanedCode };
+  };
+
+  // 从Excel中的金子颜色列解析颜色
+  // 支持格式：KR、KR（玫瑰金）、KY、KY（黄金）、KW、KW（白金）、KR/KY、KR（玫瑰金）/KY（黄金）等
+  const parseGoldColorFromExcel = (goldColorRaw: string): "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金" | null => {
+    if (!goldColorRaw || goldColorRaw.trim() === "") {
+      return null;
+    }
+
+    const colors: Set<"黄金" | "白金" | "玫瑰金"> = new Set();
+    const text = goldColorRaw.toUpperCase();
+
+    // 检查 KR（玫瑰金）
+    if (text.includes("KR")) {
+      colors.add("玫瑰金");
+    }
+
+    // 检查 KY（黄金）
+    if (text.includes("KY")) {
+      colors.add("黄金");
+    }
+
+    // 检查 KW（白金）
+    if (text.includes("KW")) {
+      colors.add("白金");
+    }
+
+    // 如果没有识别到任何颜色，返回 null
+    if (colors.size === 0) {
+      console.log(`[金子颜色解析] 无法识别颜色: "${goldColorRaw}"`);
+      return null;
+    }
+
+    // 处理多材质情况
+    if (colors.size > 1) {
+      const colorArray = Array.from(colors);
+      if (colorArray.includes("黄金") && colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return "黄金/白金/玫瑰金";
+      } else if (colorArray.includes("黄金") && colorArray.includes("白金")) {
+        return "黄金/白金";
+      } else if (colorArray.includes("黄金") && colorArray.includes("玫瑰金")) {
+        return "黄金/玫瑰金";
+      } else if (colorArray.includes("白金") && colorArray.includes("玫瑰金")) {
+        return "白金/玫瑰金";
+      }
+    }
+
+    // 返回单个颜色
+    const singleColor = Array.from(colors)[0];
+    console.log(`[金子颜色解析] "${goldColorRaw}" -> ${singleColor}`);
+    return singleColor;
+  };
+
   // 从货号智能识别K金材质类型（支持多材质识别）
   const detectMaterialFromCode = (productCode: string): { karat: "10K" | "14K" | "18K", goldColor: "黄金" | "白金" | "玫瑰金" | "黄金/白金/玫瑰金" | "黄金/白金" | "黄金/玫瑰金" | "白金/玫瑰金" } => {
     const code = productCode.toUpperCase();
@@ -3351,6 +3466,7 @@ function QuotePage() {
         const weightIndex = findColumnIndex("重量", "重量(g)", "重量(克)", "净重");
         const laborCostIndex = findColumnIndex("工费", "工费", "人工费", "加工费", "手工费");
         const karatIndex = findColumnIndex("成色", "成色", "K金", "材质");
+        const goldColorIndex = findColumnIndex("金子颜色", "金子颜色", "颜色", "材质颜色");
         const accessoryCostIndex = findColumnIndex("配件成本", "配件成本", "配件");
         const stoneCostIndex = findColumnIndex("石头成本", "石头成本", "石头");
         const platingCostIndex = findColumnIndex("电镀成本", "电镀成本", "电镀");
@@ -3407,15 +3523,24 @@ function QuotePage() {
             }
           }
 
+          // 🔥 从货号中提取供应商代码并清理货号（必须在调试日志之前）
+          const { supplierCode: extractedSupplierCode, cleanedCode: cleanedProductCode } = extractSupplierCodeFromCode(String(productCode), defaultKarat);
+          
+          console.log(`[货号处理] 原始货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 清理后货号: ${cleanedProductCode}`);
+
+          // 使用清理后的货号（如果提取到了供应商代码）
+          const finalProductCode = cleanedProductCode;
+
           // 调试：输出第一个产品和特定货号的详细数据
           const isTargetProduct = productCode && (
             String(productCode).includes("KCR0430") ||
             String(productCode).includes("KOR0430")
           );
 
-          if (newProducts.length === 0 && productCode) {
+          if (newProducts.length === 0 && finalProductCode) {
             console.log(`===== 第一个产品导入调试 =====`);
-            console.log(`货号: ${productCode}`);
+            console.log(`原始货号: ${productCode}`);
+            console.log(`清理后货号: ${finalProductCode}`);
             console.log(`Excel原始重量: ${weightRaw}`);
             console.log(`解析后重量: ${weight}`);
             console.log(`Excel原始工费: ${laborCostRaw}`);
@@ -3431,7 +3556,8 @@ function QuotePage() {
             console.log(`===== 目标产品调试 [${productCode}] =====`);
             console.log(`Excel行号: ${rowIndex + 2}`);
             console.log(`完整行数据:`, row);
-            console.log(`货号: ${productCode} (索引${productCodeIndex})`);
+            console.log(`原始货号: ${productCode} (索引${productCodeIndex})`);
+            console.log(`清理后货号: ${finalProductCode}`);
             console.log(`名称: ${productName} (索引${productNameIndex})`);
             console.log(`重量列(索引${weightIndex}):`, weightRaw, `-> ${weight}`);
             console.log(`工费列(索引${laborCostIndex}):`, laborCostRaw, `-> ${laborCost}`);
@@ -3452,9 +3578,9 @@ function QuotePage() {
           const moldCost = moldCostIndex !== -1 ? parseCost(row[moldCostIndex], "模具成本") : 0;
           const commission = commissionIndex !== -1 ? parseCost(row[commissionIndex], "佣金") : 0;
 
-          // 供应商代码：Excel中有值就用Excel的，没有值就用默认值"K14"
-          const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]) : "";
-          const supplierCode = supplierCodeRaw ? supplierCodeRaw : "K14";
+          // 供应商代码：从货号中提取，如果没有则使用默认值"K14"
+          const supplierCode = extractedSupplierCode ? extractedSupplierCode : "K14";
+          console.log(`[供应商代码] 货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 最终使用: ${supplierCode}`);
 
           // 下单口：Excel中有值就用Excel的，没有值就用默认值"Van"
           const orderChannelRaw = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) : "";
@@ -3466,7 +3592,7 @@ function QuotePage() {
           const karatRaw = karatIndex !== -1 ? String(row[karatIndex]) : "";
           let validKarat: "10K" | "14K" | "18K" = "14K";
 
-          console.log(`[导入调试] 货号: ${productCode}, Excel成色原始值: "${karatRaw}", 成色列索引: ${karatIndex}`);
+          console.log(`[导入调试] 原始货号: ${productCode}, 清理后货号: ${finalProductCode}, Excel成色原始值: "${karatRaw}", 成色列索引: ${karatIndex}`);
 
           if (karatRaw && karatRaw.trim() !== "") {
             const karatValue = String(karatRaw).trim().toUpperCase();
@@ -3527,22 +3653,35 @@ function QuotePage() {
             }
           }
 
-          if (!productCode || !productName) return;
+          if (!finalProductCode || !productName) return;
 
           // 使用用户选择的小类和推断的大类
           const finalCategory = importCategory;
           const finalSubCategory = importSubCategory;
 
           // 调试日志：输出分类结果
-          console.log(`产品 ${productCode} (${productName}): 用户选择小类="${importSubCategory}", 自动推断大类="${finalCategory}"`);
+          console.log(`产品 ${finalProductCode} (${productName}): 用户选择小类="${importSubCategory}", 自动推断大类="${finalCategory}"`);
 
           // 确定最终使用的成色：
           // 1. 如果Excel中有成色且是有效格式（10K/14K/18K/K10/K14/K18），则使用Excel的成色
           // 2. 否则，从货号智能识别成色
-          const detectedMaterial = detectMaterialFromCode(String(productCode));
+          const detectedMaterial = detectMaterialFromCode(finalProductCode);
           const isExcelKaratValid = karatRaw && karatRaw.trim() !== "" &&
             (["10K", "14K", "18K", "K10", "K14", "K18"].includes(String(karatRaw).trim().toUpperCase()));
           const karat = isExcelKaratValid ? validKarat : detectedMaterial.karat;
+
+          // 读取金子颜色：优先使用Excel中的金子颜色，如果没有则默认"黄金"
+          const goldColorRaw = goldColorIndex !== -1 ? String(row[goldColorIndex]) : "";
+          const excelGoldColor = goldColorRaw ? parseGoldColorFromExcel(goldColorRaw) : null;
+          const goldColor = excelGoldColor !== null ? excelGoldColor : "黄金";
+
+          if (excelGoldColor !== null) {
+            console.log(`[导入调试] Excel金子颜色: "${goldColorRaw}" -> ${excelGoldColor}`);
+          } else if (goldColorRaw && goldColorRaw.trim() !== "") {
+            console.log(`[导入调试] Excel金子颜色无法识别: "${goldColorRaw}"，使用默认值"黄金"`);
+          } else {
+            console.log(`[导入调试] Excel中没有金子颜色，使用默认值"黄金"`);
+          }
 
           const wholesalePrice = calculatePrice(
             goldPrice,
@@ -3584,13 +3723,13 @@ function QuotePage() {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
             category: finalCategory,
             subCategory: finalSubCategory, // 使用智能识别的子分类
-            productCode: String(productCode),
+            productCode: finalProductCode,
             productName: String(productName),
             specification: String(specification || ""),
             weight,
             laborCost,
             karat: karat,
-            goldColor: detectedMaterial.goldColor,
+            goldColor: goldColor,
             wholesalePrice,
             retailPrice,
             goldPrice,
@@ -3625,7 +3764,7 @@ function QuotePage() {
             weight: newProduct.weight,
             laborCost: newProduct.laborCost,
             karat: newProduct.karat,
-            goldColor: "黄金",
+            goldColor: newProduct.goldColor,
             goldPrice,
             wholesalePrice,
             retailPrice,
