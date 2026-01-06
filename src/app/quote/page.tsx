@@ -1969,24 +1969,25 @@ function QuotePage() {
       // 注意：这里的laborCost参数已经是单价(US$)
       const laborFeeUSD = laborCost - materialPriceUSD - lossUSD;
 
-      // 5. 其他成本(US$) = 配件 + 石头 + 电镀 + 模具 + 佣金
-      // 注意：这些成本值已经是美金单位
-      const otherCostsUSD = (accessoryCost || 0) + (stoneCost || 0) + (platingCost || 0) + (moldCost || 0) + (commission || 0);
-
-      // 6. 零售价/批发价(US$)
+      // T字头成本系数
       const tMaterialLossFactor2 = coefficients.tMaterialLossFactor2;  // 默认1.15
       const tMaterialFloatFactor = coefficients.tMaterialFloatFactor;  // 默认1.1
       const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.30
 
+      // 5. T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) x 1.15（T字头其它成本加成系数）
+      // 注意：这些成本值已经是美金单位；模具费单列，不计入其他成本
+      const otherCostsUSD = ((accessoryCost || 0) + (stoneCost || 0) + (platingCost || 0) + (commission || 0)) * tMaterialLossFactor2;
+
+      // 6. 零售价/批发价(US$)
       let finalPrice: number;
       if (isRetail) {
-        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.30
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.30 + 模具费
         const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
       } else {
-        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.30
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.30 + 模具费
         const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
       }
 
       // 保留两位小数
@@ -6377,7 +6378,7 @@ function QuotePage() {
                     suppressHydrationWarning
                   />
                   <div className="mt-1 text-xs text-red-600 font-semibold">
-                    注：T开头供应商使用美金单位和特殊公式
+                    注：T开头供应商使用美金单位和T字报价公式
                   </div>
                 </div>
                 <div>
