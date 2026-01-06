@@ -9,11 +9,13 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resetUrl, setResetUrl] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setMessage("");
+    setResetUrl("");
     setLoading(true);
 
     try {
@@ -32,6 +34,11 @@ export default function ForgotPasswordPage() {
       }
 
       setMessage("重置密码邮件已发送到您的邮箱，请查收。");
+
+      // 如果是开发环境，显示重置链接
+      if (data.resetUrl) {
+        setResetUrl(data.resetUrl);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -61,6 +68,21 @@ export default function ForgotPasswordPage() {
           {message && (
             <div className="rounded-md bg-green-50 p-4">
               <p className="text-sm text-green-800">{message}</p>
+            </div>
+          )}
+
+          {resetUrl && (
+            <div className="rounded-md bg-blue-50 p-4">
+              <p className="text-sm text-blue-800 mb-2">
+                开发环境：重置密码链接（点击直接跳转）
+              </p>
+              <a
+                href={resetUrl}
+                className="text-sm text-blue-600 underline break-all"
+                suppressHydrationWarning
+              >
+                {resetUrl}
+              </a>
             </div>
           )}
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { passwordResetManager } from "@/storage/database/passwordResetManager";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,25 +12,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 这里应该：
-    // 1. 验证邮箱是否存在
-    // 2. 生成重置 token
-    // 3. 保存 token 到数据库
-    // 4. 发送重置邮件
+    // 生成重置 token
+    const result = await passwordResetManager.createResetToken(email);
 
-    // 临时方案：返回成功消息（实际应该发送邮件）
-    // 重置链接格式：https://yourdomain.com/reset-password?token=xxx
+    if (result) {
+      console.log(`重置密码请求：${email}`);
+      console.log(`重置链接：${result.resetUrl}`);
 
-    console.log(`重置密码请求：${email}`);
+      // TODO: 发送重置邮件
+      // 当前没有邮件集成，需要在生产环境中集成邮件服务
+      // 临时方案：将重置链接返回给用户（仅用于开发/测试）
 
-    // TODO: 实现邮件发送功能
-    // 需要集成邮件服务（如 integration-agent-mail）
-    // 或者使用数据库集成来存储重置 token
+      return NextResponse.json({
+        message: "重置密码邮件已发送",
+        // 开发环境返回重置链接，生产环境应该通过邮件发送
+        resetUrl: process.env.NODE_ENV === 'development' ? result.resetUrl : undefined,
+      });
+    }
 
+    // 即使用户不存在，也返回成功消息（避免邮箱枚举攻击）
     return NextResponse.json({
       message: "重置密码邮件已发送",
-      // 测试环境下返回 token（生产环境应该通过邮件发送）
-      // resetLink: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=test-token`
     });
   } catch (error) {
     console.error("忘记密码错误:", error);

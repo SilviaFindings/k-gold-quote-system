@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { passwordResetManager } from "@/storage/database/passwordResetManager";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,19 +19,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 这里应该：
-    // 1. 验证 token 是否有效
-    // 2. 检查 token 是否过期
-    // 3. 更新用户密码
-    // 4. 删除已使用的 token
+    // 验证 token 并重置密码
+    const success = await passwordResetManager.resetPassword(token, password);
 
-    console.log(`重置密码请求：token=${token}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: "重置链接无效或已过期" },
+        { status: 400 }
+      );
+    }
 
-    // TODO: 实现实际的密码重置逻辑
-    // 需要集成数据库服务（如 integration-postgre-database）
-    // 来验证 token 并更新用户密码
-
-    // 临时方案：总是返回成功
     return NextResponse.json({
       message: "密码重置成功"
     });
