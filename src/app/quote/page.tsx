@@ -3850,9 +3850,10 @@ function QuotePage() {
           const moldCost = moldCostIndex !== -1 ? parseCost(row[moldCostIndex], "模具成本") : 0;
           const commission = commissionIndex !== -1 ? parseCost(row[commissionIndex], "佣金") : 0;
 
-          // 供应商代码：从货号中提取，如果没有则使用默认值"K14"
-          const supplierCode = extractedSupplierCode ? extractedSupplierCode : "K14";
-          console.log(`[供应商代码] 货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 最终使用: ${supplierCode}`);
+          // 供应商代码：优先使用Excel中的，如果没有则从货号中提取，最后使用默认值"K14"
+          const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]).trim() : "";
+          const supplierCode = supplierCodeRaw ? supplierCodeRaw : (extractedSupplierCode ? extractedSupplierCode : "K14");
+          console.log(`[供应商代码] 货号: ${productCode}, Excel供应商代码: "${supplierCodeRaw}", 提取的供应商代码: ${extractedSupplierCode}, 最终使用: ${supplierCode}`);
 
           // 下单口：Excel中有值就用Excel的，没有值就用默认值"Van"
           const orderChannelRaw = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) : "";
