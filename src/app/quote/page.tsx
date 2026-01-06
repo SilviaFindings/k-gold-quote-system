@@ -7600,13 +7600,9 @@ function QuotePage() {
               <div className="text-sm text-black">
                 <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，需要输入密码验证身份。</p>
                 <p className="mb-2 text-gray-600">⚠️ 此操作不可恢复，请谨慎操作！</p>
-                <p className="text-blue-600 font-medium">📌 请先输入密码，验证通过后才会执行清空操作。</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-black mb-2">
-                  请输入密码
-                </label>
                 <input
                   type="password"
                   value={passwordInput}
@@ -7616,7 +7612,6 @@ function QuotePage() {
                     setPasswordInput(value);
                     if (passwordError) setPasswordError("");
                   }}
-                  placeholder="请输入密码"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none text-center text-2xl tracking-widest"
                   autoFocus
                   suppressHydrationWarning
@@ -7624,12 +7619,6 @@ function QuotePage() {
                 {passwordError && (
                   <p className="mt-2 text-sm text-red-600">{passwordError}</p>
                 )}
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-600">
-                  💡 提示：默认密码为 <strong>v6v2k3</strong>
-                </p>
               </div>
             </div>
 
