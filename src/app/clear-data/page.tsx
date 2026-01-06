@@ -112,7 +112,7 @@ export default function ClearDataPage() {
                 className="mt-2 w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 suppressHydrationWarning
               >
-                {error.includes("未设置") ? "设置清空数据密码（本地/云端）" : "重置清空数据密码（本地/云端）"}
+                {error.includes("未设置") ? "设置云端清空数据密码" : "重置云端清空数据密码"}
               </button>
             )}
           </div>

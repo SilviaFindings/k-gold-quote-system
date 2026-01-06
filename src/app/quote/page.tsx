@@ -7677,7 +7677,9 @@ function QuotePage() {
                   className="block w-full text-sm text-blue-600 hover:text-blue-500 font-medium"
                   suppressHydrationWarning
                 >
-                  设置或重置清空数据密码（本地/云端）
+                  {clearActionType === "local"
+                    ? "设置或重置本地清空数据密码"
+                    : "设置或重置云端清空数据密码"}
                 </button>
                 <button
                   type="button"
