@@ -17,7 +17,13 @@ export async function POST(req: NextRequest) {
 
     if (result) {
       console.log(`重置密码请求：${email}`);
-      console.log(`重置链接：${result.resetUrl}`);
+
+      // 动态生成重置链接（基于当前请求的域名）
+      const protocol = req.headers.get('x-forwarded-proto') || 'http';
+      const host = req.headers.get('host') || 'localhost:5000';
+      const dynamicResetUrl = `${protocol}://${host}/reset-password?token=${encodeURIComponent(result.token)}`;
+
+      console.log(`重置链接：${dynamicResetUrl}`);
 
       // TODO: 发送重置邮件
       // 当前没有邮件集成，需要在生产环境中集成邮件服务
@@ -27,7 +33,7 @@ export async function POST(req: NextRequest) {
         message: "重置密码邮件已发送",
         // 当前为开发/测试环境，直接返回重置链接
         // 生产环境应该通过邮件发送，不返回 resetUrl
-        resetUrl: result.resetUrl,
+        resetUrl: dynamicResetUrl,
       });
     }
 

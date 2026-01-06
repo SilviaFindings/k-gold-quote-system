@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
 
       setMessage("重置密码邮件已发送到您的邮箱，请查收。");
 
-      // 如果是开发环境，显示重置链接
+      // 如果返回了重置链接，则显示给用户
       if (data.resetUrl) {
         setResetUrl(data.resetUrl);
       }
@@ -45,6 +45,15 @@ export default function ForgotPasswordPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoToResetPage = () => {
+    // 从 resetUrl 中提取 token
+    const urlParams = new URLSearchParams(resetUrl.split('?')[1]);
+    const token = urlParams.get('token');
+    if (token) {
+      router.push(`/reset-password?token=${encodeURIComponent(token)}`);
     }
   };
 
@@ -101,13 +110,14 @@ export default function ForgotPasswordPage() {
               </p>
 
               <div className="space-y-3">
-                <a
-                  href={resetUrl}
+                <button
+                  type="button"
+                  onClick={handleGoToResetPage}
                   className="block w-full text-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   suppressHydrationWarning
                 >
                   点击跳转到重置密码页面
-                </a>
+                </button>
 
                 <div className="flex gap-2">
                   <button
