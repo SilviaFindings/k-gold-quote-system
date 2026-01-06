@@ -12,14 +12,6 @@ export default function ForgotPasswordPage() {
   const [resetUrl, setResetUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
-export default function ForgotPasswordPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [resetUrl, setResetUrl] = useState<string>("");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
