@@ -10,12 +10,22 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [resetUrl, setResetUrl] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+export default function ForgotPasswordPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [resetUrl, setResetUrl] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setMessage("");
     setResetUrl("");
+    setCopied(false);
     setLoading(true);
 
     try {
@@ -43,6 +53,24 @@ export default function ForgotPasswordPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(resetUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // 如果 clipboard API 不可用，使用传统方法
+      const textArea = document.createElement("textarea");
+      textArea.value = resetUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -77,25 +105,40 @@ export default function ForgotPasswordPage() {
                 ⚙️ 开发环境：重置密码链接
               </p>
               <p className="text-sm text-blue-700 mb-3">
-                当前未配置邮件服务，请点击下方按钮直接跳转到重置密码页面：
+                当前未配置邮件服务，请选择以下方式继续：
               </p>
-              <a
-                href={resetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block w-full text-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                suppressHydrationWarning
-              >
-                点击此处重置密码（在新窗口打开）
-              </a>
-              <details className="mt-3">
-                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
-                  查看完整链接
-                </summary>
-                <p className="text-xs text-blue-600 mt-1 break-all font-mono bg-white p-2 rounded">
-                  {resetUrl}
-                </p>
-              </details>
+
+              <div className="space-y-3">
+                <a
+                  href={resetUrl}
+                  className="block w-full text-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  suppressHydrationWarning
+                >
+                  点击跳转到重置密码页面
+                </a>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={copyToClipboard}
+                    className="flex-1 py-2 px-4 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    suppressHydrationWarning
+                  >
+                    {copied ? "已复制！" : "复制链接"}
+                  </button>
+                </div>
+
+                <details className="mt-3">
+                  <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 select-none">
+                    查看完整链接 ▼
+                  </summary>
+                  <div className="mt-2">
+                    <p className="text-xs text-blue-600 break-all font-mono bg-white p-3 rounded border border-blue-200">
+                      {resetUrl}
+                    </p>
+                  </div>
+                </details>
+              </div>
             </div>
           )}
 
