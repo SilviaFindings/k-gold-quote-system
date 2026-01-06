@@ -7996,6 +7996,17 @@ function QuotePage() {
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🗑️ 清空本地数据</h4>
+                      <p className="text-sm text-black mb-2">删除本地存储中的所有数据（浏览器 localStorage）</p>
+                      <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded mt-2">
+                        ⚠️ 此操作不可恢复，会删除本地所有产品、历史记录和配置数据
+                      </div>
+                      <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">
+                        🔐 需要输入"本地清空数据密码"验证身份，与登录密码不同
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-black mb-2">🔍 检查云端数据</h4>
                       <p className="text-sm text-black mb-2">快速检查云端是否有数据可以下载</p>
                     </div>
@@ -8005,6 +8016,9 @@ function QuotePage() {
                       <p className="text-sm text-black mb-2">删除云端数据库中的所有数据</p>
                       <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2">
                         ⚠️ 危险操作！此操作不可恢复，会删除云端所有产品、历史记录和配置数据
+                      </div>
+                      <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">
+                        🔐 需要输入"云端清空数据密码"验证身份，与登录密码不同
                       </div>
                     </div>
 
@@ -8025,6 +8039,7 @@ function QuotePage() {
                         <li>替换下载前，建议先通过"备份数据"按钮备份本地数据</li>
                         <li>可以关闭"自动同步"手动控制同步时机</li>
                         <li>清空云端数据前，请确保已备份重要数据，此操作不可恢复</li>
+                        <li>首次清空数据前，需要先设置"清空数据密码"（本地/云端），用于保护清空操作安全</li>
                       </ul>
                     </div>
                   </div>
