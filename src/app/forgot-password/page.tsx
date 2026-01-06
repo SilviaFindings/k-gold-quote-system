@@ -72,17 +72,23 @@ export default function ForgotPasswordPage() {
           )}
 
           {resetUrl && (
-            <div className="rounded-md bg-blue-50 p-4">
-              <p className="text-sm text-blue-800 mb-2">
-                开发环境：重置密码链接（点击直接跳转）
+            <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
+              <p className="text-sm text-blue-800 mb-3 font-medium">
+                ⚙️ 开发环境：重置密码链接
+              </p>
+              <p className="text-sm text-blue-700 mb-3">
+                当前未配置邮件服务，请点击下方按钮直接跳转到重置密码页面：
               </p>
               <a
                 href={resetUrl}
-                className="text-sm text-blue-600 underline break-all"
+                className="inline-block w-full text-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 suppressHydrationWarning
               >
-                {resetUrl}
+                跳转到重置密码页面
               </a>
+              <p className="text-xs text-blue-600 mt-2 break-all">
+                {resetUrl}
+              </p>
             </div>
           )}
 
