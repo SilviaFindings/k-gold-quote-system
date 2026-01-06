@@ -81,14 +81,21 @@ export default function ForgotPasswordPage() {
               </p>
               <a
                 href={resetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block w-full text-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 suppressHydrationWarning
               >
-                跳转到重置密码页面
+                点击此处重置密码（在新窗口打开）
               </a>
-              <p className="text-xs text-blue-600 mt-2 break-all">
-                {resetUrl}
-              </p>
+              <details className="mt-3">
+                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                  查看完整链接
+                </summary>
+                <p className="text-xs text-blue-600 mt-1 break-all font-mono bg-white p-2 rounded">
+                  {resetUrl}
+                </p>
+              </details>
             </div>
           )}
 

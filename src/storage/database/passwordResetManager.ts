@@ -42,8 +42,8 @@ export class PasswordResetManager {
       used: false,
     });
 
-    // 生成重置链接
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+    // 生成重置链接（对 token 进行 URL 编码）
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'}/reset-password?token=${encodeURIComponent(token)}`;
 
     return { token, resetUrl };
   }
