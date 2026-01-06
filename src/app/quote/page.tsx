@@ -8336,8 +8336,11 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-black mb-2">批量导入产品</h4>
                       <p className="text-sm text-black mb-2">点击"批量导入"选择Excel文件，支持 .xlsx、.xls、.csv 格式</p>
-                      <div className="text-xs text-black bg-gray-50 p-2 rounded">
-                        Excel 必须包含：货号、名称列，可选包含：规格、重量、工费等
+                      <div className="text-xs text-black bg-gray-50 p-2 rounded mb-2">
+                        Excel 必须包含：货号、名称列，可选包含：规格、重量、工费、配件、石头、电镀、模具、佣金、供应商代码、下单口等
+                      </div>
+                      <div className="text-xs text-black bg-orange-50 p-2 rounded">
+                        💡 <strong>T字头供应商：</strong>如果货号中包含T字头（如T2-KEW001/K14），系统会自动提取T字头到"供应商代码"列，并使用T字头报价公式计算价格。
                       </div>
                     </div>
 
@@ -8385,6 +8388,39 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-black mb-2">为特定产品设置特殊系数</h4>
                       <p className="text-sm text-black mb-2">在编辑产品时，可以设置该产品的特殊系数，优先使用特殊系数而不是全局系数</p>
+                    </div>
+
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🔥 T字头供应商报价公式</h4>
+                      <p className="text-sm text-black mb-2">
+                        <strong>什么是T字头供应商？</strong><br />
+                        T字头供应商是指供应商代码以字母"T"开头的供应商（如T001、T002、T5等），使用特殊的报价公式计算价格。
+                      </p>
+                      <p className="text-sm text-black mb-2">
+                        <strong>自动识别与计算：</strong><br />
+                        系统会自动识别T字头供应商并使用对应公式计算价格，无需手动切换。
+                      </p>
+                      <p className="text-sm text-black mb-2">
+                        <strong>T字头报价公式：</strong><br />
+                        • 使用美金（US$）作为货币单位<br />
+                        • T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15<br />
+                        • 模具费单独列示，不计入其他成本<br />
+                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br />
+                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费
+                      </p>
+                      <p className="text-sm text-black mb-2">
+                        <strong>Excel导入时自动识别：</strong><br />
+                        系统支持从货号中自动提取T字头供应商代码，支持以下格式：<br />
+                        • 前缀格式：T2-KEW001/K14 → 供应商代码：T2，货号：KEW001/K14<br />
+                        • 后缀格式：KEW001/K14-T1 → 供应商代码：T1，货号：KEW001/K14<br />
+                        • 简单格式：KBD250-T5 → 供应商代码：T5，货号：KBD250/K14
+                      </p>
+                      <p className="text-xs text-black bg-orange-100 p-2 rounded mt-2">
+                        💡 <strong>提示：</strong>系统会自动清理货号中的T字头前缀/后缀，将供应商代码单独列示到"供应商代码"列，"货号"列只保留产品货号（如KEW001/K14）。
+                      </p>
+                      <p className="text-xs text-black bg-orange-100 p-2 rounded mt-2">
+                        💡 <strong>优先级：</strong>如果Excel中有"供应商代码"列，优先使用该列的值；如果Excel中没有该列，系统会从货号中自动提取。
+                      </p>
                     </div>
                   </div>
                 </section>
@@ -8616,7 +8652,22 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <h4 className="font-bold text-black mb-2">Q: 价格计算公式是什么？</h4>
                       <p className="text-sm text-black">
-                        A: 总价 = (材料价 + 工费 + 其它成本) × (1 + 佣金率) × 国际运输和关税系数
+                        A: 普通供应商：总价 = (材料价 + 工费 + 其它成本 + 佣金) × 利润率<br/>
+                        T字头供应商：零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br/>
+                        T字头供应商：批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费<br/>
+                        <strong>注意</strong>：T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15，模具费单独列示
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-bold text-black mb-2">Q: 什么是T字头供应商？如何使用？</h4>
+                      <p className="text-sm text-black">
+                        A: T字头供应商是指供应商代码以字母"T"开头的供应商（如T001、T002、T5等），使用特殊的报价公式计算价格。<br/>
+                        <strong>使用方法：</strong><br/>
+                        1. 在"供应商代码"字段中输入T字头代码（如T001）<br/>
+                        2. 系统会自动识别并使用T字头报价公式计算价格<br/>
+                        3. Excel导入时，如果货号中包含T字头（如T2-KEW001/K14），系统会自动提取并使用对应公式<br/>
+                        <strong>重要提示：</strong>T字头供应商使用美金（US$）作为货币单位，与普通供应商的加币（CAD$）不同。
                       </p>
                     </div>
 
