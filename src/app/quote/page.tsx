@@ -3760,17 +3760,45 @@ function QuotePage() {
 
         const newProducts: Product[] = [];
         const newHistory: PriceHistory[] = [];
+        
+        // 🔥 使用 Map 来跟踪相同货号+供应商的产品，确保每种组合只添加一次
+        // 使用 Set 记录已处理的货号+供应商组合
+        const processedProductKeys = new Set<string>();
 
         rows.forEach((row: any, rowIndex: number) => {
+          // 🔥 在开始处理每一行之前，先检查货号是否为空，避免空行被处理
           const productCode = row[productCodeIndex];
           const productName = row[productNameIndex];
-          const specification = specificationIndex !== -1 ? row[specificationIndex] : "";
 
-          // 跳过空行
+          // 跳过空行（在提取供应商代码之前检查）
           if (!productCode || String(productCode).trim() === "") {
-            console.log(`第${rowIndex + 2}行：跳过空行`);
+            console.log(`第${rowIndex + 2}行：跳过空行（货号为空）`);
             return;
           }
+
+          // 🔥 从货号中提取供应商代码并清理货号（必须在调试日志之前）
+          const { supplierCode: extractedSupplierCode, cleanedCode: cleanedProductCode } = extractSupplierCodeFromCode(String(productCode), defaultKarat);
+          
+          console.log(`[货号处理] 原始货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 清理后货号: ${cleanedProductCode}`);
+
+          // 使用清理后的货号（如果提取到了供应商代码）
+          const finalProductCode = cleanedProductCode;
+          
+          // 🔥 获取供应商代码（优先使用Excel中的，其次从货号中提取，最后使用默认值）
+          const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]).trim() : "";
+          const supplierCode = supplierCodeRaw ? supplierCodeRaw : (extractedSupplierCode ? extractedSupplierCode : "K14");
+          
+          // 🔥 检查是否已经处理过相同的货号+供应商组合
+          const productKey = `${finalProductCode}_${supplierCode}`;
+          if (processedProductKeys.has(productKey)) {
+            console.log(`⚠️ 第${rowIndex + 2}行：跳过重复的产品（货号+供应商组合已存在）- ${finalProductCode} (${supplierCode})`);
+            return;
+          }
+          processedProductKeys.add(productKey);
+          
+          console.log(`[供应商代码] 货号: ${productCode}, Excel供应商代码: "${supplierCodeRaw}", 提取的供应商代码: ${extractedSupplierCode}, 最终使用: ${supplierCode}`);
+
+          const specification = specificationIndex !== -1 ? row[specificationIndex] : "";
 
           // 改进数值读取：更好的处理Excel中的数字
           const weightRaw = importWeight && weightIndex !== -1 ? row[weightIndex] : undefined;
@@ -3794,14 +3822,6 @@ function QuotePage() {
               console.warn(`第${rowIndex + 2}行：无法解析工费 "${laborCostRaw}"，使用0`);
             }
           }
-
-          // 🔥 从货号中提取供应商代码并清理货号（必须在调试日志之前）
-          const { supplierCode: extractedSupplierCode, cleanedCode: cleanedProductCode } = extractSupplierCodeFromCode(String(productCode), defaultKarat);
-          
-          console.log(`[货号处理] 原始货号: ${productCode}, 提取的供应商代码: ${extractedSupplierCode}, 清理后货号: ${cleanedProductCode}`);
-
-          // 使用清理后的货号（如果提取到了供应商代码）
-          const finalProductCode = cleanedProductCode;
 
           // 调试：输出第一个产品和特定货号的详细数据
           const isTargetProduct = productCode && (
@@ -3849,11 +3869,6 @@ function QuotePage() {
           const platingCost = platingCostIndex !== -1 ? parseCost(row[platingCostIndex], "电镀成本") : 0;
           const moldCost = moldCostIndex !== -1 ? parseCost(row[moldCostIndex], "模具成本") : 0;
           const commission = commissionIndex !== -1 ? parseCost(row[commissionIndex], "佣金") : 0;
-
-          // 供应商代码：优先使用Excel中的，如果没有则从货号中提取，最后使用默认值"K14"
-          const supplierCodeRaw = supplierCodeIndex !== -1 ? String(row[supplierCodeIndex]).trim() : "";
-          const supplierCode = supplierCodeRaw ? supplierCodeRaw : (extractedSupplierCode ? extractedSupplierCode : "K14");
-          console.log(`[供应商代码] 货号: ${productCode}, Excel供应商代码: "${supplierCodeRaw}", 提取的供应商代码: ${extractedSupplierCode}, 最终使用: ${supplierCode}`);
 
           // 下单口：Excel中有值就用Excel的，没有值就用默认值"Van"
           const orderChannelRaw = orderChannelIndex !== -1 ? String(row[orderChannelIndex]) : "";
@@ -4061,6 +4076,25 @@ function QuotePage() {
           newHistory.push(historyRecord);
         });
 
+        // 🔥 确保 newProducts 中没有与现有产品重复的货号+供应商组合
+        // 获取现有产品的所有货号+供应商组合
+        const existingProductKeys = new Set<string>();
+        products.forEach(p => {
+          existingProductKeys.add(`${p.productCode}_${p.supplierCode}`);
+        });
+        
+        // 过滤掉新导入的产品中与现有产品重复的组合
+        const filteredNewProducts = newProducts.filter(p => {
+          const key = `${p.productCode}_${p.supplierCode}`;
+          if (existingProductKeys.has(key)) {
+            console.log(`⚠️ 跳过已存在的产品（货号+供应商组合）- ${p.productCode} (${p.supplierCode})`);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log(`📊 导入统计: Excel中共${rows.length}行，处理后新增${newProducts.length}个产品，过滤重复后实际添加${filteredNewProducts.length}个产品`);
+
         // 不再删除已存在的重复货号，直接合并所有产品
         // 允许相同货号存在不同供应商的产品
         // const newProductCodes = new Set(newProducts.map(p => p.productCode));
@@ -4081,7 +4115,7 @@ function QuotePage() {
         // 使用回调函数确保状态更新
         setProducts(prev => {
           console.log("setProducts 被调用，当前产品数量:", prev.length);
-          return [...prev, ...newProducts];
+          return [...prev, ...filteredNewProducts];
         });
 
         setPriceHistory(prev => {
