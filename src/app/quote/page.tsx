@@ -7602,8 +7602,9 @@ function QuotePage() {
             {/* 内容区域 */}
             <div className="p-6 space-y-4">
               <div className="text-sm text-black">
-                <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，需要输入密码验证身份。</p>
+                <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，需要输入<strong>数据清空密码</strong>验证身份。</p>
                 <p className="mb-2 text-gray-600">⚠️ 此操作不可恢复，请谨慎操作！</p>
+                <p className="text-xs text-gray-500">注意：数据清空密码与登录密码不同，用于保护数据清空操作。</p>
               </div>
 
               <div className="relative">
@@ -7617,6 +7618,7 @@ function QuotePage() {
                     if (passwordError) setPasswordError("");
                   }}
                   className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none text-center text-2xl tracking-widest"
+                  placeholder="数据清空密码"
                   autoFocus
                   suppressHydrationWarning
                 />
@@ -7645,19 +7647,11 @@ function QuotePage() {
               <div className="text-center space-y-2">
                 <button
                   type="button"
-                  onClick={() => router.push("/forgot-password")}
-                  className="block w-full text-sm text-indigo-600 hover:text-indigo-500"
-                  suppressHydrationWarning
-                >
-                  忘记密码？
-                </button>
-                <button
-                  type="button"
                   onClick={() => router.push("/set-data-clear-password")}
-                  className="block w-full text-sm text-gray-600 hover:text-gray-500"
+                  className="block w-full text-sm text-blue-600 hover:text-blue-500 font-medium"
                   suppressHydrationWarning
                 >
-                  设置数据清空密码
+                  设置或修改数据清空密码
                 </button>
                 <button
                   type="button"

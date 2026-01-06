@@ -105,6 +105,16 @@ export default function ClearDataPage() {
                 去登录
               </button>
             )}
+            {(error.includes("未设置数据清空密码") || error.includes("数据清空密码不正确")) && (
+              <button
+                type="button"
+                onClick={() => router.push("/set-data-clear-password")}
+                className="mt-2 w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                suppressHydrationWarning
+              >
+                {error.includes("未设置") ? "设置数据清空密码" : "重置数据清空密码"}
+              </button>
+            )}
           </div>
         )}
 
