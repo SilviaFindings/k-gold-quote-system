@@ -266,6 +266,7 @@ interface Product {
   supplierCode: string;         // 供应商代码
   orderChannel: OrderChannel | "";  // 下单口
   shape: ProductShape;          // 形状
+  remarks: string;              // 备注
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -308,6 +309,7 @@ interface PriceHistory {
   supplierCode: string;         // 供应商代码
   orderChannel: OrderChannel | "";  // 下单口
   shape: ProductShape;          // 形状
+  remarks: string;              // 备注
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -466,7 +468,7 @@ function QuotePage() {
   const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的小类
 
   // 导出Excel范围选择
-  const [exportScope, setExportScope] = useState<"current" | "all">("current");
+  const [exportScope, setExportScope] = useState<"current" | "all" | "latest">("current");
 
   // 导出备份相关状态
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -2110,6 +2112,7 @@ function QuotePage() {
       supplierCode: "K14",
       orderChannel: "Van",
       shape: "",
+      remarks: "测试产品2",
       laborCostDate: now,
       accessoryCostDate: now,
       stoneCostDate: now,
@@ -2142,6 +2145,7 @@ function QuotePage() {
       supplierCode: "K14",
       orderChannel: "Van",
       shape: "",
+      remarks: "测试产品2",
       laborCostDate: now,
       accessoryCostDate: now,
       stoneCostDate: now,
@@ -2174,6 +2178,7 @@ function QuotePage() {
       supplierCode: "K14",
       orderChannel: "", // 故意不设置下单口
       shape: "",
+      remarks: "测试产品3",
       laborCostDate: now,
       accessoryCostDate: now,
       stoneCostDate: now,
@@ -2390,6 +2395,7 @@ function QuotePage() {
       supplierCode: currentProduct.supplierCode || "K14",
       orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
+      remarks: currentProduct.remarks || "",
       // 特殊系数（可选）
       specialMaterialLoss: currentProduct.specialMaterialLoss,
       specialMaterialCost: currentProduct.specialMaterialCost,
@@ -2452,6 +2458,7 @@ function QuotePage() {
       supplierCode: currentProduct.supplierCode || "K14",
       orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
+      remarks: currentProduct.remarks || "",
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2560,6 +2567,7 @@ function QuotePage() {
         supplierCode: product.supplierCode || "",
         orderChannel: product.orderChannel || "",
         shape: product.shape || "",
+        remarks: product.remarks || "",
         // 特殊系数（继承旧记录）
         specialMaterialLoss: product.specialMaterialLoss,
         specialMaterialCost: product.specialMaterialCost,
@@ -2598,6 +2606,7 @@ function QuotePage() {
         supplierCode: product.supplierCode || "",
         orderChannel: product.orderChannel || "",
         shape: product.shape || "",
+        remarks: product.remarks || "",
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -2873,6 +2882,7 @@ function QuotePage() {
         supplierCode: updatedProduct.supplierCode,
         orderChannel: updatedProduct.orderChannel,
         shape: updatedProduct.shape,
+        remarks: updatedProduct.remarks || "",
         // 特殊系数
         specialMaterialLoss: updatedProduct.specialMaterialLoss,
         specialMaterialCost: updatedProduct.specialMaterialCost,
@@ -2909,15 +2919,27 @@ function QuotePage() {
   // 导出 Excel（xlsx 格式）- 导出当前产品的最新数据，支持冻结表头和颜色标记
   const exportToExcel = () => {
     // 根据选择的范围过滤产品
-    const filteredProducts = exportScope === "current"
-      ? products.filter(p => {
-          // 先匹配大类
-          if (p.category !== currentCategory) return false;
-          // 如果选择了子分类，还要匹配子分类
-          if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
-          return true;
-        })
-      : products;
+    let filteredProducts: Product[];
+    if (exportScope === "current") {
+      filteredProducts = products.filter(p => {
+        // 先匹配大类
+        if (p.category !== currentCategory) return false;
+        // 如果选择了子分类，还要匹配子分类
+        if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+        return true;
+      });
+    } else if (exportScope === "latest") {
+      // 导出最新导入的产品（最近10分钟内导入的产品）
+      const now = new Date().getTime();
+      const tenMinutesAgo = now - 10 * 60 * 1000; // 10分钟前
+      filteredProducts = products.filter(p => {
+        const timestamp = new Date(p.timestamp).getTime();
+        return timestamp >= tenMinutesAgo;
+      });
+    } else {
+      // exportScope === "all"
+      filteredProducts = products;
+    }
 
     // 🔥 修复：允许相同货号存在不同供应商的产品，使用 货号+供应商 作为唯一键
     // 使用 Map 记录每个 货号+供应商 最新记录的索引，保持导入顺序
@@ -2989,6 +3011,7 @@ function QuotePage() {
         零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
         下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
+        备注: product.remarks || "",
         _modified: modified,  // 内部字段，用于标记是否修改过
       };
 
@@ -2999,7 +3022,7 @@ function QuotePage() {
     const allColumns = [
       "货号", "供应商代码", "分类", "名称", "成色", "金子颜色", "规格", "形状",
       "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金",
-      "零售价", "批发价", "下单口"
+      "零售价", "批发价", "下单口", "备注"
     ];
 
     // 生成表头和数据数组
@@ -3044,6 +3067,9 @@ function QuotePage() {
       } else if (header === "供应商代码" || header === "下单口") {
         minWidth = 8;
         maxWidth = 12;
+      } else if (header === "备注") {
+        minWidth = 15;
+        maxWidth = 40;
       } else if (header === "重量") {
         minWidth = 6;
         maxWidth = 10;
@@ -3146,6 +3172,9 @@ function QuotePage() {
         // 只选了大类：大类_产品报价单_日期.xlsx
         fileName = `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
       }
+    } else if (exportScope === "latest") {
+      // 最新导入的产品
+      fileName = `最新导入_产品报价单_` + new Date().toLocaleDateString("zh-CN") + "_" + new Date().toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ".xlsx";
     } else {
       // 全部分类
       fileName = `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
@@ -4029,6 +4058,7 @@ function QuotePage() {
             supplierCode,
             orderChannel: validOrderChannel,
             shape: validShape,
+            remarks: "",  // Excel导入时不读取备注，默认为空
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -4064,6 +4094,7 @@ function QuotePage() {
             supplierCode,
             orderChannel: validOrderChannel,
             shape: validShape,
+            remarks: "",  // Excel导入时不读取备注，默认为空
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -6385,6 +6416,24 @@ function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
+                    备注
+                  </label>
+                  <input
+                    type="text"
+                    value={currentProduct.remarks || ""}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        remarks: e.target.value,
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                    placeholder="输入备注信息"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black">
                     形状
                   </label>
                   <select
@@ -6482,12 +6531,13 @@ function QuotePage() {
                   <label className="text-sm text-black font-medium">导出范围:</label>
                   <select
                     value={exportScope}
-                    onChange={(e) => setExportScope(e.target.value as "current" | "all")}
+                    onChange={(e) => setExportScope(e.target.value as "current" | "all" | "latest")}
                     className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                     suppressHydrationWarning
                   >
                     <option value="current">{currentSubCategory ? `当前子分类（${currentSubCategory}）` : `当前大类（${currentCategory}）`}</option>
                     <option value="all">所有分类</option>
+                    <option value="latest">最新导入（最近10分钟）</option>
                   </select>
                   <button
                     onClick={() => exportToExcel()}
@@ -6701,6 +6751,7 @@ function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">批发价</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">下单口</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">备注</th>
                     <th className="border border-gray-200 px-3 py-2 text-center text-black bg-gray-100">操作</th>
                   </tr>
                 </thead>
@@ -6827,6 +6878,24 @@ function QuotePage() {
                             return channel ? channel.code : product.orderChannel;
                           })()
                         ) : "-"}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-left text-black">
+                        <input
+                          type="text"
+                          value={product.remarks || ""}
+                          onChange={(e) => {
+                            const newRemarks = e.target.value;
+                            setProducts(products.map(p => {
+                              if (p.id === product.id) {
+                                return { ...p, remarks: newRemarks };
+                              }
+                              return p;
+                            }));
+                          }}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+                          placeholder="添加备注"
+                          suppressHydrationWarning
+                        />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-center">
                         <button
