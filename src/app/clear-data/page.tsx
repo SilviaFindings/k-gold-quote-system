@@ -23,11 +23,13 @@ export default function ClearDataPage() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("auth_token");
       // 先验证数据清空密码
       const verifyResponse = await fetch("/api/auth/verify-data-clear-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ dataClearPassword }),
       });
@@ -43,6 +45,7 @@ export default function ClearDataPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ confirmed: true }),
       });

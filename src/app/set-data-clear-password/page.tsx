@@ -25,7 +25,12 @@ export default function SetDataClearPasswordPage() {
 
   const checkHasPassword = async () => {
     try {
-      const response = await fetch("/api/auth/data-clear-password");
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch("/api/auth/data-clear-password", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setHasPassword(data.hasDataClearPassword);
@@ -55,10 +60,12 @@ export default function SetDataClearPasswordPage() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("auth_token");
       const response = await fetch("/api/auth/data-clear-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
