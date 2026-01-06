@@ -747,21 +747,32 @@ function QuotePage() {
 
   // 计算Top 7产品（按累计数量排序）
   const getTop7Products = (): { productCode: string; supplierCode: string; rank: number }[] => {
-    // 统计每个货号（货号+供应商）的总数量
-    const productQuantities: { [key: string]: { quantity: number; productCode: string; supplierCode: string } } = {};
+    // 统计每个货号（货号+供应商）的最新数量
+    const productQuantities: { [key: string]: { quantity: number; productCode: string; supplierCode: string; timestamp: string } } = {};
 
     products.forEach(product => {
       const key = `${product.productCode}-${product.supplierCode}`;
-      const existing = productQuantities[key];
       const currentQuantity = product.quantity || 0;
+      const currentTimestamp = product.timestamp;
 
-      if (existing) {
-        // 如果当前记录的数量更大，更新为当前记录的信息
-        if (currentQuantity > existing.quantity) {
-          productQuantities[key] = { quantity: currentQuantity, productCode: product.productCode, supplierCode: product.supplierCode };
-        }
+      if (!productQuantities[key]) {
+        // 如果该货号+供应商组合还未记录，直接添加
+        productQuantities[key] = {
+          quantity: currentQuantity,
+          productCode: product.productCode,
+          supplierCode: product.supplierCode,
+          timestamp: currentTimestamp
+        };
       } else {
-        productQuantities[key] = { quantity: currentQuantity, productCode: product.productCode, supplierCode: product.supplierCode };
+        // 如果已存在，比较时间戳，使用最新的记录
+        if (currentTimestamp > productQuantities[key].timestamp) {
+          productQuantities[key] = {
+            quantity: currentQuantity,
+            productCode: product.productCode,
+            supplierCode: product.supplierCode,
+            timestamp: currentTimestamp
+          };
+        }
       }
     });
 
