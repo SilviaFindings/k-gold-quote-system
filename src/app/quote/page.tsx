@@ -8829,6 +8829,50 @@ function QuotePage() {
                       <h4 className="font-bold text-black mb-2">编辑/删除产品</h4>
                       <p className="text-sm text-black">在产品列表中，每行右侧有"编辑"、"查看历史"、"删除"按钮</p>
                     </div>
+
+                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-black mb-2">🏆 Top 7产品颜色标识</h4>
+                      <p className="text-sm text-black mb-2">
+                        系统会自动识别累计数量前7名的产品，并在产品列表的"数量"列和货号查询结果中使用颜色标识：
+                      </p>
+                      <div className="space-y-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-red-100 border border-red-300 rounded-full flex items-center justify-center text-xs">🥇</span>
+                          <span className="text-sm text-black"><strong>第1名：</strong>赤色（红色背景 + 红色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-orange-100 border border-orange-300 rounded-full flex items-center justify-center text-xs">🥈</span>
+                          <span className="text-sm text-black"><strong>第2名：</strong>橙色（橙色背景 + 橙色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full flex items-center justify-center text-xs">🥉</span>
+                          <span className="text-sm text-black"><strong>第3名：</strong>黄色（黄色背景 + 黄色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-100 border border-green-300 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                          <span className="text-sm text-black"><strong>第4名：</strong>绿色（绿色背景 + 绿色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-cyan-100 border border-cyan-300 rounded-full flex items-center justify-center text-xs font-bold">5</span>
+                          <span className="text-sm text-black"><strong>第5名：</strong>青色（青色背景 + 青色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-blue-100 border border-blue-300 rounded-full flex items-center justify-center text-xs font-bold">6</span>
+                          <span className="text-sm text-black"><strong>第6名：</strong>蓝色（蓝色背景 + 蓝色文字）</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-purple-100 border border-purple-300 rounded-full flex items-center justify-center text-xs font-bold">7</span>
+                          <span className="text-sm text-black"><strong>第7名：</strong>紫色（紫色背景 + 紫色文字）</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-black bg-indigo-50 p-2 rounded">
+                        <strong>💡 特点：</strong><br />
+                        • 按货号+供应商组合统计累计数量，确保不同供应商的相同货号分别计算<br />
+                        • 基于最新记录的累计数量排名，而不是最大数量<br />
+                        • 每次进货后排名会自动更新，无需手动刷新<br />
+                        • 同一货号+供应商的所有记录显示相同的颜色标识
+                      </div>
+                    </div>
                   </div>
                 </section>
 
