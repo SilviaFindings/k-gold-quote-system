@@ -648,6 +648,15 @@ function QuotePage() {
     usdExchangeRate: number;  // 美金汇率（加币 x 汇率 = 美金）
     // 佣金相关
     commissionRate: number;  // 佣金率（默认10%）
+    // T开头工厂代码特殊公式参数
+    tKaratFactor: number;  // 14K材质系数（默认0.586）
+    tMaterialLossFactor: number;  // 材料损耗系数（默认1.1）
+    tLaborFactorRetail: number;  // 零售工费系数（默认5）
+    tLaborFactorWholesale: number;  // 批发工费系数（默认3）
+    tMaterialLossFactor2: number;  // 材料损耗系数2（默认1.15）
+    tMaterialFloatFactor: number;  // 材料浮动系数（默认1.1）
+    tInternationalShippingTaxFactor: number;  // 国际运输和关税系数（默认1.30）
+    tLossPercentage: number;  // 损耗百分比（默认0.1即10%）
   }>(() => {
     if (typeof window === 'undefined') {
       return {
@@ -662,6 +671,15 @@ function QuotePage() {
         exchangeRate: 5,
         usdExchangeRate: 0.8,  // 默认美金汇率：加币 x 0.8 = 美金
         commissionRate: 10,  // 默认佣金率：10%
+        // T开头工厂代码特殊公式默认值
+        tKaratFactor: 0.586,
+        tMaterialLossFactor: 1.1,
+        tLaborFactorRetail: 5,
+        tLaborFactorWholesale: 3,
+        tMaterialLossFactor2: 1.15,
+        tMaterialFloatFactor: 1.1,
+        tInternationalShippingTaxFactor: 1.30,
+        tLossPercentage: 0.1,
       };
     }
     const savedCoefficients = localStorage.getItem("priceCoefficients");
@@ -680,6 +698,15 @@ function QuotePage() {
         exchangeRate: parsed.exchangeRate ?? 5,
         usdExchangeRate: parsed.usdExchangeRate ?? 0.8,
         commissionRate: parsed.commissionRate ?? 10,
+        // T开头工厂代码特殊公式参数（兼容旧数据）
+        tKaratFactor: parsed.tKaratFactor ?? 0.586,
+        tMaterialLossFactor: parsed.tMaterialLossFactor ?? 1.1,
+        tLaborFactorRetail: parsed.tLaborFactorRetail ?? 5,
+        tLaborFactorWholesale: parsed.tLaborFactorWholesale ?? 3,
+        tMaterialLossFactor2: parsed.tMaterialLossFactor2 ?? 1.15,
+        tMaterialFloatFactor: parsed.tMaterialFloatFactor ?? 1.1,
+        tInternationalShippingTaxFactor: parsed.tInternationalShippingTaxFactor ?? 1.30,
+        tLossPercentage: parsed.tLossPercentage ?? 0.1,
       };
     }
     return {
@@ -694,6 +721,15 @@ function QuotePage() {
       exchangeRate: 5,
       usdExchangeRate: 0.8,
       commissionRate: 10,
+      // T开头工厂代码特殊公式默认值
+      tKaratFactor: 0.586,
+      tMaterialLossFactor: 1.1,
+      tLaborFactorRetail: 5,
+      tLaborFactorWholesale: 3,
+      tMaterialLossFactor2: 1.15,
+      tMaterialFloatFactor: 1.1,
+      tInternationalShippingTaxFactor: 1.30,
+      tLossPercentage: 0.1,
     };
   });
 
@@ -1211,6 +1247,15 @@ function QuotePage() {
           usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
           commissionRate: coeff.commissionRate ?? 10,
           commissionRateMode: coeff.commissionRateMode ?? "fixed",
+          // T开头工厂代码特殊公式参数（兼容旧数据）
+          tKaratFactor: coeff.tKaratFactor ?? 0.586,
+          tMaterialLossFactor: coeff.tMaterialLossFactor ?? 1.1,
+          tLaborFactorRetail: coeff.tLaborFactorRetail ?? 5,
+          tLaborFactorWholesale: coeff.tLaborFactorWholesale ?? 3,
+          tMaterialLossFactor2: coeff.tMaterialLossFactor2 ?? 1.15,
+          tMaterialFloatFactor: coeff.tMaterialFloatFactor ?? 1.1,
+          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.30,
+          tLossPercentage: coeff.tLossPercentage ?? 0.1,
         };
         console.log("设置系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1503,6 +1548,15 @@ function QuotePage() {
           usdExchangeRateMode: coeff.usdExchangeRateMode ?? "fixed",
           commissionRate: coeff.commissionRate ?? 10,
           commissionRateMode: coeff.commissionRateMode ?? "fixed",
+          // T开头工厂代码特殊公式参数（兼容旧数据）
+          tKaratFactor: coeff.tKaratFactor ?? 0.586,
+          tMaterialLossFactor: coeff.tMaterialLossFactor ?? 1.1,
+          tLaborFactorRetail: coeff.tLaborFactorRetail ?? 5,
+          tLaborFactorWholesale: coeff.tLaborFactorWholesale ?? 3,
+          tMaterialLossFactor2: coeff.tMaterialLossFactor2 ?? 1.15,
+          tMaterialFloatFactor: coeff.tMaterialFloatFactor ?? 1.1,
+          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.30,
+          tLossPercentage: coeff.tLossPercentage ?? 0.1,
         };
         console.log("✅ 加载系数:", completeCoeff);
         setCoefficients(completeCoeff);
@@ -1889,8 +1943,52 @@ function QuotePage() {
     specialLaborFactorRetail?: number,
     specialLaborFactorWholesale?: number,
     specialUsdExchangeRate?: number,  // 特殊美金汇率
-    specialCommissionRate?: number  // 特殊佣金率
+    specialCommissionRate?: number,  // 特殊佣金率
+    supplierCode?: string  // 工厂代码（用于判断是否使用T开头特殊公式）
   ): number => {
+    // 🔥 新增：检查是否为T开头工厂代码（不分大小写）
+    const isTPrefixSupplier = supplierCode && supplierCode.trim().toUpperCase().startsWith('T');
+
+    // 🔥 T开头工厂代码使用特殊公式
+    if (isTPrefixSupplier) {
+      // T开头工厂特殊公式
+      // 1. 金价 (US$) = Toz price (US$) / 31.1035
+      const goldPriceUSD = marketGoldPrice / 31.1035;
+
+      // 2. 材料价 (US$) = 单重 x 金价(US$) x 材质系数(14K=0.586) x 损耗系数(1.1)
+      const tKaratFactor = coefficients.tKaratFactor;  // 默认0.586
+      const tMaterialLossFactor = coefficients.tMaterialLossFactor;  // 默认1.1
+      const materialPriceUSD = weight * goldPriceUSD * tKaratFactor * tMaterialLossFactor;
+
+      // 3. 损耗(US$) = 单重 x 金价(US$) x 损耗百分比(10%)
+      const tLossPercentage = coefficients.tLossPercentage;  // 默认0.1
+      const lossUSD = weight * goldPriceUSD * tLossPercentage;
+
+      // 4. 工费(US$) = 单价(US$) - 材料价(US$) - 损耗(US$)
+      // 注意：这里的laborCost参数已经是单价(US$)
+      const laborFeeUSD = laborCost - materialPriceUSD - lossUSD;
+
+      // 5. 零售价/批发价(US$)
+      const tMaterialLossFactor2 = coefficients.tMaterialLossFactor2;  // 默认1.15
+      const tMaterialFloatFactor = coefficients.tMaterialFloatFactor;  // 默认1.1
+      const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.30
+
+      let finalPrice: number;
+      if (isRetail) {
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5) x 1.30
+        const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail) * tInternationalShippingTaxFactor;
+      } else {
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3) x 1.30
+        const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale) * tInternationalShippingTaxFactor;
+      }
+
+      // 保留两位小数
+      return Math.round(finalPrice * 100) / 100;
+    }
+
+    // 以下是原有公式（非T开头工厂代码）
     let goldFactor: number;
     if (karat === "10K") {
       goldFactor = coefficients.goldFactor10K;
@@ -2315,7 +2413,8 @@ function QuotePage() {
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
       currentProduct.specialUsdExchangeRate,
-      currentProduct.specialCommissionRate
+      currentProduct.specialCommissionRate,
+      currentProduct.supplierCode  // 🔥 新增：传递工厂代码
     );
 
     const retailPrice = calculatePrice(
@@ -2333,7 +2432,8 @@ function QuotePage() {
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
       currentProduct.specialUsdExchangeRate,
-      currentProduct.specialCommissionRate
+      currentProduct.specialCommissionRate,
+      currentProduct.supplierCode  // 🔥 新增：传递工厂代码
     );
 
     // 判断是否为更新操作
@@ -2528,7 +2628,8 @@ function QuotePage() {
         product.specialMaterialCost,
         product.specialProfitMargin,
         product.specialUsdExchangeRate,
-        product.specialCommissionRate
+        product.specialCommissionRate,
+        product.supplierCode  // 🔥 新增：传递工厂代码
       );
 
       const newRetailPrice = calculatePrice(
@@ -2546,7 +2647,8 @@ function QuotePage() {
         product.specialMaterialCost,
         product.specialProfitMargin,
         product.specialUsdExchangeRate,
-        product.specialCommissionRate
+        product.specialCommissionRate,
+        product.supplierCode  // 🔥 新增：传递工厂代码
       );
 
       // 创建新的产品记录
@@ -2840,7 +2942,8 @@ function QuotePage() {
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
         updatedProduct.specialUsdExchangeRate,
-        updatedProduct.specialCommissionRate
+        updatedProduct.specialCommissionRate,
+        updatedProduct.supplierCode  // 🔥 新增：传递工厂代码
       );
 
       updatedProduct.retailPrice = calculatePrice(
@@ -2858,7 +2961,8 @@ function QuotePage() {
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
         updatedProduct.specialUsdExchangeRate,
-        updatedProduct.specialCommissionRate
+        updatedProduct.specialCommissionRate,
+        updatedProduct.supplierCode  // 🔥 新增：传递工厂代码
       );
 
       updatedProduct.timestamp = new Date().toLocaleString("zh-CN");
@@ -4059,7 +4163,8 @@ function QuotePage() {
             undefined,
             undefined,
             undefined,
-            undefined
+            undefined,
+            supplierCode  // 🔥 新增：传递工厂代码
           );
 
           const retailPrice = calculatePrice(
@@ -4077,7 +4182,8 @@ function QuotePage() {
             undefined,
             undefined,
             undefined,
-            undefined
+            undefined,
+            supplierCode  // 🔥 新增：传递工厂代码
           );
 
           const newProduct: Product = {
@@ -5967,6 +6073,127 @@ function QuotePage() {
                 suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-black">默认: 10%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 🔥 T开头工厂代码特殊公式参数 */}
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-black">T开头工厂代码特殊公式参数</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材质系数（14K）
+              </label>
+              <input
+                type="number"
+                value={coefficients.tKaratFactor}
+                onChange={(e) => setCoefficients({...coefficients, tKaratFactor: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.001"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 0.586</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材料损耗系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.tMaterialLossFactor}
+                onChange={(e) => setCoefficients({...coefficients, tMaterialLossFactor: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 1.1</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                零售工费系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.tLaborFactorRetail}
+                onChange={(e) => setCoefficients({...coefficients, tLaborFactorRetail: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.1"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 5</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                批发工费系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.tLaborFactorWholesale}
+                onChange={(e) => setCoefficients({...coefficients, tLaborFactorWholesale: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.1"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 3</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材料损耗系数2
+              </label>
+              <input
+                type="number"
+                value={coefficients.tMaterialLossFactor2}
+                onChange={(e) => setCoefficients({...coefficients, tMaterialLossFactor2: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 1.15</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                材料浮动系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.tMaterialFloatFactor}
+                onChange={(e) => setCoefficients({...coefficients, tMaterialFloatFactor: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 1.1</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                国际运输和关税系数
+              </label>
+              <input
+                type="number"
+                value={coefficients.tInternationalShippingTaxFactor}
+                onChange={(e) => setCoefficients({...coefficients, tInternationalShippingTaxFactor: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 1.30</div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black">
+                损耗百分比
+              </label>
+              <input
+                type="number"
+                value={coefficients.tLossPercentage}
+                onChange={(e) => setCoefficients({...coefficients, tLossPercentage: Number(e.target.value)})}
+                className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                step="0.01"
+                min="0"
+                max="1"
+                suppressHydrationWarning
+              />
+              <div className="mt-1 text-xs text-black">默认: 0.1（即10%）</div>
             </div>
           </div>
         </div>
