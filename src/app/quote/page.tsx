@@ -745,6 +745,36 @@ function QuotePage() {
     };
   });
 
+  // 计算Top 7产品（按累计数量排序）
+  const getTop7Products = (): { productId: string; rank: number }[] => {
+    // 统计每个货号（货号+供应商）的总数量
+    const productQuantities: { [key: string]: { quantity: number; productId: string } } = {};
+
+    products.forEach(product => {
+      const key = `${product.productCode}-${product.supplierCode}`;
+      const existing = productQuantities[key];
+      const currentQuantity = product.quantity || 0;
+
+      if (existing) {
+        if (currentQuantity > existing.quantity) {
+          productQuantities[key] = { quantity: currentQuantity, productId: product.id };
+        }
+      } else {
+        productQuantities[key] = { quantity: currentQuantity, productId: product.id };
+      }
+    });
+
+    // 转换为数组并按数量排序
+    const sortedProducts = Object.values(productQuantities)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 7);  // 取前7名
+
+    return sortedProducts.map((item, index) => ({
+      productId: item.productId,
+      rank: index + 1,
+    }));
+  };
+
   // 格式化日期为年月日
   const formatDate = (timestamp: string): string => {
     return new Date(timestamp).toLocaleDateString("zh-CN");
@@ -5703,7 +5733,56 @@ function QuotePage() {
                 </div>
                 <div className="bg-white rounded p-3 bg-purple-50 border-2 border-purple-300">
                   <div className="text-purple-700 mb-1 font-semibold">累计数量</div>
-                  <div className="font-bold text-xl text-purple-900">
+                  <div className={`font-bold text-xl ${(() => {
+                    // 获取Top 7产品列表
+                    const top7 = getTop7Products();
+                    const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
+                    const rank = top7Map.get(searchResult.id);
+
+                    // 根据排名确定颜色
+                    if (rank !== undefined) {
+                      switch (rank) {
+                        case 1:  // 赤色
+                          return "text-red-900";
+                        case 2:  // 橙色
+                          return "text-orange-700";
+                        case 3:  // 红色
+                          return "text-red-800";
+                        case 4:  // 绿色
+                          return "text-green-900";
+                        case 5:  // 青色
+                          return "text-cyan-900";
+                        case 6:  // 蓝色
+                          return "text-blue-900";
+                        case 7:  // 紫色
+                          return "text-purple-900";
+                        default:
+                          return "text-purple-900";
+                      }
+                    }
+                    return "text-purple-900";
+                  })()}`}>
+                    {(() => {
+                      // 获取Top 7产品列表
+                      const top7 = getTop7Products();
+                      const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
+                      const rank = top7Map.get(searchResult.id);
+
+                      // 根据排名显示排名标识
+                      if (rank !== undefined) {
+                        switch (rank) {
+                          case 1:
+                            return "🥇 ";
+                          case 2:
+                            return "🥈 ";
+                          case 3:
+                            return "🥉 ";
+                          default:
+                            return `${rank} `;
+                        }
+                      }
+                      return "";
+                    })()}
                     {searchResult.quantity || 0}
                   </div>
                   {searchResult.quantityDate && (
@@ -7469,40 +7548,96 @@ function QuotePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products
-                    .filter(p => searchScope === "current" ? p.category === currentCategory : true)
-                    .filter(p => {
-                      // 子分类筛选：如果选中了子分类，只显示匹配的子分类产品
-                      if (currentSubCategory) {
-                        return p.subCategory === currentSubCategory;
-                      }
-                      return true;
-                    })
-                    .filter(p => {
-                      if (!searchQuery) return true;
-                      const query = searchQuery.toLowerCase();
-                      if (searchType === "name") {
-                        return p.productName.toLowerCase().includes(query);
-                      } else if (searchType === "specification") {
-                        return p.specification.toLowerCase().includes(query);
-                      } else if (searchType === "supplierCode") {
-                        return p.supplierCode.toLowerCase().includes(query);
-                      } else if (searchType === "karat") {
-                        return p.karat.toLowerCase().includes(query);
-                      } else if (searchType === "shape") {
-                        return (p.shape || "").toLowerCase().includes(query);
-                      } else {
-                        return (
-                          p.productName.toLowerCase().includes(query) ||
-                          p.specification.toLowerCase().includes(query) ||
-                          p.productCode.toLowerCase().includes(query) ||
-                          p.supplierCode.toLowerCase().includes(query) ||
-                          p.karat.toLowerCase().includes(query) ||
-                          (p.shape || "").toLowerCase().includes(query)
-                        );
-                      }
-                    })
-                    .map((product) => (
+                  {
+                    // 获取Top 7产品列表
+                    (() => {
+                      const top7 = getTop7Products();
+                      const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
+
+                      return products
+                        .filter(p => searchScope === "current" ? p.category === currentCategory : true)
+                        .filter(p => {
+                          // 子分类筛选：如果选中了子分类，只显示匹配的子分类产品
+                          if (currentSubCategory) {
+                            return p.subCategory === currentSubCategory;
+                          }
+                          return true;
+                        })
+                        .filter(p => {
+                          if (!searchQuery) return true;
+                          const query = searchQuery.toLowerCase();
+                          if (searchType === "name") {
+                            return p.productName.toLowerCase().includes(query);
+                          } else if (searchType === "specification") {
+                            return p.specification.toLowerCase().includes(query);
+                          } else if (searchType === "supplierCode") {
+                            return p.supplierCode.toLowerCase().includes(query);
+                          } else if (searchType === "karat") {
+                            return p.karat.toLowerCase().includes(query);
+                          } else if (searchType === "shape") {
+                            return (p.shape || "").toLowerCase().includes(query);
+                          } else {
+                            return (
+                              p.productName.toLowerCase().includes(query) ||
+                              p.specification.toLowerCase().includes(query) ||
+                              p.productCode.toLowerCase().includes(query) ||
+                              p.supplierCode.toLowerCase().includes(query) ||
+                              p.karat.toLowerCase().includes(query) ||
+                              (p.shape || "").toLowerCase().includes(query)
+                            );
+                          }
+                        })
+                        .map((product) => {
+                          // 检查该产品是否在Top 7中
+                          const rank = top7Map.get(product.id);
+                          const isTop7 = rank !== undefined;
+
+                          // 根据排名确定颜色
+                          let colorClass = "text-blue-900";  // 默认蓝色
+                          let bgClass = "";
+                          let rankIndicator = "";
+
+                          if (isTop7) {
+                            switch (rank) {
+                              case 1:  // 赤色
+                                colorClass = "text-red-700";
+                                bgClass = "bg-red-50";
+                                rankIndicator = "🥇";
+                                break;
+                              case 2:  // 橙色
+                                colorClass = "text-orange-600";
+                                bgClass = "bg-orange-50";
+                                rankIndicator = "🥈";
+                                break;
+                              case 3:  // 红色
+                                colorClass = "text-red-600";
+                                bgClass = "bg-red-50";
+                                rankIndicator = "🥉";
+                                break;
+                              case 4:  // 绿色
+                                colorClass = "text-green-700";
+                                bgClass = "bg-green-50";
+                                rankIndicator = "4";
+                                break;
+                              case 5:  // 青色
+                                colorClass = "text-cyan-700";
+                                bgClass = "bg-cyan-50";
+                                rankIndicator = "5";
+                                break;
+                              case 6:  // 蓝色
+                                colorClass = "text-blue-700";
+                                bgClass = "bg-blue-50";
+                                rankIndicator = "6";
+                                break;
+                              case 7:  // 紫色
+                                colorClass = "text-purple-700";
+                                bgClass = "bg-purple-50";
+                                rankIndicator = "7";
+                                break;
+                            }
+                          }
+
+                          return (
                     <tr 
                       key={product.id}
                       className={selectedProducts.has(product.id) ? "bg-blue-50" : product.id === currentProduct.id ? "bg-yellow-50" : ""}
@@ -7592,7 +7727,8 @@ function QuotePage() {
                           })()
                         ) : "-"}
                       </td>
-                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-blue-900">
+                      <td className={`border border-gray-200 px-3 py-2 text-right font-bold ${colorClass} ${bgClass}`}>
+                        {rankIndicator && <span className="mr-1">{rankIndicator}</span>}
                         {product.quantity || 0}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-black">
@@ -7623,7 +7759,9 @@ function QuotePage() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  );
+                });
+                      })()}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
                       <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-black">
