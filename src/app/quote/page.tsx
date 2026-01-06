@@ -275,7 +275,7 @@ interface Product {
   specialProfitMargin?: number;     // 特殊关税系数
   specialLaborFactorRetail?: number;   // 特殊零售价工费系数
   specialLaborFactorWholesale?: number; // 特殊批发价工费系数
-  specialUsdExchangeRate?: number;  // 特殊美金汇率（仅用于US201订单）
+  // specialUsdExchangeRate?: number;  // 特殊美金汇率（已弃用 - 所有订单统一使用加币报价）
   specialCommissionRate?: number;  // 特殊佣金率（默认10%）
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
@@ -320,7 +320,7 @@ interface PriceHistory {
   specialProfitMargin?: number;     // 特殊关税系数
   specialLaborFactorRetail?: number;   // 特殊零售价工费系数
   specialLaborFactorWholesale?: number; // 特殊批发价工费系数
-  specialUsdExchangeRate?: number;  // 特殊美金汇率（仅用于US201订单）
+  // specialUsdExchangeRate?: number;  // 特殊美金汇率（已弃用 - 所有订单统一使用加币报价）
   // 成本时间戳
   laborCostDate: string;        // 工费更新时间
   accessoryCostDate: string;    // 配件成本更新时间
@@ -1996,14 +1996,14 @@ function QuotePage() {
     platingCost: number = 0,
     moldCost: number = 0,
     commission: number = 0,  // 新增佣金参数
-    orderChannel?: OrderChannel,  // 下单口（用于判断是否转换货币）
+    orderChannel?: OrderChannel,  // 下单口
     // 特殊系数（可选，如果提供则优先使用）
     specialMaterialLoss?: number,
     specialMaterialCost?: number,
     specialProfitMargin?: number,
     specialLaborFactorRetail?: number,
     specialLaborFactorWholesale?: number,
-    specialUsdExchangeRate?: number,  // 特殊美金汇率
+    // specialUsdExchangeRate?: number,  // 特殊美金汇率（已弃用 - 所有订单统一使用加币报价）
     specialCommissionRate?: number,  // 特殊佣金率
     supplierCode?: string  // 工厂代码（用于判断是否使用T开头特殊公式）
   ): number => {
@@ -2096,13 +2096,6 @@ function QuotePage() {
     const totalPrice = basePrice * profitMargin;
 
     let finalPrice = Math.round(totalPrice * 100) / 100; // 保留两位小数
-
-    // 如果下单口是US201，则转换成美金
-    if (orderChannel === "US201") {
-      // 确定使用的汇率：优先使用特殊汇率，否则使用全局固定汇率
-      const usdRate = specialUsdExchangeRate !== undefined ? specialUsdExchangeRate : coefficients.usdExchangeRate;
-      finalPrice = Math.round(finalPrice * usdRate * 100) / 100;
-    }
 
     return finalPrice;
   };
@@ -2540,7 +2533,8 @@ function QuotePage() {
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
-      currentProduct.specialUsdExchangeRate,
+      currentProduct.specialLaborFactorRetail,
+      currentProduct.specialLaborFactorWholesale,
       currentProduct.specialCommissionRate,
       currentProduct.supplierCode  // 🔥 新增：传递工厂代码
     );
@@ -2560,7 +2554,8 @@ function QuotePage() {
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
       currentProduct.specialProfitMargin,
-      currentProduct.specialUsdExchangeRate,
+      currentProduct.specialLaborFactorRetail,
+      currentProduct.specialLaborFactorWholesale,
       currentProduct.specialCommissionRate,
       currentProduct.supplierCode  // 🔥 新增：传递工厂代码
     );
@@ -2781,7 +2776,8 @@ function QuotePage() {
         product.specialMaterialLoss,
         product.specialMaterialCost,
         product.specialProfitMargin,
-        product.specialUsdExchangeRate,
+        product.specialLaborFactorRetail,
+        product.specialLaborFactorWholesale,
         product.specialCommissionRate,
         product.supplierCode  // 🔥 新增：传递工厂代码
       );
@@ -2801,7 +2797,8 @@ function QuotePage() {
         product.specialMaterialLoss,
         product.specialMaterialCost,
         product.specialProfitMargin,
-        product.specialUsdExchangeRate,
+        product.specialLaborFactorRetail,
+        product.specialLaborFactorWholesale,
         product.specialCommissionRate,
         product.supplierCode  // 🔥 新增：传递工厂代码
       );
@@ -3101,7 +3098,8 @@ function QuotePage() {
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
-        updatedProduct.specialUsdExchangeRate,
+        updatedProduct.specialLaborFactorRetail,
+        updatedProduct.specialLaborFactorWholesale,
         updatedProduct.specialCommissionRate,
         updatedProduct.supplierCode  // 🔥 新增：传递工厂代码
       );
@@ -3121,7 +3119,8 @@ function QuotePage() {
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
         updatedProduct.specialProfitMargin,
-        updatedProduct.specialUsdExchangeRate,
+        updatedProduct.specialLaborFactorRetail,
+        updatedProduct.specialLaborFactorWholesale,
         updatedProduct.specialCommissionRate,
         updatedProduct.supplierCode  // 🔥 新增：传递工厂代码
       );
@@ -4330,6 +4329,7 @@ function QuotePage() {
             undefined,
             undefined,
             undefined,
+            undefined,
             supplierCode  // 🔥 新增：传递工厂代码
           );
 
@@ -4345,6 +4345,7 @@ function QuotePage() {
             moldCost,
             commission,  // 新增佣金参数
             validOrderChannel || undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -6454,7 +6455,8 @@ function QuotePage() {
               />
               <div className="mt-1 text-xs text-black">默认: 5</div>
             </div>
-            <div>
+            {/* 美金汇率已禁用 - 所有订单统一使用加币报价 */}
+            {/* <div>
               <label className="mb-2 block text-sm font-medium text-black">
                 美金汇率（加币×汇率=美金）
               </label>
@@ -6467,7 +6469,7 @@ function QuotePage() {
                 suppressHydrationWarning
               />
               <div className="mt-1 text-xs text-black">默认: 0.8</div>
-            </div>
+            </div> */}
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
                 佣金率（佣金=工费×佣金率）
@@ -6927,7 +6929,8 @@ function QuotePage() {
                       suppressHydrationWarning
                     />
                   </div>
-                  <div>
+                  {/* 特殊美金汇率已禁用 - 所有订单统一使用加币报价 */}
+                  {/* <div>
                     <label className="mb-2 block text-sm font-medium text-black">
                       特殊美金汇率
                     </label>
@@ -6945,7 +6948,7 @@ function QuotePage() {
                       placeholder={`默认: ${coefficients.usdExchangeRate}`}
                       suppressHydrationWarning
                     />
-                  </div>
+                  </div> */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-black">
                       特殊佣金率
