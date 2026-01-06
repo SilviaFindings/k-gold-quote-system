@@ -131,7 +131,7 @@ export default function SetDataClearPasswordPage() {
       });
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/quote");
       }, 2000);
     } catch (err: any) {
       setError(err.message);

@@ -69,7 +69,7 @@ export default function ClearDataPage() {
       setMessage("数据已成功清空！");
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/quote");
       }, 2000);
     } catch (err: any) {
       setError(err.message);
