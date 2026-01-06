@@ -26,17 +26,42 @@ export default function SetDataClearPasswordPage() {
   const checkHasPassword = async () => {
     try {
       const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setError("未登录，请先登录");
+        router.push("/login");
+        return;
+      }
+
       const response = await fetch("/api/auth/data-clear-password", {
         headers: {
           "Authorization": `Bearer ${token}`,
         },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setHasPassword(data.hasDataClearPassword);
+
+      if (response.status === 401) {
+        setError("登录已过期，请重新登录");
+        setTimeout(() => {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user");
+          router.push("/login");
+        }, 2000);
+        return;
       }
-    } catch (err) {
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "获取状态失败");
+      }
+
+      const data = await response.json();
+      setHasPassword(data.hasDataClearPassword);
+    } catch (err: any) {
       console.error("检查密码状态失败:", err);
+      if (err.message.includes("未登录") || err.message.includes("登录已过期")) {
+        setError(err.message);
+      } else {
+        setError("获取状态失败，请稍后重试");
+      }
     } finally {
       setFetching(false);
     }
@@ -61,6 +86,10 @@ export default function SetDataClearPasswordPage() {
 
     try {
       const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("未登录，请先登录");
+      }
+
       const response = await fetch("/api/auth/data-clear-password", {
         method: "POST",
         headers: {
@@ -74,6 +103,10 @@ export default function SetDataClearPasswordPage() {
       });
 
       const data = await response.json();
+
+      if (response.status === 401) {
+        throw new Error("登录已过期，请重新登录");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "设置失败");
@@ -92,6 +125,13 @@ export default function SetDataClearPasswordPage() {
       }, 2000);
     } catch (err: any) {
       setError(err.message);
+      if (err.message.includes("登录已过期") || err.message.includes("未登录")) {
+        setTimeout(() => {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user");
+          router.push("/login");
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }

@@ -24,6 +24,10 @@ export default function ClearDataPage() {
 
     try {
       const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("未登录，请先登录");
+      }
+
       // 先验证数据清空密码
       const verifyResponse = await fetch("/api/auth/verify-data-clear-password", {
         method: "POST",
@@ -35,6 +39,10 @@ export default function ClearDataPage() {
       });
 
       const verifyData = await verifyResponse.json();
+
+      if (verifyResponse.status === 401) {
+        throw new Error("登录已过期，请重新登录");
+      }
 
       if (!verifyResponse.ok) {
         throw new Error(verifyData.error || "验证失败");
@@ -63,6 +71,13 @@ export default function ClearDataPage() {
       }, 2000);
     } catch (err: any) {
       setError(err.message);
+      if (err.message.includes("登录已过期") || err.message.includes("未登录")) {
+        setTimeout(() => {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user");
+          router.push("/login");
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
