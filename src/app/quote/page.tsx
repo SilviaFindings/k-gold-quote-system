@@ -5990,7 +5990,7 @@ function QuotePage() {
             {/* 材料系数 */}
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
-                材料损耗系数
+                T材料损耗系数
               </label>
               <input
                 type="number"
@@ -6139,7 +6139,7 @@ function QuotePage() {
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
-                材料损耗系数2
+                SF材料损耗系数
               </label>
               <input
                 type="number"
@@ -6181,7 +6181,7 @@ function QuotePage() {
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
-                损耗百分比
+                T损耗百分比
               </label>
               <input
                 type="number"
