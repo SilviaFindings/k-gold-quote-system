@@ -746,9 +746,9 @@ function QuotePage() {
   });
 
   // 计算Top 7产品（按累计数量排序）
-  const getTop7Products = (): { productId: string; rank: number }[] => {
+  const getTop7Products = (): { productCode: string; supplierCode: string; rank: number }[] => {
     // 统计每个货号（货号+供应商）的总数量
-    const productQuantities: { [key: string]: { quantity: number; productId: string } } = {};
+    const productQuantities: { [key: string]: { quantity: number; productCode: string; supplierCode: string } } = {};
 
     products.forEach(product => {
       const key = `${product.productCode}-${product.supplierCode}`;
@@ -756,11 +756,12 @@ function QuotePage() {
       const currentQuantity = product.quantity || 0;
 
       if (existing) {
+        // 如果当前记录的数量更大，更新为当前记录的信息
         if (currentQuantity > existing.quantity) {
-          productQuantities[key] = { quantity: currentQuantity, productId: product.id };
+          productQuantities[key] = { quantity: currentQuantity, productCode: product.productCode, supplierCode: product.supplierCode };
         }
       } else {
-        productQuantities[key] = { quantity: currentQuantity, productId: product.id };
+        productQuantities[key] = { quantity: currentQuantity, productCode: product.productCode, supplierCode: product.supplierCode };
       }
     });
 
@@ -770,7 +771,8 @@ function QuotePage() {
       .slice(0, 7);  // 取前7名
 
     return sortedProducts.map((item, index) => ({
-      productId: item.productId,
+      productCode: item.productCode,
+      supplierCode: item.supplierCode,
       rank: index + 1,
     }));
   };
@@ -5736,8 +5738,9 @@ function QuotePage() {
                   <div className={`font-bold text-xl ${(() => {
                     // 获取Top 7产品列表
                     const top7 = getTop7Products();
-                    const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
-                    const rank = top7Map.get(searchResult.id);
+                    const top7Map = new Map(top7.map(item => [`${item.productCode}-${item.supplierCode}`, item.rank]));
+                    const key = `${searchResult.productCode}-${searchResult.supplierCode}`;
+                    const rank = top7Map.get(key);
 
                     // 根据排名确定颜色
                     if (rank !== undefined) {
@@ -5765,8 +5768,9 @@ function QuotePage() {
                     {(() => {
                       // 获取Top 7产品列表
                       const top7 = getTop7Products();
-                      const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
-                      const rank = top7Map.get(searchResult.id);
+                      const top7Map = new Map(top7.map(item => [`${item.productCode}-${item.supplierCode}`, item.rank]));
+                      const key = `${searchResult.productCode}-${searchResult.supplierCode}`;
+                      const rank = top7Map.get(key);
 
                       // 根据排名显示排名标识
                       if (rank !== undefined) {
@@ -7552,7 +7556,8 @@ function QuotePage() {
                     // 获取Top 7产品列表
                     (() => {
                       const top7 = getTop7Products();
-                      const top7Map = new Map(top7.map(item => [item.productId, item.rank]));
+                      // 创建Map，key为"货号-供应商"，value为排名
+                      const top7Map = new Map(top7.map(item => [`${item.productCode}-${item.supplierCode}`, item.rank]));
 
                       return products
                         .filter(p => searchScope === "current" ? p.category === currentCategory : true)
@@ -7588,8 +7593,9 @@ function QuotePage() {
                           }
                         })
                         .map((product) => {
-                          // 检查该产品是否在Top 7中
-                          const rank = top7Map.get(product.id);
+                          // 检查该产品是否在Top 7中（按货号+供应商匹配）
+                          const key = `${product.productCode}-${product.supplierCode}`;
+                          const rank = top7Map.get(key);
                           const isTop7 = rank !== undefined;
 
                           // 根据排名确定颜色
