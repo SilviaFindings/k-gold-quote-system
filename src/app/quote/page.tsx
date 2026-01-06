@@ -1935,6 +1935,7 @@ function QuotePage() {
     stoneCost: number = 0,
     platingCost: number = 0,
     moldCost: number = 0,
+    commission: number = 0,  // 新增佣金参数
     orderChannel?: OrderChannel,  // 下单口（用于判断是否转换货币）
     // 特殊系数（可选，如果提供则优先使用）
     specialMaterialLoss?: number,
@@ -1968,20 +1969,24 @@ function QuotePage() {
       // 注意：这里的laborCost参数已经是单价(US$)
       const laborFeeUSD = laborCost - materialPriceUSD - lossUSD;
 
-      // 5. 零售价/批发价(US$)
+      // 5. 其他成本(US$) = 配件 + 石头 + 电镀 + 模具 + 佣金
+      // 注意：这些成本值已经是美金单位
+      const otherCostsUSD = (accessoryCost || 0) + (stoneCost || 0) + (platingCost || 0) + (moldCost || 0) + (commission || 0);
+
+      // 6. 零售价/批发价(US$)
       const tMaterialLossFactor2 = coefficients.tMaterialLossFactor2;  // 默认1.15
       const tMaterialFloatFactor = coefficients.tMaterialFloatFactor;  // 默认1.1
       const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.30
 
       let finalPrice: number;
       if (isRetail) {
-        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5) x 1.30
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.30
         const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor;
       } else {
-        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3) x 1.30
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.30
         const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor;
       }
 
       // 保留两位小数
@@ -2408,6 +2413,7 @@ function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
+      currentProduct.commission || 0,  // 新增佣金参数
       currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
@@ -2427,6 +2433,7 @@ function QuotePage() {
       currentProduct.stoneCost || 0,
       currentProduct.platingCost || 0,
       currentProduct.moldCost || 0,
+      currentProduct.commission || 0,  // 新增佣金参数
       currentProduct.orderChannel || undefined,
       currentProduct.specialMaterialLoss,
       currentProduct.specialMaterialCost,
@@ -2623,6 +2630,7 @@ function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
+        product.commission || 0,  // 新增佣金参数
         product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
@@ -2642,6 +2650,7 @@ function QuotePage() {
         product.stoneCost || 0,
         product.platingCost || 0,
         product.moldCost || 0,
+        product.commission || 0,  // 新增佣金参数
         product.orderChannel || undefined,
         product.specialMaterialLoss,
         product.specialMaterialCost,
@@ -2937,6 +2946,7 @@ function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
+        updatedProduct.commission,  // 新增佣金参数
         updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
@@ -2956,6 +2966,7 @@ function QuotePage() {
         updatedProduct.stoneCost,
         updatedProduct.platingCost,
         updatedProduct.moldCost,
+        updatedProduct.commission,  // 新增佣金参数
         updatedProduct.orderChannel || undefined,
         updatedProduct.specialMaterialLoss,
         updatedProduct.specialMaterialCost,
@@ -4158,6 +4169,7 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
+            commission,  // 新增佣金参数
             validOrderChannel || undefined,
             undefined,
             undefined,
@@ -4177,6 +4189,7 @@ function QuotePage() {
             stoneCost,
             platingCost,
             moldCost,
+            commission,  // 新增佣金参数
             validOrderChannel || undefined,
             undefined,
             undefined,
@@ -5714,7 +5727,7 @@ function QuotePage() {
                   <label className="mb-2 block text-sm font-medium text-amber-900">
                     市场金价（人民币/克）
                   </label>
-                  <div className="mb-2 text-xs text-amber-700">
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
                     注：T开头工厂代码会自动转换为美金/盎司（除以31.1035）
                   </div>
                   <input
@@ -5993,7 +6006,7 @@ function QuotePage() {
             {/* 材料系数 */}
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
-                T材料损耗系数
+                材料损耗系数
               </label>
               <input
                 type="number"
@@ -6345,6 +6358,51 @@ function QuotePage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black">
+                    供应商代码 *
+                  </label>
+                  <input
+                    type="text"
+                    value={currentProduct.supplierCode}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        supplierCode: e.target.value,
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                    placeholder="例如: J5, T001等"
+                    suppressHydrationWarning
+                  />
+                  <div className="mt-1 text-xs text-red-600 font-semibold">
+                    注：T开头供应商使用美金单位和特殊公式
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black">
+                    下单口
+                  </label>
+                  <select
+                    value={currentProduct.orderChannel}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        orderChannel: e.target.value as OrderChannel | "",
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                    suppressHydrationWarning
+                  >
+                    <option value="">选择下单口...</option>
+                    <option value="Van">Van</option>
+                    <option value="David">David</option>
+                    <option value="Eric">Eric</option>
+                    <option value="US201">US201</option>
+                  </select>
+                </div>
+              </div>
 
               {/* 特殊系数设置（可选） */}
               <div className="rounded-lg border-2 border-gray-200 p-4">
@@ -6534,7 +6592,7 @@ function QuotePage() {
                   <label className="mb-2 block text-sm font-medium text-black">
                     人工成本
                   </label>
-                  <div className="mb-2 text-xs text-gray-600">
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
                     注：T开头工厂代码使用美金单位，其他用人民币
                   </div>
                   <input
@@ -6557,8 +6615,11 @@ function QuotePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
-                    配件成本（人民币）
+                    配件成本
                   </label>
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
+                    注：T开头供应商使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.accessoryCost}
@@ -6575,8 +6636,11 @@ function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
-                    石头成本（人民币）
+                    石头成本
                   </label>
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
+                    注：T开头供应商使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.stoneCost}
@@ -6596,8 +6660,11 @@ function QuotePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
-                    电镀成本（人民币）
+                    电镀成本
                   </label>
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
+                    注：T开头供应商使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.platingCost}
@@ -6614,8 +6681,11 @@ function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
-                    模具成本（人民币）
+                    模具成本
                   </label>
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
+                    注：T开头供应商使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.moldCost}
@@ -6637,6 +6707,9 @@ function QuotePage() {
                   <label className="mb-2 block text-sm font-medium text-black">
                     佣金（%）
                   </label>
+                  <div className="mb-2 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-2 py-1">
+                    注：T开头供应商使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.commission}
