@@ -4656,14 +4656,40 @@ function QuotePage() {
   };
 
   // 密码验证函数
-  const verifyPassword = (): boolean => {
-    // 默认密码：v6v2k3
-    const DEFAULT_PASSWORD = "v6v2k3";
+  const verifyPassword = async (): Promise<boolean> => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setPasswordError("未登录，请先登录");
+        return false;
+      }
 
-    if (passwordInput === DEFAULT_PASSWORD) {
+      const response = await fetch('/api/auth/verify-data-clear-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ dataClearPassword: passwordInput }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setPasswordError("登录已过期，请重新登录");
+        } else if (data.error && data.error.includes('未设置')) {
+          setPasswordError("未设置数据清空密码，请先设置");
+        } else {
+          setPasswordError(data.error || "密码错误，请重试");
+        }
+        return false;
+      }
+
       return true;
-    } else {
-      setPasswordError("密码错误，请重试");
+    } catch (error) {
+      console.error('验证密码失败:', error);
+      setPasswordError("验证失败，请重试");
       return false;
     }
   };
@@ -7604,7 +7630,7 @@ function QuotePage() {
               <div className="text-sm text-black">
                 <p className="mb-2">您正在进行<strong>{clearActionType === "local" ? "清空本地数据" : "清空云端数据"}</strong>操作，需要输入<strong>数据清空密码</strong>验证身份。</p>
                 <p className="mb-2 text-gray-600">⚠️ 此操作不可恢复，请谨慎操作！</p>
-                <p className="text-xs text-gray-500">注意：数据清空密码与登录密码不同，用于保护数据清空操作。</p>
+                <p className="text-xs text-gray-500">注意：数据清空密码用于保护清空本地和云端数据的操作，与登录密码不同。</p>
               </div>
 
               <div className="relative">
@@ -7651,7 +7677,7 @@ function QuotePage() {
                   className="block w-full text-sm text-blue-600 hover:text-blue-500 font-medium"
                   suppressHydrationWarning
                 >
-                  设置或修改数据清空密码
+                  设置或重置清空数据密码（本地/云端）
                 </button>
                 <button
                   type="button"
@@ -7674,13 +7700,14 @@ function QuotePage() {
                 取消
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (passwordInput.length === 0) {
                     setPasswordError("请输入密码");
                     return;
                   }
 
-                  if (verifyPassword()) {
+                  const isValid = await verifyPassword();
+                  if (isValid) {
                     setShowPasswordModal(false);
                     // 执行待处理的清空操作
                     if (pendingClearAction && typeof pendingClearAction === 'function') {

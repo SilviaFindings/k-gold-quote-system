@@ -300,10 +300,10 @@ export default function SetDataClearPasswordPage() {
         </form>
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">ℹ️ 关于数据清空密码</h3>
+          <h3 className="text-sm font-medium text-blue-800 mb-2">ℹ️ 关于清空数据密码</h3>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• 数据清空密码用于确认清空本地数据的操作</li>
-            <li>• 与登录密码不同，专门用于数据安全保护</li>
+            <li>• 清空数据密码用于保护清空本地和云端数据的操作</li>
+            <li>• 与登录密码不同，专门用于数据清空安全保护</li>
             <li>• 首次使用数据清空功能前需要先设置此密码</li>
             <li>• 重置时需要验证您的登录密码以确保安全</li>
           </ul>

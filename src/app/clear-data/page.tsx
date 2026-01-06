@@ -83,11 +83,11 @@ export default function ClearDataPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            清空数据
+            清空云端数据
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             {step === "confirm"
-              ? "此操作将删除所有数据，请谨慎操作"
+              ? "此操作将删除云端所有数据，请谨慎操作"
               : "请输入数据清空密码以确认操作"}
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function ClearDataPage() {
                 className="mt-2 w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 suppressHydrationWarning
               >
-                {error.includes("未设置") ? "设置数据清空密码" : "重置数据清空密码"}
+                {error.includes("未设置") ? "设置清空数据密码（本地/云端）" : "重置清空数据密码（本地/云端）"}
               </button>
             )}
           </div>
