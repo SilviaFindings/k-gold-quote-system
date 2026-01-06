@@ -709,6 +709,17 @@ function QuotePage() {
     let supplierCode = "";
     let cleanedCode = code;
 
+    // ⚠️ 特殊处理：圆珠产品格式（KR数字-供应商代码）
+    // 例如：KR200-J5 -> 货号：KR200-J5，供应商代码：J5
+    // 这种格式应该被后缀模式匹配，而不是前缀模式
+    const beadMatch = code.match(/^(KR\d+)-([A-Z][0-9]|[A-Z]{1,2})$/);
+    if (beadMatch) {
+      supplierCode = beadMatch[2];    // J5
+      cleanedCode = beadMatch[0];      // KR200-J5（完整货号）
+      console.log(`[供应商代码提取] 圆珠产品: 供应商代码=${supplierCode}, 清理后货号=${cleanedCode}`);
+      return { supplierCode, cleanedCode };
+    }
+
     // 1. 检查前缀供应商代码（格式：XX-货号...）
     // 例如：E1-KEW001/18K -> 提取 E1，清理后为 KEW001/18K
     const prefixMatch = code.match(/^([A-Z0-9]{1,5})-(.+)/);
@@ -3746,6 +3757,12 @@ function QuotePage() {
           const productCode = row[productCodeIndex];
           const productName = row[productNameIndex];
           const specification = specificationIndex !== -1 ? row[specificationIndex] : "";
+
+          // 跳过空行
+          if (!productCode || String(productCode).trim() === "") {
+            console.log(`第${rowIndex + 2}行：跳过空行`);
+            return;
+          }
 
           // 改进数值读取：更好的处理Excel中的数字
           const weightRaw = importWeight && weightIndex !== -1 ? row[weightIndex] : undefined;
