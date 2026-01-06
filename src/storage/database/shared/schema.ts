@@ -9,6 +9,7 @@ export const users = pgTable("users", {
 	email: varchar({ length: 255 }).notNull(),
 	name: varchar({ length: 128 }).notNull(),
 	password: text().notNull(),
+	dataClearPassword: text("data_clear_password"), // 数据清空密码（可选字段）
 	isActive: boolean("is_active").default(true).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),

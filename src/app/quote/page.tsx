@@ -7642,14 +7642,30 @@ function QuotePage() {
                 )}
               </div>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
                   onClick={() => router.push("/forgot-password")}
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                  className="block w-full text-sm text-indigo-600 hover:text-indigo-500"
                   suppressHydrationWarning
                 >
                   忘记密码？
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/set-data-clear-password")}
+                  className="block w-full text-sm text-gray-600 hover:text-gray-500"
+                  suppressHydrationWarning
+                >
+                  设置数据清空密码
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/clear-data")}
+                  className="block w-full text-sm text-red-600 hover:text-red-500"
+                  suppressHydrationWarning
+                >
+                  清空所有数据
                 </button>
               </div>
             </div>
