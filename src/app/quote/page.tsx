@@ -8797,6 +8797,15 @@ function QuotePage() {
                       <strong>第四步：</strong> 导出报价单或备份数据
                     </p>
                   </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+                    <h4 className="font-bold text-black mb-2">💰 重要：货币规则</h4>
+                    <p className="text-sm text-black">
+                      系统根据供应商代码自动选择报价货币：<br/>
+                      • <strong>T字头供应商</strong>（以T开头）：所有订单使用<strong>美金（US$）</strong><br/>
+                      • <strong>其他供应商</strong>：所有订单使用<strong>加币（CAD$）</strong><br/>
+                      货币规则与下单口（Van/US201/US202）无关，仅由供应商代码决定。
+                    </p>
+                  </div>
                 </section>
 
                 {/* 产品管理 */}
@@ -8824,7 +8833,8 @@ function QuotePage() {
                         Excel 必须包含：货号、名称列，可选包含：规格、重量、工费、配件、石头、电镀、模具、佣金、供应商代码、下单口等
                       </div>
                       <div className="text-xs text-black bg-orange-50 p-2 rounded">
-                        💡 <strong>T字头供应商：</strong>如果货号中包含T字头（如T2-KEW001/K14），系统会自动提取T字头到"供应商代码"列，并使用T字头报价公式计算价格。
+                        💡 <strong>T字头供应商：</strong>如果货号中包含T字头（如T2-KEW001/K14），系统会自动提取T字头到"供应商代码"列，并使用T字头报价公式计算价格。<br/>
+                        💡 <strong>货币规则：</strong>T字头供应商所有订单（包括Van、US201、US202）统一使用美金（US$）报价，其他供应商所有订单统一使用加币（CAD$）报价。
                       </div>
                     </div>
 
@@ -8929,6 +8939,12 @@ function QuotePage() {
                         系统会自动识别T字头供应商并使用对应公式计算价格，无需手动切换。
                       </p>
                       <p className="text-sm text-black mb-2">
+                        <strong>💰 货币规则（重要）：</strong><br />
+                        • <strong>T字头供应商：</strong>所有订单（包括Van、US201、US202）统一使用<strong>美金（US$）</strong>报价<br />
+                        • <strong>其他供应商：</strong>所有订单统一使用<strong>加币（CAD$）</strong>报价<br />
+                        • 货币规则仅与<strong>供应商代码</strong>相关，与<strong>下单口</strong>无关
+                      </p>
+                      <p className="text-sm text-black mb-2">
                         <strong>T字头报价公式：</strong><br />
                         • 使用美金（US$）作为货币单位<br />
                         • T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15<br />
@@ -8948,6 +8964,9 @@ function QuotePage() {
                       </p>
                       <p className="text-xs text-black bg-orange-100 p-2 rounded mt-2">
                         💡 <strong>优先级：</strong>如果Excel中有"供应商代码"列，优先使用该列的值；如果Excel中没有该列，系统会从货号中自动提取。
+                      </p>
+                      <p className="text-xs text-black bg-red-100 p-2 rounded mt-2">
+                        ⚠️ <strong>重要提示：</strong>同一货号（如KEW001）如果在不同供应商下（如T2、K14、K15），报价货币可能不同。T2供应商使用美金，K14/K15供应商使用加币。系统会根据供应商代码自动选择对应的货币和公式。
                       </p>
                     </div>
                   </div>
@@ -9180,10 +9199,17 @@ function QuotePage() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <h4 className="font-bold text-black mb-2">Q: 价格计算公式是什么？</h4>
                       <p className="text-sm text-black">
-                        A: 普通供应商：总价 = (材料价 + 工费 + 其它成本 + 佣金) × 利润率<br/>
-                        T字头供应商：零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br/>
-                        T字头供应商：批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费<br/>
-                        <strong>注意</strong>：T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15，模具费单独列示
+                        A: 系统根据供应商代码自动选择计算公式和货币：<br/><br/>
+                        <strong>💰 T字头供应商（以T开头）：</strong><br/>
+                        • 货币：<strong>美金（US$）</strong><br/>
+                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br/>
+                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费<br/>
+                        • 其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15<br/>
+                        • 模具费单独列示，不计入其他成本<br/><br/>
+                        <strong>💰 其他供应商（非T开头）：</strong><br/>
+                        • 货币：<strong>加币（CAD$）</strong><br/>
+                        • 总价 = (材料价 + 工费 + 其它成本 + 佣金) × 利润率<br/><br/>
+                        <strong>⚠️ 重要：</strong>货币规则与下单口无关，仅由供应商代码决定。T字头所有订单都用美金，其他供应商所有订单都用加币。
                       </p>
                     </div>
 
@@ -9195,7 +9221,11 @@ function QuotePage() {
                         1. 在"供应商代码"字段中输入T字头代码（如T001）<br/>
                         2. 系统会自动识别并使用T字头报价公式计算价格<br/>
                         3. Excel导入时，如果货号中包含T字头（如T2-KEW001/K14），系统会自动提取并使用对应公式<br/>
-                        <strong>重要提示：</strong>T字头供应商使用美金（US$）作为货币单位，与普通供应商的加币（CAD$）不同。
+                        <strong>💰 货币规则：</strong><br/>
+                        • T字头供应商：所有订单（Van、US201、US202）统一使用<strong>美金（US$）</strong><br/>
+                        • 其他供应商：所有订单统一使用<strong>加币（CAD$）</strong><br/>
+                        • 货币与下单口无关，仅由供应商代码决定<br/>
+                        <strong>⚠️ 重要提示：</strong>同一货号在不同供应商下报价货币可能不同（如T2供应商用美金，K14供应商用加币）。
                       </p>
                     </div>
 
