@@ -130,8 +130,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-black rounded-b-md focus:border-blue-500 focus:outline-none sm:text-sm"
-                placeholder="密码"
+                className="rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 text-black rounded-b-md focus:border-blue-500 focus:outline-none sm:text-sm"
                 suppressHydrationWarning
               />
               <button
