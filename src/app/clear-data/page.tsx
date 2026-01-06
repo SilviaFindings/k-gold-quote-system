@@ -25,7 +25,9 @@ export default function ClearDataPage() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        throw new Error("未登录，请先登录");
+        setError("⚠️ 您当前未登录。请先登录后再清空数据。");
+        setLoading(false);
+        return;
       }
 
       // 先验证数据清空密码
@@ -71,13 +73,6 @@ export default function ClearDataPage() {
       }, 2000);
     } catch (err: any) {
       setError(err.message);
-      if (err.message.includes("登录已过期") || err.message.includes("未登录")) {
-        setTimeout(() => {
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("user");
-          router.push("/login");
-        }, 2000);
-      }
     } finally {
       setLoading(false);
     }
@@ -99,7 +94,17 @@ export default function ClearDataPage() {
 
         {error && (
           <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
+            <p className="text-sm text-red-800 mb-3">{error}</p>
+            {error.includes("未登录") && (
+              <button
+                type="button"
+                onClick={() => router.push("/login")}
+                className="mt-2 w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                suppressHydrationWarning
+              >
+                去登录
+              </button>
+            )}
           </div>
         )}
 
