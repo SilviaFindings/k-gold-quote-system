@@ -57,7 +57,7 @@ export class UserManager {
     const validated = updateUserSchema.parse(data);
     const [user] = await db
       .update(users)
-      .set({ ...validated, updatedAt: new Date() })
+      .set({ ...validated, updatedAt: new Date().toISOString() })
       .where(eq(users.id, id))
       .returning();
     return user || null;

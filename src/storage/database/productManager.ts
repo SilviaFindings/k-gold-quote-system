@@ -1,6 +1,6 @@
 import { eq, and, SQL, like, sql } from "drizzle-orm";
 import { getDb } from "coze-coding-dev-sdk";
-import { products, insertProductSchema, insertProductWithIdSchema, updateProductSchema } from "./shared/schema";
+import { products, insertProductSchema, updateProductSchema } from "./shared/schema";
 import type { Product, InsertProduct, UpdateProduct } from "./shared/schema";
 
 export class ProductManager {

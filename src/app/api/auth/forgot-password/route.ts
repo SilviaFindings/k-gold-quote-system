@@ -34,8 +34,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message: "重置密码邮件已发送",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("忘记密码错误:", error);
+    console.error("错误详情:", {
+      message: error?.message,
+      stack: error?.stack,
+      code: error?.code,
+    });
     return NextResponse.json(
       { error: "处理请求时出错" },
       { status: 500 }

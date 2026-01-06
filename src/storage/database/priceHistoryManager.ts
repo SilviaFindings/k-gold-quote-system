@@ -1,6 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "coze-coding-dev-sdk";
-import { priceHistory, insertPriceHistorySchema, insertPriceHistoryWithIdSchema } from "./shared/schema";
+import { priceHistory, insertPriceHistorySchema } from "./shared/schema";
 import type { PriceHistory, InsertPriceHistory } from "./shared/schema";
 
 export class PriceHistoryManager {

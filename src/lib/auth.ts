@@ -80,7 +80,7 @@ export async function login(email: string, password: string): Promise<{
   await sessionManager.createSession({
     userId: user.id,
     token,
-    expiresAt,
+    expiresAt: expiresAt.toISOString(),
   });
 
   return { user, token };
@@ -119,7 +119,7 @@ export async function register(email: string, name: string, password: string): P
   await sessionManager.createSession({
     userId: user.id,
     token,
-    expiresAt,
+    expiresAt: expiresAt.toISOString(),
   });
 
   return { user, token };

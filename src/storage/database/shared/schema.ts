@@ -1,10 +1,11 @@
 import { pgTable, index, unique, varchar, text, boolean, timestamp, foreignKey, jsonb, numeric } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 
 
 export const users = pgTable("users", {
-	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	email: varchar({ length: 255 }).notNull(),
 	name: varchar({ length: 128 }).notNull(),
 	password: text().notNull(),
@@ -17,7 +18,7 @@ export const users = pgTable("users", {
 ]);
 
 export const appConfig = pgTable("app_config", {
-	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
 	configKey: varchar("config_key", { length: 100 }).notNull(),
 	configValue: jsonb("config_value").notNull(),
@@ -33,7 +34,7 @@ export const appConfig = pgTable("app_config", {
 ]);
 
 export const priceHistory = pgTable("price_history", {
-	id: varchar({ length: 200 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 200 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
 	productId: varchar("product_id", { length: 200 }).notNull(),
 	category: varchar({ length: 50 }).notNull(),
@@ -83,7 +84,7 @@ export const priceHistory = pgTable("price_history", {
 ]);
 
 export const products = pgTable("products", {
-	id: varchar({ length: 200 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 200 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
 	category: varchar({ length: 50 }).notNull(),
 	subCategory: varchar("sub_category", { length: 100 }).notNull(),
@@ -128,7 +129,7 @@ export const products = pgTable("products", {
 ]);
 
 export const sessions = pgTable("sessions", {
-	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
 	token: text().notNull(),
 	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
@@ -143,7 +144,7 @@ export const sessions = pgTable("sessions", {
 ]);
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
-	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
 	token: text().notNull(),
 	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
@@ -165,3 +166,33 @@ export type Product = typeof products.$inferSelect;
 export type PriceHistory = typeof priceHistory.$inferSelect;
 export type AppConfig = typeof appConfig.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
+// Insert types
+export type InsertUser = typeof users.$inferInsert;
+export type InsertSession = typeof sessions.$inferInsert;
+export type InsertProduct = typeof products.$inferInsert;
+export type InsertPriceHistory = typeof priceHistory.$inferInsert;
+export type InsertAppConfig = typeof appConfig.$inferInsert;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+// Update types
+export type UpdateUser = Partial<InsertUser>;
+export type UpdateSession = Partial<InsertSession>;
+export type UpdateProduct = Partial<InsertProduct>;
+export type UpdatePriceHistory = Partial<InsertPriceHistory>;
+export type UpdateAppConfig = Partial<InsertAppConfig>;
+export type UpdatePasswordResetToken = Partial<InsertPasswordResetToken>;
+
+// Zod schemas for validation
+export const insertUserSchema = createInsertSchema(users);
+export const updateUserSchema = createUpdateSchema(users);
+export const insertSessionSchema = createInsertSchema(sessions);
+export const updateSessionSchema = createUpdateSchema(sessions);
+export const insertProductSchema = createInsertSchema(products);
+export const updateProductSchema = createUpdateSchema(products);
+export const insertPriceHistorySchema = createInsertSchema(priceHistory);
+export const updatePriceHistorySchema = createUpdateSchema(priceHistory);
+export const insertAppConfigSchema = createInsertSchema(appConfig);
+export const updateAppConfigSchema = createUpdateSchema(appConfig);
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens);
+export const updatePasswordResetTokenSchema = createUpdateSchema(passwordResetTokens);

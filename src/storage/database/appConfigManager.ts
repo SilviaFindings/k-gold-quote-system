@@ -30,7 +30,7 @@ export class AppConfigManager {
     if (existing) {
       const [config] = await db
         .update(appConfig)
-        .set({ configValue, updatedAt: new Date() })
+        .set({ configValue, updatedAt: new Date().toISOString() })
         .where(and(
           eq(appConfig.userId, userId),
           eq(appConfig.configKey, configKey)
@@ -38,7 +38,9 @@ export class AppConfigManager {
         .returning();
       return config!;
     } else {
-      return this.createConfig(userId, { configKey, configValue });
+      const validated = insertAppConfigSchema.parse({ configKey, configValue });
+      const [config] = await db.insert(appConfig).values({ ...validated, userId }).returning();
+      return config;
     }
   }
 

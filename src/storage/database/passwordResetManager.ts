@@ -1,6 +1,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import { getDb } from "coze-coding-dev-sdk";
 import { passwordResetTokens, users } from "./shared/schema";
+import * as bcrypt from "bcrypt";
 
 export class PasswordResetManager {
   /**
@@ -97,10 +98,13 @@ export class PasswordResetManager {
 
     const { userId } = validation;
 
+    // 哈希新密码
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
     // 更新密码
     await db
       .update(users)
-      .set({ password: newPassword, updatedAt: new Date().toISOString() })
+      .set({ password: hashedPassword, updatedAt: new Date().toISOString() })
       .where(eq(users.id, userId));
 
     // 标记 token 为已使用
