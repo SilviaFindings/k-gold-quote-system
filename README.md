@@ -153,12 +153,120 @@ pnpm start
 3. 如需部署到服务器，建议使用 Vercel 或 Netlify
 4. 如需多人协作，建议将数据迁移到后端数据库
 
+## Git 推送到 GitHub 指南
+
+### 推送前准备
+
+#### 1. 生成 SSH 密钥
+
+```cmd
+ssh-keygen -t ed25519 -C "你的邮箱@example.com"
+```
+
+按回车 3 次：
+1. 第一次：使用默认文件路径
+2. 第二次：不设置密码（留空）
+3. 第三次：确认密码（留空）
+
+#### 2. 复制公钥
+
+```cmd
+type %USERPROFILE%\.ssh\id_ed25519.pub
+```
+
+复制显示的以 `ssh-ed25519` 开头的完整内容。
+
+#### 3. 添加 SSH Key 到 GitHub
+
+1. 访问：https://github.com/settings/keys
+2. 点击右上角的 **"New SSH key"**
+3. 填写信息：
+   - **Title**：随意填写（如：`我的电脑`）
+   - **Key type**：选择 **"Authentication Key"**
+   - **Key**：粘贴刚才复制的公钥
+4. 点击 **"Add SSH key"**
+
+#### 4. 配置远程仓库为 SSH
+
+```cmd
+# 进入项目目录
+cd 你的项目路径
+
+# 更改远程仓库地址
+git remote set-url origin git@github.com:SilviaFindings/k-gold-quote-system.git
+
+# 验证远程仓库
+git remote -v
+```
+
+应该显示：
+```
+origin  git@github.com:SilviaFindings/k-gold-quote-system.git (fetch)
+origin  git@github.com:SilviaFindings/k-gold-quote-system.git (push)
+```
+
+### 推送代码
+
+```cmd
+# 添加所有修改
+git add .
+
+# 提交更改
+git commit -m "提交说明"
+
+# 推送到 GitHub
+git push origin main
+```
+
+**首次推送时**会提示：
+```
+The authenticity of host 'github.com (20.205.243.166)' can't be established.
+ED25519 key fingerprint is: SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+输入 `yes` 并按回车。
+
+### 常用 Git 命令
+
+```cmd
+# 查看当前状态
+git status
+
+# 查看提交历史
+git log --oneline
+
+# 查看远程仓库
+git remote -v
+
+# 拉取最新代码
+git pull origin main
+
+# 查看文件差异
+git diff
+
+# 放弃本地修改（危险！）
+git reset --hard HEAD
+```
+
+### 推送成功示例
+
+```
+Warning: Permanently added 'github.com (ED25519) to the list of known hosts.
+Everything up-to-date
+```
+
+表示推送成功且已是最新状态。
+
+---
+
 ## 联系方式
 如有问题或建议，请通过以下方式联系：
-- 项目仓库：[待添加]
+- 项目仓库：https://github.com/SilviaFindings/k-gold-quote-system
 - 问题反馈：[待添加]
 
 ---
 
-**最后更新时间**: 2025年1月3日
+**最后更新时间**: 2025年1月5日
 **版本**: v1.0.0
