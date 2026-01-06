@@ -6097,7 +6097,7 @@ function QuotePage() {
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
-                材料损耗系数
+                T材料损耗系数
               </label>
               <input
                 type="number"
@@ -8297,7 +8297,7 @@ function QuotePage() {
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <span className="px-2 py-1 bg-gray-100 text-black rounded">金含量系数</span>
                         <span className="px-2 py-1 bg-gray-100 text-black rounded">工费系数</span>
-                        <span className="px-2 py-1 bg-gray-100 text-black rounded">材料损耗系数</span>
+                        <span className="px-2 py-1 bg-gray-100 text-black rounded">T材料损耗系数</span>
                         <span className="px-2 py-1 bg-gray-100 text-black rounded">汇率</span>
                       </div>
                     </div>
