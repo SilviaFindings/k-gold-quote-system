@@ -5746,8 +5746,8 @@ function QuotePage() {
                           return "text-red-900";
                         case 2:  // 橙色
                           return "text-orange-700";
-                        case 3:  // 红色
-                          return "text-red-800";
+                        case 3:  // 黄色
+                          return "text-yellow-800";
                         case 4:  // 绿色
                           return "text-green-900";
                         case 5:  // 青色
@@ -7609,9 +7609,9 @@ function QuotePage() {
                                 bgClass = "bg-orange-50";
                                 rankIndicator = "🥈";
                                 break;
-                              case 3:  // 红色
-                                colorClass = "text-red-600";
-                                bgClass = "bg-red-50";
+                              case 3:  // 黄色
+                                colorClass = "text-yellow-700";
+                                bgClass = "bg-yellow-50";
                                 rankIndicator = "🥉";
                                 break;
                               case 4:  // 绿色
