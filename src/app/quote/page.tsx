@@ -268,6 +268,7 @@ interface Product {
   shape: ProductShape;          // 形状
   remarks: string;              // 备注
   quantity: number;             // 累计数量
+  quantityDate: string;         // 数量录入时间
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -312,6 +313,7 @@ interface PriceHistory {
   shape: ProductShape;          // 形状
   remarks: string;              // 备注
   quantity: number;             // 累计数量
+  quantityDate: string;         // 数量录入时间
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -456,6 +458,7 @@ function QuotePage() {
     orderChannel: "Van",
     shape: "",
     quantity: 0,  // 默认数量为0
+    quantityDate: "",  // 默认录入时间为空
     // 特殊系数（可选，默认为空表示使用全局固定系数）
     specialMaterialLoss: undefined,
     specialMaterialCost: undefined,
@@ -1097,6 +1100,7 @@ function QuotePage() {
             supplierCode: p.supplierCode || "",
             goldColor: (p as any).goldColor || "黄金",
             quantity: (p as any).quantity || 0,  // 兼容旧数据
+            quantityDate: (p as any).quantityDate || "",  // 兼容旧数据
             // 添加成本时间戳（兼容旧数据）
             laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
             accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
@@ -1454,6 +1458,7 @@ function QuotePage() {
             commission: p.commission || 0,
             supplierCode: p.supplierCode || "",
             goldColor: (p as any).goldColor || "黄金",
+            quantityDate: (p as any).quantityDate || "",  // 兼容旧数据
             // 添加成本时间戳（兼容旧数据）
             laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
             accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
@@ -1505,6 +1510,7 @@ function QuotePage() {
             commission: h.commission || 0,
             supplierCode: h.supplierCode || "",
             goldColor: (h as any).goldColor || "黄金",
+            quantityDate: (h as any).quantityDate || "",  // 兼容旧数据
             // 添加成本时间戳（兼容旧数据）
             laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
             accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
@@ -2229,6 +2235,7 @@ function QuotePage() {
       platingCost: 5,
       moldCost: 0,
       quantity: 0,
+      quantityDate: "",
       commission: 0,
       supplierCode: "K14",
       orderChannel: "Van",
@@ -2263,6 +2270,7 @@ function QuotePage() {
       platingCost: 5,
       moldCost: 0,
       quantity: 0,
+      quantityDate: "",
       commission: 0,
       supplierCode: "K14",
       orderChannel: "Van",
@@ -2297,6 +2305,7 @@ function QuotePage() {
       platingCost: 5,
       moldCost: 0,
       quantity: 0,
+      quantityDate: "",
       commission: 0,
       supplierCode: "K14",
       orderChannel: "", // 故意不设置下单口
@@ -2597,6 +2606,7 @@ function QuotePage() {
       shape: currentProduct.shape || "",
       remarks: currentProduct.remarks || "",
       quantity: totalQuantity,  // 累计数量
+      quantityDate: new Date().toLocaleString("zh-CN"),  // 数量录入时间
       // 特殊系数（可选）
       specialMaterialLoss: currentProduct.specialMaterialLoss,
       specialMaterialCost: currentProduct.specialMaterialCost,
@@ -2661,6 +2671,7 @@ function QuotePage() {
       shape: currentProduct.shape || "",
       remarks: currentProduct.remarks || "",
       quantity: totalQuantity,  // 累计数量
+      quantityDate: new Date().toLocaleString("zh-CN"),  // 数量录入时间
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2683,6 +2694,7 @@ function QuotePage() {
       karat: "14K",
       goldColor: "黄金",
       quantity: 0,  // 重置数量为0
+      quantityDate: "",  // 重置数量录入时间为空
     });
 
     // 提示用户
@@ -2776,6 +2788,7 @@ function QuotePage() {
         shape: product.shape || "",
         remarks: product.remarks || "",
         quantity: product.quantity || 0,  // 保留原有的数量
+        quantityDate: product.quantityDate || "",  // 保留原有的数量录入时间
         // 特殊系数（继承旧记录）
         specialMaterialLoss: product.specialMaterialLoss,
         specialMaterialCost: product.specialMaterialCost,
@@ -2816,6 +2829,7 @@ function QuotePage() {
         shape: product.shape || "",
         remarks: product.remarks || "",
         quantity: product.quantity || 0,  // 保留原有的数量
+        quantityDate: product.quantityDate || "",  // 保留原有的数量录入时间
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -3097,6 +3111,7 @@ function QuotePage() {
         shape: updatedProduct.shape,
         remarks: updatedProduct.remarks || "",
         quantity: updatedProduct.quantity || 0,  // 保留原有的数量
+        quantityDate: updatedProduct.quantityDate || "",  // 保留原有的数量录入时间
         // 特殊系数
         specialMaterialLoss: updatedProduct.specialMaterialLoss,
         specialMaterialCost: updatedProduct.specialMaterialCost,
@@ -3251,6 +3266,7 @@ function QuotePage() {
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
         下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
         数量: product.quantity || 0,
+        数量录入时间: product.quantityDate || "",
         备注: product.remarks || "",
         _modified: modified,  // 内部字段，用于标记是否修改过
       };
@@ -3262,7 +3278,7 @@ function QuotePage() {
     const allColumns = [
       "货号", "供应商代码", "分类", "名称", "成色", "金子颜色", "规格", "形状",
       "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金",
-      "零售价", "批发价", "下单口", "数量", "备注"
+      "零售价", "批发价", "下单口", "数量", "数量录入时间", "备注"
     ];
 
     // 生成表头和数据数组
@@ -4298,6 +4314,10 @@ function QuotePage() {
           const quantityIndex = headers.findIndex(h => h.includes("数量"));
           const quantity = quantityIndex !== -1 ? parseCost(row[quantityIndex], "数量") : 0;
 
+          // 读取数量录入时间：如果有"数量录入时间"列则读取，否则默认为空
+          const quantityDateIndex = headers.findIndex(h => h.includes("数量录入时间"));
+          const quantityDate = quantityDateIndex !== -1 ? String(row[quantityDateIndex]) || "" : "";
+
           const newProduct: Product = {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
             category: finalCategory,
@@ -4322,6 +4342,7 @@ function QuotePage() {
             shape: validShape,
             remarks: "",  // Excel导入时不读取备注，默认为空
             quantity: quantity,  // 数量
+            quantityDate: quantityDate,  // 数量录入时间
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -4359,6 +4380,7 @@ function QuotePage() {
             shape: validShape,
             remarks: "",  // Excel导入时不读取备注，默认为空
             quantity: quantity,  // 数量
+            quantityDate: quantityDate,  // 数量录入时间
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -5684,6 +5706,11 @@ function QuotePage() {
                   <div className="font-bold text-xl text-purple-900">
                     {searchResult.quantity || 0}
                   </div>
+                  {searchResult.quantityDate && (
+                    <div className="text-xs text-purple-700 mt-1">
+                      录入时间: {searchResult.quantityDate}
+                    </div>
+                  )}
                 </div>
                 <div className="bg-white rounded p-3">
                   <div className="text-gray-600 mb-1">工费</div>
