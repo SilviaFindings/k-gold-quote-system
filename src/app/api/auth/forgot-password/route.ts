@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         message: "重置密码邮件已发送",
-        // 开发环境返回重置链接，生产环境应该通过邮件发送
-        resetUrl: process.env.NODE_ENV === 'development' ? result.resetUrl : undefined,
+        // 当前为开发/测试环境，直接返回重置链接
+        // 生产环境应该通过邮件发送，不返回 resetUrl
+        resetUrl: result.resetUrl,
       });
     }
 
