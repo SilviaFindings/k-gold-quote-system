@@ -710,12 +710,20 @@ function QuotePage() {
     let cleanedCode = code;
 
     // ⚠️ 特殊处理：圆珠产品格式（KR数字-供应商代码）
-    // 例如：KR200-J5 -> 货号：KR200-J5，供应商代码：J5
-    // 这种格式应该被后缀模式匹配，而不是前缀模式
+    // 例如：KR200-J5 -> 货号：KR200/K18，供应商代码：J5
+    // 货号格式应该是：货号/材质，不要包含供应商代码
     const beadMatch = code.match(/^(KR\d+)-([A-Z][0-9]|[A-Z]{1,2})$/);
     if (beadMatch) {
-      supplierCode = beadMatch[2];    // J5
-      cleanedCode = beadMatch[0];      // KR200-J5（完整货号）
+      supplierCode = beadMatch[2];      // J5
+      cleanedCode = beadMatch[1];        // KR200
+      // 根据默认材质添加对应的材质后缀
+      if (defaultKarat === '14K') {
+        cleanedCode = cleanedCode + '/K14';
+      } else if (defaultKarat === '18K') {
+        cleanedCode = cleanedCode + '/K18';
+      } else {
+        cleanedCode = cleanedCode + '/K10';
+      }
       console.log(`[供应商代码提取] 圆珠产品: 供应商代码=${supplierCode}, 清理后货号=${cleanedCode}`);
       return { supplierCode, cleanedCode };
     }
