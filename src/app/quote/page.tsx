@@ -267,6 +267,7 @@ interface Product {
   orderChannel: OrderChannel | "";  // 下单口
   shape: ProductShape;          // 形状
   remarks: string;              // 备注
+  quantity: number;             // 累计数量
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -310,6 +311,7 @@ interface PriceHistory {
   orderChannel: OrderChannel | "";  // 下单口
   shape: ProductShape;          // 形状
   remarks: string;              // 备注
+  quantity: number;             // 累计数量
   // 特殊系数（可选，如果设置则优先使用）
   specialMaterialLoss?: number;      // 特殊材料损耗系数
   specialMaterialCost?: number;      // 特殊材料浮动系数
@@ -453,6 +455,7 @@ function QuotePage() {
     supplierCode: "K14",
     orderChannel: "Van",
     shape: "",
+    quantity: 0,  // 默认数量为0
     // 特殊系数（可选，默认为空表示使用全局固定系数）
     specialMaterialLoss: undefined,
     specialMaterialCost: undefined,
@@ -1093,6 +1096,7 @@ function QuotePage() {
             commission: p.commission || 0,
             supplierCode: p.supplierCode || "",
             goldColor: (p as any).goldColor || "黄金",
+            quantity: (p as any).quantity || 0,  // 兼容旧数据
             // 添加成本时间戳（兼容旧数据）
             laborCostDate: (p as any).laborCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
             accessoryCostDate: (p as any).accessoryCostDate || p.timestamp || new Date().toLocaleString("zh-CN"),
@@ -1182,6 +1186,7 @@ function QuotePage() {
             commission: h.commission || 0,
             supplierCode: h.supplierCode || "",
             goldColor: (h as any).goldColor || "黄金",
+            quantity: (h as any).quantity || 0,  // 兼容旧数据
             // 添加成本时间戳（兼容旧数据）
             laborCostDate: (h as any).laborCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
             accessoryCostDate: (h as any).accessoryCostDate || h.timestamp || new Date().toLocaleString("zh-CN"),
@@ -2223,6 +2228,7 @@ function QuotePage() {
       stoneCost: 0,
       platingCost: 5,
       moldCost: 0,
+      quantity: 0,
       commission: 0,
       supplierCode: "K14",
       orderChannel: "Van",
@@ -2256,6 +2262,7 @@ function QuotePage() {
       stoneCost: 0,
       platingCost: 5,
       moldCost: 0,
+      quantity: 0,
       commission: 0,
       supplierCode: "K14",
       orderChannel: "Van",
@@ -2289,6 +2296,7 @@ function QuotePage() {
       stoneCost: 0,
       platingCost: 5,
       moldCost: 0,
+      quantity: 0,
       commission: 0,
       supplierCode: "K14",
       orderChannel: "", // 故意不设置下单口
@@ -2547,6 +2555,24 @@ function QuotePage() {
       // modificationType === 'none'：不生成副号，直接覆盖
     }
 
+    // 计算累计数量
+    const currentQuantity = currentProduct.quantity ?? 0;
+    let totalQuantity = currentQuantity;
+
+    if (isUpdate) {
+      // 如果是更新，累加该货号之前所有记录的总数量（不包括当前货号的最新记录）
+      const supplierCode = currentProduct.supplierCode || "K14";
+      const allRecords = products.filter(p =>
+        p.productCode === currentProduct.productCode && p.supplierCode === supplierCode
+      );
+
+      // 计算总累计数量 = 最新记录的数量 + 本次输入的数量
+      if (allRecords.length > 0) {
+        const latestRecord = allRecords[allRecords.length - 1];
+        totalQuantity = (latestRecord.quantity || 0) + currentQuantity;
+      }
+    }
+
     const newProduct: Product = {
       id: Date.now().toString(),
       category: currentCategory,
@@ -2570,6 +2596,7 @@ function QuotePage() {
       orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
       remarks: currentProduct.remarks || "",
+      quantity: totalQuantity,  // 累计数量
       // 特殊系数（可选）
       specialMaterialLoss: currentProduct.specialMaterialLoss,
       specialMaterialCost: currentProduct.specialMaterialCost,
@@ -2633,6 +2660,7 @@ function QuotePage() {
       orderChannel: currentProduct.orderChannel || "Van",
       shape: currentProduct.shape || "",
       remarks: currentProduct.remarks || "",
+      quantity: totalQuantity,  // 累计数量
       // 成本时间戳
       laborCostDate: new Date().toLocaleString("zh-CN"),
       accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -2654,6 +2682,7 @@ function QuotePage() {
       laborCost: 0,
       karat: "14K",
       goldColor: "黄金",
+      quantity: 0,  // 重置数量为0
     });
 
     // 提示用户
@@ -2746,6 +2775,7 @@ function QuotePage() {
         orderChannel: product.orderChannel || "",
         shape: product.shape || "",
         remarks: product.remarks || "",
+        quantity: product.quantity || 0,  // 保留原有的数量
         // 特殊系数（继承旧记录）
         specialMaterialLoss: product.specialMaterialLoss,
         specialMaterialCost: product.specialMaterialCost,
@@ -2785,6 +2815,7 @@ function QuotePage() {
         orderChannel: product.orderChannel || "",
         shape: product.shape || "",
         remarks: product.remarks || "",
+        quantity: product.quantity || 0,  // 保留原有的数量
         // 成本时间戳（从旧记录继承）
         laborCostDate: product.laborCostDate || new Date().toLocaleString("zh-CN"),
         accessoryCostDate: product.accessoryCostDate || new Date().toLocaleString("zh-CN"),
@@ -3065,6 +3096,7 @@ function QuotePage() {
         orderChannel: updatedProduct.orderChannel,
         shape: updatedProduct.shape,
         remarks: updatedProduct.remarks || "",
+        quantity: updatedProduct.quantity || 0,  // 保留原有的数量
         // 特殊系数
         specialMaterialLoss: updatedProduct.specialMaterialLoss,
         specialMaterialCost: updatedProduct.specialMaterialCost,
@@ -3218,6 +3250,7 @@ function QuotePage() {
         零售价: modified ? `★ CAD$${product.retailPrice.toFixed(2)}` : `CAD$${product.retailPrice.toFixed(2)}`,
         批发价: modified ? `★ CAD$${product.wholesalePrice.toFixed(2)}` : `CAD$${product.wholesalePrice.toFixed(2)}`,
         下单口: product.orderChannel ? (ORDER_CHANNELS.find(d => d.code === product.orderChannel)?.code || product.orderChannel) : "",
+        数量: product.quantity || 0,
         备注: product.remarks || "",
         _modified: modified,  // 内部字段，用于标记是否修改过
       };
@@ -3229,7 +3262,7 @@ function QuotePage() {
     const allColumns = [
       "货号", "供应商代码", "分类", "名称", "成色", "金子颜色", "规格", "形状",
       "重量", "金价", "工费", "配件", "石头", "电镀", "模具", "佣金",
-      "零售价", "批发价", "下单口", "备注"
+      "零售价", "批发价", "下单口", "数量", "备注"
     ];
 
     // 生成表头和数据数组
@@ -4261,6 +4294,10 @@ function QuotePage() {
             supplierCode  // 🔥 新增：传递工厂代码
           );
 
+          // 读取数量：如果有"数量"列则读取，否则默认为0
+          const quantityIndex = headers.findIndex(h => h.includes("数量"));
+          const quantity = quantityIndex !== -1 ? parseCost(row[quantityIndex], "数量") : 0;
+
           const newProduct: Product = {
             id: Date.now().toString() + "_" + Math.random().toString(36).substr(2, 9),
             category: finalCategory,
@@ -4284,6 +4321,7 @@ function QuotePage() {
             orderChannel: validOrderChannel,
             shape: validShape,
             remarks: "",  // Excel导入时不读取备注，默认为空
+            quantity: quantity,  // 数量
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -4320,6 +4358,7 @@ function QuotePage() {
             orderChannel: validOrderChannel,
             shape: validShape,
             remarks: "",  // Excel导入时不读取备注，默认为空
+            quantity: quantity,  // 数量
             // 成本时间戳
             laborCostDate: new Date().toLocaleString("zh-CN"),
             accessoryCostDate: new Date().toLocaleString("zh-CN"),
@@ -5640,6 +5679,12 @@ function QuotePage() {
                   <div className="text-gray-600 mb-1">下单口</div>
                   <div className="font-medium text-black">{searchResult.orderChannel || "-"}</div>
                 </div>
+                <div className="bg-white rounded p-3 bg-purple-50 border-2 border-purple-300">
+                  <div className="text-purple-700 mb-1 font-semibold">累计数量</div>
+                  <div className="font-bold text-xl text-purple-900">
+                    {searchResult.quantity || 0}
+                  </div>
+                </div>
                 <div className="bg-white rounded p-3">
                   <div className="text-gray-600 mb-1">工费</div>
                   <div className="font-medium text-black">
@@ -6630,6 +6675,31 @@ function QuotePage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black">
+                    数量 *
+                  </label>
+                  <input
+                    type="number"
+                    value={currentProduct.quantity ?? 0}
+                    onChange={(e) =>
+                      setCurrentProduct({
+                        ...currentProduct,
+                        quantity: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none text-black"
+                    step="1"
+                    min="0"
+                    suppressHydrationWarning
+                  />
+                  <div className="mt-1 text-xs text-gray-600">
+                    输入本次数量，系统将自动累计到该货号的总数量
+                  </div>
+                </div>
+              </div>
+
               {/* 特殊系数设置（可选） */}
               <div className="rounded-lg border-2 border-gray-200 p-4">
                 <div className="mb-3">
@@ -7366,6 +7436,7 @@ function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">零售价</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">批发价</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">下单口</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">数量</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">备注</th>
                     <th className="border border-gray-200 px-3 py-2 text-center text-black bg-gray-100">操作</th>
                   </tr>
@@ -7493,6 +7564,9 @@ function QuotePage() {
                             return channel ? channel.code : product.orderChannel;
                           })()
                         ) : "-"}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-blue-900">
+                        {product.quantity || 0}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-left text-black">
                         <input
