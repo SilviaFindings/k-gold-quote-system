@@ -605,6 +605,12 @@ function QuotePage() {
   // 数据问题提示展开状态
   const [expandedWarning, setExpandedWarning] = useState<string | null>(null);
 
+  // 货号查询相关状态
+  const [searchCode, setSearchCode] = useState<string>("");
+  const [searchResult, setSearchResult] = useState<Product | null>(null);
+  const [showSearchResult, setShowSearchResult] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string>("");
+
   // 调试信息状态
   const [debugInfo, setDebugInfo] = useState<{
     localProducts: number;
@@ -2396,6 +2402,61 @@ function QuotePage() {
     const fixedCount = products.filter(p => !p.orderChannel).length;
     setProducts(updatedProducts);
     alert(`✅ 已为 ${fixedCount} 个产品设置默认下单口"Van"！`);
+  };
+
+  // 货号查询功能
+  const handleSearchProduct = () => {
+    if (!searchCode.trim()) {
+      setSearchError("请输入货号");
+      setSearchResult(null);
+      setShowSearchResult(false);
+      return;
+    }
+
+    // 在所有产品中查找匹配的货号（模糊匹配）
+    const searchLower = searchCode.toLowerCase().trim();
+    const matchedProducts = products.filter(p =>
+      p.productCode.toLowerCase().includes(searchLower)
+    );
+
+    if (matchedProducts.length === 0) {
+      setSearchError("未找到匹配的货号");
+      setSearchResult(null);
+      setShowSearchResult(false);
+      return;
+    }
+
+    if (matchedProducts.length === 1) {
+      // 精确匹配或唯一匹配
+      setSearchResult(matchedProducts[0]);
+      setSearchError("");
+      setShowSearchResult(true);
+    } else {
+      // 多个匹配，询问用户选择
+      const options = matchedProducts.map((p, idx) =>
+        `${idx + 1}. ${p.productCode} - ${p.productName} (${p.supplierCode})`
+      ).join('\n');
+
+      const selection = prompt(`找到 ${matchedProducts.length} 个匹配的产品：\n\n${options}\n\n请输入序号（1-${matchedProducts.length}）选择，或取消查看第一个：`);
+
+      if (selection === null) {
+        // 用户取消，显示第一个结果
+        setSearchResult(matchedProducts[0]);
+        setSearchError("");
+        setShowSearchResult(true);
+      } else {
+        const index = parseInt(selection) - 1;
+        if (index >= 0 && index < matchedProducts.length) {
+          setSearchResult(matchedProducts[index]);
+          setSearchError("");
+          setShowSearchResult(true);
+        } else {
+          setSearchError("选择的序号无效");
+          setSearchResult(null);
+          setShowSearchResult(false);
+        }
+      }
+    }
   };
 
   const addProduct = () => {
@@ -5101,6 +5162,33 @@ function QuotePage() {
           </h1>
 
           <div className="flex items-center gap-3">
+            {/* 货号查询功能 */}
+            <div className="flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2">
+              <input
+                type="text"
+                value={searchCode}
+                onChange={(e) => {
+                  setSearchCode(e.target.value);
+                  setSearchError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchProduct();
+                  }
+                }}
+                placeholder="输入货号查询..."
+                className="w-64 px-3 py-1.5 border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm text-black"
+                suppressHydrationWarning
+              />
+              <button
+                onClick={handleSearchProduct}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                suppressHydrationWarning
+              >
+                查询
+              </button>
+            </div>
+
             {/* 操作指引按钮 */}
             <button
               onClick={() => setShowHelpModal(true)}
@@ -5495,6 +5583,143 @@ function QuotePage() {
             }
             return null;
           })()}
+
+          {/* 货号查询结果 */}
+          {showSearchResult && searchResult && (
+            <div className="rounded-lg bg-blue-50 border-2 border-blue-200 p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-blue-800">🔍 查询结果</h3>
+                <button
+                  onClick={() => setShowSearchResult(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                  suppressHydrationWarning
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">货号</div>
+                  <div className="font-mono font-bold text-lg text-blue-900">{searchResult.productCode}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">产品名称</div>
+                  <div className="font-medium text-black">{searchResult.productName}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">分类</div>
+                  <div className="font-medium text-black">{searchResult.category} / {searchResult.subCategory}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">成色</div>
+                  <div className="font-medium text-black">{searchResult.karat}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">金子颜色</div>
+                  <div className="font-medium text-black">{searchResult.goldColor}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">重量</div>
+                  <div className="font-medium text-black">{searchResult.weight.toFixed(2)} g</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">规格</div>
+                  <div className="font-medium text-black">{searchResult.specification || "-"}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">形状</div>
+                  <div className="font-medium text-black">{searchResult.shape || "-"}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">供应商代码</div>
+                  <div className="font-medium text-black">{searchResult.supplierCode}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">下单口</div>
+                  <div className="font-medium text-black">{searchResult.orderChannel || "-"}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">工费</div>
+                  <div className="font-medium text-black">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${searchResult.laborCost.toFixed(2)}` 
+                      : `¥${searchResult.laborCost.toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">金价</div>
+                  <div className="font-medium text-black">¥{searchResult.goldPrice.toFixed(2)}</div>
+                </div>
+                <div className="bg-white rounded p-3 bg-green-50 border-2 border-green-300">
+                  <div className="text-green-700 mb-1 font-semibold">批发价</div>
+                  <div className="font-bold text-xl text-green-900">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${searchResult.wholesalePrice.toFixed(2)}` 
+                      : `CAD$${searchResult.wholesalePrice.toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3 bg-red-50 border-2 border-red-300">
+                  <div className="text-red-700 mb-1 font-semibold">零售价</div>
+                  <div className="font-bold text-xl text-red-900">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${searchResult.retailPrice.toFixed(2)}` 
+                      : `CAD$${searchResult.retailPrice.toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">配件成本</div>
+                  <div className="font-medium text-black">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${(searchResult.accessoryCost || 0).toFixed(2)}` 
+                      : `¥${(searchResult.accessoryCost || 0).toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">石头成本</div>
+                  <div className="font-medium text-black">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${(searchResult.stoneCost || 0).toFixed(2)}` 
+                      : `¥${(searchResult.stoneCost || 0).toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">电镀成本</div>
+                  <div className="font-medium text-black">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${(searchResult.platingCost || 0).toFixed(2)}` 
+                      : `¥${(searchResult.platingCost || 0).toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">模具成本</div>
+                  <div className="font-medium text-black">
+                    {searchResult.supplierCode.toUpperCase().startsWith('T') 
+                      ? `US$${(searchResult.moldCost || 0).toFixed(2)}` 
+                      : `¥${(searchResult.moldCost || 0).toFixed(2)}`}
+                  </div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">备注</div>
+                  <div className="font-medium text-black">{searchResult.remarks || "-"}</div>
+                </div>
+                <div className="bg-white rounded p-3">
+                  <div className="text-gray-600 mb-1">最后更新</div>
+                  <div className="font-medium text-black text-xs">{new Date(searchResult.timestamp).toLocaleString("zh-CN")}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {searchError && (
+            <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 mb-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <span className="text-xl">⚠️</span>
+                <span className="font-medium">{searchError}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 分类导航区域 */}
