@@ -468,7 +468,12 @@ function QuotePage() {
   const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的小类
 
   // 导出Excel范围选择
-  const [exportScope, setExportScope] = useState<"current" | "all" | "latest">("current");
+  const [exportScope, setExportScope] = useState<"current" | "all" | "timeRange">("current");
+
+  // 时间范围选择
+  const [timeRangeOption, setTimeRangeOption] = useState<"1h" | "6h" | "24h" | "3d" | "7d" | "custom">("24h");
+  const [customStartTime, setCustomStartTime] = useState<string>("");
+  const [customEndTime, setCustomEndTime] = useState<string>("");
 
   // 导出备份相关状态
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -2928,14 +2933,39 @@ function QuotePage() {
         if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
         return true;
       });
-    } else if (exportScope === "latest") {
-      // 导出最新导入的产品（最近10分钟内导入的产品）
+    } else if (exportScope === "timeRange") {
+      // 根据选择的时间范围过滤产品
       const now = new Date().getTime();
-      const tenMinutesAgo = now - 10 * 60 * 1000; // 10分钟前
-      filteredProducts = products.filter(p => {
-        const timestamp = new Date(p.timestamp).getTime();
-        return timestamp >= tenMinutesAgo;
-      });
+      let startTime: number;
+
+      if (timeRangeOption === "custom") {
+        // 自定义时间范围
+        if (!customStartTime || !customEndTime) {
+          alert("请选择开始时间和结束时间！");
+          return;
+        }
+        const start = new Date(customStartTime).getTime();
+        const end = new Date(customEndTime).getTime();
+        filteredProducts = products.filter(p => {
+          const timestamp = new Date(p.timestamp).getTime();
+          return timestamp >= start && timestamp <= end;
+        });
+      } else {
+        // 预设时间范围
+        const timeRangeMinutes: Record<"1h" | "6h" | "24h" | "3d" | "7d" | "custom", number> = {
+          "1h": 1 * 60,
+          "6h": 6 * 60,
+          "24h": 24 * 60,
+          "3d": 3 * 24 * 60,
+          "7d": 7 * 24 * 60,
+          "custom": 0
+        };
+        startTime = now - timeRangeMinutes[timeRangeOption] * 60 * 1000;
+        filteredProducts = products.filter(p => {
+          const timestamp = new Date(p.timestamp).getTime();
+          return timestamp >= startTime;
+        });
+      }
     } else {
       // exportScope === "all"
       filteredProducts = products;
@@ -3172,9 +3202,23 @@ function QuotePage() {
         // 只选了大类：大类_产品报价单_日期.xlsx
         fileName = `${currentCategory}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
       }
-    } else if (exportScope === "latest") {
-      // 最新导入的产品
-      fileName = `最新导入_产品报价单_` + new Date().toLocaleDateString("zh-CN") + "_" + new Date().toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ".xlsx";
+    } else if (exportScope === "timeRange") {
+      // 根据时间范围生成文件名
+      let timeRangeLabel: string;
+      if (timeRangeOption === "custom") {
+        timeRangeLabel = "自定义时间";
+      } else {
+        const labels: Record<"1h" | "6h" | "24h" | "3d" | "7d" | "custom", string> = {
+          "1h": "最近1小时",
+          "6h": "最近6小时",
+          "24h": "最近24小时",
+          "3d": "最近3天",
+          "7d": "最近7天",
+          "custom": ""
+        };
+        timeRangeLabel = labels[timeRangeOption];
+      }
+      fileName = `${timeRangeLabel}_产品报价单_` + new Date().toLocaleDateString("zh-CN") + "_" + new Date().toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ".xlsx";
     } else {
       // 全部分类
       fileName = `全部分类_产品报价单_` + new Date().toLocaleDateString("zh-CN") + ".xlsx";
@@ -6531,14 +6575,53 @@ function QuotePage() {
                   <label className="text-sm text-black font-medium">导出范围:</label>
                   <select
                     value={exportScope}
-                    onChange={(e) => setExportScope(e.target.value as "current" | "all" | "latest")}
+                    onChange={(e) => setExportScope(e.target.value as "current" | "all" | "timeRange")}
                     className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
                     suppressHydrationWarning
                   >
                     <option value="current">{currentSubCategory ? `当前子分类（${currentSubCategory}）` : `当前大类（${currentCategory}）`}</option>
                     <option value="all">所有分类</option>
-                    <option value="latest">最新导入（最近10分钟）</option>
+                    <option value="timeRange">自定义时间范围</option>
                   </select>
+
+                  {/* 时间范围选择器 */}
+                  {exportScope === "timeRange" && (
+                    <select
+                      value={timeRangeOption}
+                      onChange={(e) => setTimeRangeOption(e.target.value as "1h" | "6h" | "24h" | "3d" | "7d" | "custom")}
+                      className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
+                      suppressHydrationWarning
+                    >
+                      <option value="1h">最近1小时</option>
+                      <option value="6h">最近6小时</option>
+                      <option value="24h">最近24小时</option>
+                      <option value="3d">最近3天</option>
+                      <option value="7d">最近7天</option>
+                      <option value="custom">自定义时间</option>
+                    </select>
+                  )}
+
+                  {/* 自定义时间输入 */}
+                  {exportScope === "timeRange" && timeRangeOption === "custom" && (
+                    <>
+                      <input
+                        type="datetime-local"
+                        value={customStartTime}
+                        onChange={(e) => setCustomStartTime(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
+                        suppressHydrationWarning
+                      />
+                      <span className="text-black text-sm">至</span>
+                      <input
+                        type="datetime-local"
+                        value={customEndTime}
+                        onChange={(e) => setCustomEndTime(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded text-sm text-black"
+                        suppressHydrationWarning
+                      />
+                    </>
+                  )}
+
                   <button
                     onClick={() => exportToExcel()}
                     className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
