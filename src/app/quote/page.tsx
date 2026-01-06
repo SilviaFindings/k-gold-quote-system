@@ -5714,6 +5714,9 @@ function QuotePage() {
                   <label className="mb-2 block text-sm font-medium text-amber-900">
                     市场金价（人民币/克）
                   </label>
+                  <div className="mb-2 text-xs text-amber-700">
+                    注：T开头工厂代码会自动转换为美金/盎司（除以31.1035）
+                  </div>
                   <input
                     type="number"
                     value={goldPrice}
@@ -6529,8 +6532,11 @@ function QuotePage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black">
-                    人工成本（人民币）
+                    人工成本
                   </label>
+                  <div className="mb-2 text-xs text-gray-600">
+                    注：T开头工厂代码使用美金单位，其他用人民币
+                  </div>
                   <input
                     type="number"
                     value={currentProduct.laborCost}
@@ -7051,7 +7057,7 @@ function QuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">规格</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black bg-gray-100">形状</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">重量</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100" title="注：T开头工厂代码使用美金单位，其他用人民币">工费</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">配件</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">石头</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black bg-gray-100">电镀</th>
