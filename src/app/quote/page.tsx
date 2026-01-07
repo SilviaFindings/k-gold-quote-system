@@ -2058,23 +2058,24 @@ function QuotePage() {
       const tMaterialLossFactor2 = coefficients.tMaterialLossFactor2;  // 默认1.15
       const tMaterialFloatFactor = coefficients.tMaterialFloatFactor;  // 默认1.1
       const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.35
+      const usdToCadExchangeRate = 1.4;  // 美金折加币汇率
 
       // 5. T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) x 1.15（T字头其它成本加成系数）
       // 注意：这些成本值已经是美金单位；模具费单列，不计入其他成本
       const otherCostsUSD = ((accessoryCost || 0) + (stoneCost || 0) + (platingCost || 0) + (commission || 0)) * tMaterialLossFactor2;
 
-      // 6. 零售价/批发价(US$)
+      // 6. 零售价/批发价(US$) -> 折算为加币(CAD)
       let finalPrice: number;
       if (isRetail) {
-        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.35
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.35 x 1.4（美金折加币）
         // 注意：模具费单列，不参与此计算
         const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor * usdToCadExchangeRate;
       } else {
-        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.35
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.35 x 1.4（美金折加币）
         // 注意：模具费单列，不参与此计算
         const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor;
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor * usdToCadExchangeRate;
       }
 
       // 保留两位小数
@@ -5289,9 +5290,19 @@ function QuotePage() {
     <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold text-black">
-            K 金产品报价计算表
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-black">
+              K 金产品报价计算表
+            </h1>
+            <div className="mt-2">
+              <a
+                href="/silver-quote"
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                → 前往银制品报价系统
+              </a>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             {/* 货号查询功能 */}
