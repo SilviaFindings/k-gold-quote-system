@@ -467,6 +467,54 @@ function QuotePage() {
     specialLaborFactorWholesale: undefined,
   });
 
+  // ========== 金制品Excel导入列名映射（支持中英文） ==========
+
+  // 定义列名映射表：{ 中文列名: 英文列名 }
+  const GOLD_COLUMN_MAPPING: Record<string, string> = {
+    "货号": "Product Code",
+    "产品名称": "Product Name",
+    "规格": "Specification",
+    "重量": "Weight",
+    "工费": "Labor Cost",
+    "成色": "Karat",
+    "金子颜色": "Gold Color",
+    "形状": "Shape",
+    "配件成本": "Accessory Cost",
+    "石头成本": "Stone Cost",
+    "电镀成本": "Plating Cost",
+    "供应商代码": "Supplier Code",
+    "下单口": "Order Channel",
+    "数量": "Quantity",
+  };
+
+  // 从行中获取值，支持中英文列名（基于索引）
+  const getGoldColumnValue = (row: any, headers: string[], chineseColumnName: string, keywords: string[]): any => {
+    // 尝试查找中文列名的精确匹配
+    const exactIndex = headers.findIndex(h => h && String(h).trim() === chineseColumnName);
+    if (exactIndex !== -1 && row[exactIndex] !== undefined) {
+      return row[exactIndex];
+    }
+
+    // 尝试查找英文列名
+    const englishColumnName = GOLD_COLUMN_MAPPING[chineseColumnName];
+    if (englishColumnName) {
+      const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
+      if (englishIndex !== -1 && row[englishIndex] !== undefined) {
+        return row[englishIndex];
+      }
+    }
+
+    // 尝试模糊匹配关键词（中文）
+    for (const keyword of keywords) {
+      const fuzzyIndex = headers.findIndex(h => h && String(h).includes(keyword));
+      if (fuzzyIndex !== -1 && row[fuzzyIndex] !== undefined) {
+        return row[fuzzyIndex];
+      }
+    }
+
+    return undefined;
+  };
+
   // 导入Excel相关状态
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
@@ -4070,13 +4118,23 @@ function QuotePage() {
           console.log(`  名称:`, row[1]);
         });
 
-        // 改进的列索引查找：先精确匹配，再模糊匹配
+        // 改进的列索引查找：先精确匹配（中英文），再模糊匹配（中文）
         const findColumnIndex = (exactMatch: string, ...keywords: string[]): number => {
-          // 先尝试精确匹配
+          // 先尝试精确匹配中文
           const exactIndex = headers.findIndex(h => h && String(h).trim() === exactMatch);
           if (exactIndex !== -1) {
-            console.log(`列 "${exactMatch}" 精确匹配到索引 ${exactIndex}`);
+            console.log(`列 "${exactMatch}" 精确匹配（中文）到索引 ${exactIndex}`);
             return exactIndex;
+          }
+
+          // 尝试精确匹配英文
+          const englishColumnName = GOLD_COLUMN_MAPPING[exactMatch];
+          if (englishColumnName) {
+            const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
+            if (englishIndex !== -1) {
+              console.log(`列 "${exactMatch}" 精确匹配（英文: ${englishColumnName}）到索引 ${englishIndex}`);
+              return englishIndex;
+            }
           }
 
           // 再尝试模糊匹配

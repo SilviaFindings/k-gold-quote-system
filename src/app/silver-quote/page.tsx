@@ -208,6 +208,41 @@ const detectSilverSubCategoryFromName = (productName: string): string | null => 
   return matches[0].subCat;
 };
 
+// ========== 银制品Excel导入列名映射（支持中英文） ==========
+
+// 定义列名映射表：{ 中文列名: 英文列名 }
+const SILVER_COLUMN_MAPPING: Record<string, string> = {
+  "分类": "Category",
+  "子分类": "Sub Category",
+  "货号": "Product Code",
+  "产品名称": "Product Name",
+  "规格": "Specification",
+  "克重": "Weight",
+  "工费": "Labor Cost",
+  "银色": "Silver Color",
+  "配件成本": "Accessory Cost",
+  "石头成本": "Stone Cost",
+  "电镀成本": "Plating Cost",
+  "供应商代码": "Supplier Code",
+  "备注": "Remarks",
+  "数量": "Quantity",
+  "累计数量": "Cumulative Quantity",
+};
+
+// 从行中获取值，支持中英文列名
+const getSilverColumnValue = (row: any, chineseColumnName: string): any => {
+  // 优先使用中文列名
+  if (row[chineseColumnName] !== undefined) {
+    return row[chineseColumnName];
+  }
+  // 尝试使用英文列名
+  const englishColumnName = SILVER_COLUMN_MAPPING[chineseColumnName];
+  if (englishColumnName && row[englishColumnName] !== undefined) {
+    return row[englishColumnName];
+  }
+  return undefined;
+};
+
 // ========== 银制品货号识别 ==========
 
 // 判断是否为银制品货号
@@ -952,7 +987,7 @@ function SilverQuotePage() {
         .filter((row: any) => {
           // 如果选择了"仅导入当前分类"，则过滤
           if (importMode === "current") {
-            const rowCategory = row["分类"];
+            const rowCategory = getSilverColumnValue(row, "分类");
             if (!rowCategory) return false; // 没有分类的也不导入
             return rowCategory === currentCategory;
           }
@@ -960,26 +995,26 @@ function SilverQuotePage() {
         })
         .map((row: any, index) => ({
           id: Date.now().toString() + index,
-          category: row["分类"] || currentCategory,
-          subCategory: row["子分类"] || SILVER_SUB_CATEGORIES[(row["分类"] as SilverProductCategory) || currentCategory]?.[0] || "",
-          productCode: row["货号"] || "",
-          productName: row["产品名称"] || "",
-          specification: row["规格"] || "",
-          weight: Number(row["克重"]) || 0,
-          laborCost: Number(row["工费"]) || 0,
-          silverColor: row["银色"] || "银色",
+          category: getSilverColumnValue(row, "分类") || currentCategory,
+          subCategory: getSilverColumnValue(row, "子分类") || SILVER_SUB_CATEGORIES[(getSilverColumnValue(row, "分类") as SilverProductCategory) || currentCategory]?.[0] || "",
+          productCode: getSilverColumnValue(row, "货号") || "",
+          productName: getSilverColumnValue(row, "产品名称") || "",
+          specification: getSilverColumnValue(row, "规格") || "",
+          weight: Number(getSilverColumnValue(row, "克重")) || 0,
+          laborCost: Number(getSilverColumnValue(row, "工费")) || 0,
+          silverColor: getSilverColumnValue(row, "银色") || "银色",
           silverPrice: silverPrice,
           wholesalePrice: 0,
           retailPrice: 0,
-          accessoryCost: Number(row["配件成本"]) || 0,
-          stoneCost: Number(row["石头成本"]) || 0,
-          platingCost: Number(row["电镀成本"]) || 0,
+          accessoryCost: Number(getSilverColumnValue(row, "配件成本")) || 0,
+          stoneCost: Number(getSilverColumnValue(row, "石头成本")) || 0,
+          platingCost: Number(getSilverColumnValue(row, "电镀成本")) || 0,
           moldCost: 0,
           commission: 0,
-          supplierCode: row["供应商代码"] || "E1",
-          remarks: row["备注"] || "",
-          batchQuantity: Number(row["数量"]) || 0,
-          quantity: Number(row["累计数量"]) || 0,
+          supplierCode: getSilverColumnValue(row, "供应商代码") || "E1",
+          remarks: getSilverColumnValue(row, "备注") || "",
+          batchQuantity: Number(getSilverColumnValue(row, "数量")) || 0,
+          quantity: Number(getSilverColumnValue(row, "累计数量")) || 0,
           quantityDate: "",
           laborCostDate: "",
           accessoryCostDate: "",
