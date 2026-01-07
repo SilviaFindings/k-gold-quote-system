@@ -451,15 +451,15 @@ function SilverQuotePage() {
         <div className="max-w-7xl mx-auto">
           {/* 页面标题 */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">银制品报价操作平台</h1>
-            <p className="text-gray-600">925银制品价格计算和管理系统</p>
+            <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
+            <p className="text-black">925银制品价格计算和管理系统</p>
           </div>
 
           {/* 银价配置 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">银价配置</h2>
+            <h2 className="text-xl font-bold text-black mb-4">银价配置</h2>
             <div className="flex items-center gap-4">
-              <label className="text-gray-700 font-medium">银价（人民币/克）:</label>
+              <label className="text-black font-medium">银价（人民币/克）:</label>
               <input
                 type="number"
                 value={silverPrice}
@@ -475,10 +475,10 @@ function SilverQuotePage() {
 
           {/* 系数配置 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">价格系数配置</h2>
+            <h2 className="text-xl font-bold text-black mb-4">价格系数配置</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 mb-1">零售工费系数</label>
+                <label className="block text-black mb-1">零售工费系数</label>
                 <input
                   type="number"
                   step="0.1"
@@ -492,7 +492,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">批发工费系数</label>
+                <label className="block text-black mb-1">批发工费系数</label>
                 <input
                   type="number"
                   step="0.1"
@@ -506,7 +506,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">银材料损耗系数</label>
+                <label className="block text-black mb-1">银材料损耗系数</label>
                 <input
                   type="number"
                   step="0.01"
@@ -520,7 +520,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">材料浮动系数</label>
+                <label className="block text-black mb-1">材料浮动系数</label>
                 <input
                   type="number"
                   step="0.01"
@@ -534,7 +534,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">国际运输和关税系数</label>
+                <label className="block text-black mb-1">国际运输和关税系数</label>
                 <input
                   type="number"
                   step="0.01"
@@ -548,7 +548,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">汇率（人民币/加币）</label>
+                <label className="block text-black mb-1">汇率（人民币/加币）</label>
                 <input
                   type="number"
                   step="0.1"
@@ -562,7 +562,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">佣金系数（工费×系数=佣金）</label>
+                <label className="block text-black mb-1">佣金系数（工费×系数=佣金）</label>
                 <input
                   type="number"
                   step="0.1"
@@ -576,7 +576,7 @@ function SilverQuotePage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">石头加成系数</label>
+                <label className="block text-black mb-1">石头加成系数</label>
                 <input
                   type="number"
                   step="0.1"
@@ -594,11 +594,11 @@ function SilverQuotePage() {
 
           {/* 计算公式展示 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">计算公式</h2>
+            <h2 className="text-xl font-bold text-black mb-4">计算公式</h2>
             <div className="space-y-4">
               <div className="border-l-4 border-blue-500 pl-4">
-                <h3 className="font-bold text-gray-900 mb-2">通用银制品（人民币基数为加币）</h3>
-                <div className="bg-gray-50 p-4 rounded text-sm space-y-2">
+                <h3 className="font-bold text-black mb-2">通用银制品（人民币基数为加币）</h3>
+                <div className="bg-gray-50 p-4 rounded text-sm space-y-2 text-black">
                   <p><strong>材料价</strong> = 银价 × 克重 × 1.05 × 1.1</p>
                   <p><strong>佣金</strong> = 工费 × 1.1</p>
                   <p><strong>零售价</strong> = 材料价/5 + (工费/5 + 配件/5 + 电镀/5) × 5 + 石头/5 × 1.3 + 佣金/5</p>
@@ -606,11 +606,11 @@ function SilverQuotePage() {
                 </div>
               </div>
               <div className="border-l-4 border-green-500 pl-4">
-                <h3 className="font-bold text-gray-900 mb-2">T字头供应商（美金基数折加币）</h3>
-                <div className="bg-gray-50 p-4 rounded text-sm space-y-2">
+                <h3 className="font-bold text-black mb-2">T字头供应商（美金基数折加币）</h3>
+                <div className="bg-gray-50 p-4 rounded text-sm space-y-2 text-black">
                   <p><strong>零售价</strong> = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.25 × 1.4（美金折加币）</p>
                   <p><strong>批发价</strong> = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.25 × 1.4（美金折加币）</p>
-                  <p className="text-gray-600 mt-2">其中：其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15</p>
+                  <p className="text-black mt-2">其中：其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15</p>
                 </div>
               </div>
             </div>
@@ -618,7 +618,7 @@ function SilverQuotePage() {
 
           {/* 测试区域 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">测试计算</h2>
+            <h2 className="text-xl font-bold text-black mb-4">测试计算</h2>
             <button
               onClick={() => {
                 const testProduct: SilverProduct = {
