@@ -707,8 +707,10 @@ function SilverQuotePage() {
         }
 
         // 自动计算价格
-        updated.retailPrice = calculateSilverPrice(updated, true);
-        updated.wholesalePrice = calculateSilverPrice(updated, false);
+        const retailPriceCalc = calculateSilverPrice(updated, true);
+        const wholesalePriceCalc = calculateSilverPrice(updated, false);
+        updated.retailPrice = isNaN(retailPriceCalc) ? 0 : retailPriceCalc;
+        updated.wholesalePrice = isNaN(wholesalePriceCalc) ? 0 : wholesalePriceCalc;
 
         // 修改产品后标记为未同步
         updated.syncStatus = "unsynced";
@@ -1272,11 +1274,15 @@ function SilverQuotePage() {
       }
 
       // 计算价格
-      const withPrices = importedProducts.map(p => ({
-        ...p,
-        retailPrice: calculateSilverPrice(p, true),
-        wholesalePrice: calculateSilverPrice(p, false),
-      }));
+      const withPrices = importedProducts.map(p => {
+        const retail = calculateSilverPrice(p, true);
+        const wholesale = calculateSilverPrice(p, false);
+        return {
+          ...p,
+          retailPrice: isNaN(retail) ? 0 : retail,
+          wholesalePrice: isNaN(wholesale) ? 0 : wholesale,
+        };
+      });
 
       setProducts([...products, ...withPrices]);
       saveToLocalStorage([...products, ...withPrices]);

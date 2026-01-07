@@ -31,14 +31,48 @@ export async function GET(request: NextRequest) {
     const allProducts = await productManager.getProducts(user.id, { limit: 10000 });
     console.log(`📦 总产品数: ${allProducts.length}`);
 
-    // 筛选银制品
-    const silverProducts = allProducts.filter(p => {
-      const isSilver = p.category && silverCategories.includes(p.category);
-      if (!isSilver && p.category) {
-        console.log(`  ⚠️ 排除产品: ${p.productCode}, 分类: ${p.category} (不在银制品分类中)`);
-      }
-      return isSilver;
-    });
+    // 筛选银制品并标准化字段
+    const silverProducts = allProducts
+      .filter((p: any) => {
+        const isSilver = p.category && silverCategories.includes(p.category);
+        if (!isSilver && p.category) {
+          console.log(`  ⚠️ 排除产品: ${p.productCode}, 分类: ${p.category} (不在银制品分类中)`);
+        }
+        return isSilver;
+      })
+      .map((p: any) => ({
+        ...p,
+        // 确保数值字段有默认值
+        weight: p.weight ?? 0,
+        laborCost: p.laborCost ?? 0,
+        silverPrice: p.silverPrice ?? 20,
+        wholesalePrice: p.wholesalePrice ?? 0,
+        retailPrice: p.retailPrice ?? 0,
+        accessoryCost: p.accessoryCost ?? 0,
+        stoneCost: p.stoneCost ?? 0,
+        platingCost: p.platingCost ?? 0,
+        moldCost: p.moldCost ?? 0,
+        commission: p.commission ?? 0,
+        batchQuantity: p.batchQuantity ?? 0,
+        quantity: p.quantity ?? 0,
+        // 确保字符串字段有默认值
+        category: p.category || "",
+        subCategory: p.subCategory || "",
+        productCode: p.productCode || "",
+        productName: p.productName || "",
+        specification: p.specification || "",
+        silverColor: p.silverColor || "银色",
+        supplierCode: p.supplierCode || "E1",
+        remarks: p.remarks || "",
+        // 确保日期字段有默认值
+        quantityDate: p.quantityDate || "",
+        laborCostDate: p.laborCostDate || "",
+        accessoryCostDate: p.accessoryCostDate || "",
+        stoneCostDate: p.stoneCostDate || "",
+        platingCostDate: p.platingCostDate || "",
+        moldCostDate: p.moldCostDate || "",
+        commissionDate: p.commissionDate || "",
+      }));
 
     console.log(`✅ 筛选后银制品数: ${silverProducts.length}`);
 
@@ -46,10 +80,27 @@ export async function GET(request: NextRequest) {
     const allHistory = await priceHistoryManager.getHistoryByUserId(user.id, { limit: 10000 });
     console.log(`📈 总历史记录数: ${allHistory.length}`);
 
-    const silverHistory = allHistory.filter((h: any) => {
-      const isSilver = h.category && silverCategories.includes(h.category);
-      return isSilver;
-    });
+    const silverHistory = allHistory
+      .filter((h: any) => {
+        const isSilver = h.category && silverCategories.includes(h.category);
+        return isSilver;
+      })
+      .map((h: any) => ({
+        ...h,
+        // 确保数值字段有默认值
+        weight: h.weight ?? 0,
+        laborCost: h.laborCost ?? 0,
+        silverPrice: h.silverPrice ?? 20,
+        wholesalePrice: h.wholesalePrice ?? 0,
+        retailPrice: h.retailPrice ?? 0,
+        accessoryCost: h.accessoryCost ?? 0,
+        stoneCost: h.stoneCost ?? 0,
+        platingCost: h.platingCost ?? 0,
+        moldCost: h.moldCost ?? 0,
+        commission: h.commission ?? 0,
+        batchQuantity: h.batchQuantity ?? 0,
+        quantity: h.quantity ?? 0,
+      }));
 
     console.log(`✅ 筛选后历史记录数: ${silverHistory.length}`);
 
