@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import XLSX from "xlsx-js-style";
 import { AuthProtection } from "@/components/AuthProtection";
@@ -573,6 +573,9 @@ function SilverQuotePage() {
   const [products, setProducts] = useState<SilverProduct[]>([]);
   const [priceHistory, setPriceHistory] = useState<SilverPriceHistory[]>([]);
 
+  // 跟踪本地数据是否已加载（使用 ref 避免状态延迟导致误判）
+  const localDataLoadedRef = useRef(false);
+
   // 调试信息：验证页面加载
   useEffect(() => {
     console.log('🔧 银制品页面已加载 - 版本: 2025-01-07');
@@ -835,8 +838,9 @@ function SilverQuotePage() {
         const hasData = data && data.products && data.products.length > 0;
         setCloudDataExists(hasData);
 
-        // 如果云端有数据且本地无数据，自动下载
-        if (hasData && products.length === 0) {
+        // 如果云端有数据且本地还没加载到任何数据，自动下载
+        // 使用 ref 检查本地数据是否已加载，避免状态延迟导致的误判
+        if (hasData && !localDataLoadedRef.current) {
           console.log('🔄 云端有数据但本地无数据，自动下载...');
           await downloadFromCloud("replace");
         }
@@ -1115,13 +1119,16 @@ function SilverQuotePage() {
           syncStatus: p.syncStatus || "unsynced",
         }));
         setProducts(normalizedProducts);
+        localDataLoadedRef.current = true;
         console.log(`✅ 本地数据已加载，产品数量: ${normalizedProducts.length}`);
       } catch (error) {
         console.error('❌ 加载本地产品数据失败:', error);
         setProducts([]);
+        localDataLoadedRef.current = true;
       }
     } else {
       setProducts([]);
+      localDataLoadedRef.current = true;
     }
 
     if (savedHistory) {
