@@ -751,33 +751,33 @@ function SilverQuotePage() {
     const historyItem: SilverPriceHistory = {
       id: Date.now().toString(),
       productId: product.id,
-      category: product.category,
-      subCategory: product.subCategory,
-      productCode: product.productCode,
-      productName: product.productName,
-      specification: product.specification,
-      weight: product.weight,
-      laborCost: product.laborCost,
-      silverColor: product.silverColor,
-      silverPrice: product.silverPrice,
-      wholesalePrice: product.wholesalePrice,
-      retailPrice: product.retailPrice,
-      accessoryCost: product.accessoryCost,
-      stoneCost: product.stoneCost,
-      platingCost: product.platingCost,
-      moldCost: product.moldCost,
-      commission: product.commission,
-      supplierCode: product.supplierCode,
-      remarks: product.remarks,
-      batchQuantity: product.batchQuantity,
-      quantity: product.quantity,
-      quantityDate: product.quantityDate,
-      laborCostDate: product.laborCostDate,
-      accessoryCostDate: product.accessoryCostDate,
-      stoneCostDate: product.stoneCostDate,
-      platingCostDate: product.platingCostDate,
-      moldCostDate: product.moldCostDate,
-      commissionDate: product.commissionDate,
+      category: product.category || "",
+      subCategory: product.subCategory || "",
+      productCode: product.productCode || "",
+      productName: product.productName || "",
+      specification: product.specification || "",
+      weight: product.weight ?? 0,
+      laborCost: product.laborCost ?? 0,
+      silverColor: product.silverColor || "银色",
+      silverPrice: product.silverPrice ?? silverPrice,
+      wholesalePrice: product.wholesalePrice ?? 0,
+      retailPrice: product.retailPrice ?? 0,
+      accessoryCost: product.accessoryCost ?? 0,
+      stoneCost: product.stoneCost ?? 0,
+      platingCost: product.platingCost ?? 0,
+      moldCost: product.moldCost ?? 0,
+      commission: product.commission ?? 0,
+      supplierCode: product.supplierCode || "E1",
+      remarks: product.remarks || "",
+      batchQuantity: product.batchQuantity ?? 0,
+      quantity: product.quantity ?? 0,
+      quantityDate: product.quantityDate || "",
+      laborCostDate: product.laborCostDate || "",
+      accessoryCostDate: product.accessoryCostDate || "",
+      stoneCostDate: product.stoneCostDate || "",
+      platingCostDate: product.platingCostDate || "",
+      moldCostDate: product.moldCostDate || "",
+      commissionDate: product.commissionDate || "",
       timestamp: new Date().toISOString(),
     };
 
@@ -1068,19 +1068,18 @@ function SilverQuotePage() {
     }
   };
 
-  // 初始化时检查云端数据
+  // 初始化：先加载本地数据，然后检查云端数据
   useEffect(() => {
-    console.log('🔄 初始化：检查云端数据...');
-    checkCloudData();
-  }, []);
+    if (typeof window === 'undefined') return;
 
-  // 加载本地数据
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedProducts = localStorage.getItem("silverProducts");
-      const savedHistory = localStorage.getItem("silverPriceHistory");
+    console.log('🔄 初始化：开始加载本地数据...');
 
-      if (savedProducts) {
+    // 步骤1：加载本地数据
+    const savedProducts = localStorage.getItem("silverProducts");
+    const savedHistory = localStorage.getItem("silverPriceHistory");
+
+    if (savedProducts) {
+      try {
         // 兼容旧数据，为所有可能缺失的字段添加默认值
         const loadedProducts: any[] = JSON.parse(savedProducts);
         const normalizedProducts: SilverProduct[] = loadedProducts.map(p => ({
@@ -1116,11 +1115,31 @@ function SilverQuotePage() {
           syncStatus: p.syncStatus || "unsynced",
         }));
         setProducts(normalizedProducts);
+        console.log(`✅ 本地数据已加载，产品数量: ${normalizedProducts.length}`);
+      } catch (error) {
+        console.error('❌ 加载本地产品数据失败:', error);
+        setProducts([]);
       }
-      if (savedHistory) {
-        setPriceHistory(JSON.parse(savedHistory));
-      }
+    } else {
+      setProducts([]);
     }
+
+    if (savedHistory) {
+      try {
+        setPriceHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('❌ 加载本地历史数据失败:', error);
+        setPriceHistory([]);
+      }
+    } else {
+      setPriceHistory([]);
+    }
+
+    // 步骤2：延迟检查云端数据，避免状态竞态
+    setTimeout(() => {
+      console.log('🔄 初始化：检查云端数据...');
+      checkCloudData();
+    }, 100);
   }, []);
 
   // 格式化日期

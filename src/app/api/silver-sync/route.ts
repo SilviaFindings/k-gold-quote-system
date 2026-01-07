@@ -188,14 +188,14 @@ export async function POST(request: NextRequest) {
             specialProfitMargin: null,
             specialLaborFactorRetail: null,
             specialLaborFactorWholesale: null,
-            // 确保时间戳格式正确
-            laborCostDate: product.laborCostDate ? new Date(product.laborCostDate) : new Date(),
-            accessoryCostDate: product.accessoryCostDate ? new Date(product.accessoryCostDate) : new Date(),
-            stoneCostDate: product.stoneCostDate ? new Date(product.stoneCostDate) : new Date(),
-            platingCostDate: product.platingCostDate ? new Date(product.platingCostDate) : new Date(),
-            moldCostDate: product.moldCostDate ? new Date(product.moldCostDate) : new Date(),
-            commissionDate: product.commissionDate ? new Date(product.commissionDate) : new Date(),
-            timestamp: product.timestamp ? new Date(product.timestamp) : new Date(),
+            // 确保时间戳格式正确（只转换有效的日期字符串）
+            laborCostDate: product.laborCostDate && product.laborCostDate.trim() !== "" ? new Date(product.laborCostDate) : new Date(),
+            accessoryCostDate: product.accessoryCostDate && product.accessoryCostDate.trim() !== "" ? new Date(product.accessoryCostDate) : new Date(),
+            stoneCostDate: product.stoneCostDate && product.stoneCostDate.trim() !== "" ? new Date(product.stoneCostDate) : new Date(),
+            platingCostDate: product.platingCostDate && product.platingCostDate.trim() !== "" ? new Date(product.platingCostDate) : new Date(),
+            moldCostDate: product.moldCostDate && product.moldCostDate.trim() !== "" ? new Date(product.moldCostDate) : new Date(),
+            commissionDate: product.commissionDate && product.commissionDate.trim() !== "" ? new Date(product.commissionDate) : new Date(),
+            timestamp: product.timestamp && product.timestamp.trim() !== "" ? new Date(product.timestamp) : new Date(),
           };
 
           // 数据完整性检查
