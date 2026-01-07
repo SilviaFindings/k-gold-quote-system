@@ -526,6 +526,13 @@ function SilverQuotePage() {
 
   const [products, setProducts] = useState<SilverProduct[]>([]);
   const [priceHistory, setPriceHistory] = useState<SilverPriceHistory[]>([]);
+
+  // 调试信息：验证页面加载
+  useEffect(() => {
+    console.log('🔧 银制品页面已加载 - 版本: 2025-01-07');
+    console.log('📋 当前产品数量:', products.length);
+  }, [products.length]);
+
   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
   const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
 
@@ -883,6 +890,7 @@ function SilverQuotePage() {
 
   // 初始化时检查云端数据
   useEffect(() => {
+    console.log('🔄 初始化：检查云端数据...');
     checkCloudData();
   }, []);
 
