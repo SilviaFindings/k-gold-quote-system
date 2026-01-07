@@ -17,25 +17,48 @@ export async function GET(request: NextRequest) {
   try {
     const user = await isAuthenticated(request);
     if (!user) {
+      console.log('❌ 未授权访问');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('📥 获取银制品数据请求，用户ID:', user.id);
+
     // 获取银制品分类列表
     const silverCategories = ["配件", "宝石托", "链条", "其它"];
+    console.log('🏷️ 银制品分类列表:', silverCategories);
 
-    // 获取所有银制品
+    // 获取所有产品
     const allProducts = await productManager.getProducts(user.id, { limit: 10000 });
+    console.log(`📦 总产品数: ${allProducts.length}`);
 
     // 筛选银制品
-    const silverProducts = allProducts.filter(p => silverCategories.includes(p.category));
+    const silverProducts = allProducts.filter(p => {
+      const isSilver = p.category && silverCategories.includes(p.category);
+      if (!isSilver && p.category) {
+        console.log(`  ⚠️ 排除产品: ${p.productCode}, 分类: ${p.category} (不在银制品分类中)`);
+      }
+      return isSilver;
+    });
+
+    console.log(`✅ 筛选后银制品数: ${silverProducts.length}`);
 
     // 获取银制品价格历史
     const allHistory = await priceHistoryManager.getHistoryByUserId(user.id, { limit: 10000 });
-    const silverHistory = allHistory.filter((h: any) => silverCategories.includes(h.category));
+    console.log(`📈 总历史记录数: ${allHistory.length}`);
+
+    const silverHistory = allHistory.filter((h: any) => {
+      const isSilver = h.category && silverCategories.includes(h.category);
+      return isSilver;
+    });
+
+    console.log(`✅ 筛选后历史记录数: ${silverHistory.length}`);
 
     // 获取银制品配置
     const silverPriceConfig = await appConfigManager.getConfig(user.id, 'silver_price_config');
     const silverPriceCoefficients = await appConfigManager.getConfig(user.id, 'silver_price_coefficients');
+
+    console.log('⚙️ 银价配置:', silverPriceConfig?.configValue);
+    console.log('⚙️ 价格系数:', silverPriceCoefficients?.configValue);
 
     return NextResponse.json({
       products: silverProducts,
@@ -44,7 +67,7 @@ export async function GET(request: NextRequest) {
       coefficients: silverPriceCoefficients?.configValue || {},
     });
   } catch (error) {
-    console.error('获取银制品数据失败:', error);
+    console.error('❌ 获取银制品数据失败:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

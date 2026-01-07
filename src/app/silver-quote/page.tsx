@@ -794,34 +794,44 @@ function SilverQuotePage() {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
+        console.log('❌ 未找到auth_token');
         setCloudDataExists(false);
         return;
       }
 
+      console.log('🔍 检查云端数据...');
       const response = await fetch('/api/silver-sync', {
         headers: {
           Authorization: `Bearer ${token}`,
         }
       });
 
+      console.log('📡 API响应状态:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 云端数据:', data);
         setCloudDataExists(data && data.products && data.products.length > 0);
+      } else {
+        console.error('❌ API返回错误:', response.status, response.statusText);
+        setCloudDataExists(false);
       }
     } catch (error) {
-      console.error('检查云端数据失败:', error);
+      console.error('❌ 检查云端数据失败:', error);
       setCloudDataExists(false);
     }
   };
 
   // 上传数据到云端
   const uploadToCloud = async () => {
+    console.log('🚀 开始上传数据到云端...');
     setSyncStatus("syncing");
     setSyncMessage("正在上传数据到云端...");
 
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
+        console.error('❌ 未找到auth_token');
         alert('请先登录');
         setSyncStatus("error");
         setSyncMessage("需要登录");
@@ -829,6 +839,13 @@ function SilverQuotePage() {
       }
 
       // 上传银制品数据
+      console.log('📤 发送数据:', {
+        productsCount: products.length,
+        historyCount: priceHistory.length,
+        silverPrice,
+        coefficients: silverCoefficients,
+      });
+
       const response = await fetch('/api/silver-sync', {
         method: 'POST',
         headers: {
@@ -843,7 +860,12 @@ function SilverQuotePage() {
         }),
       });
 
+      console.log('📡 上传响应状态:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ 上传成功:', result);
+
         // 上传成功后，标记所有产品为已同步
         const syncedProducts = products.map(p => ({ ...p, syncStatus: "synced" as const }));
         setProducts(syncedProducts);
@@ -858,39 +880,53 @@ function SilverQuotePage() {
           setShowSyncMenu(false);
         }, 2000);
       } else {
-        throw new Error('上传失败');
+        const errorText = await response.text();
+        console.error('❌ 上传失败:', response.status, errorText);
+        throw new Error(`上传失败: ${response.status} - ${errorText}`);
       }
     } catch (error) {
-      console.error('上传到云端失败:', error);
+      console.error('❌ 上传到云端失败:', error);
       setSyncStatus("error");
-      setSyncMessage("上传失败，请重试");
+      setSyncMessage(`上传失败: ${error instanceof Error ? error.message : '请重试'}`);
     }
   };
 
   // 从云端下载数据
   const downloadFromCloud = async (mode: "replace" | "merge") => {
+    console.log(`🚀 开始${mode === 'replace' ? '覆盖' : '合并'}下载数据...`);
     setSyncStatus("syncing");
     setSyncMessage("正在从云端下载数据...");
 
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
+        console.error('❌ 未找到auth_token');
         alert('请先登录');
         setSyncStatus("error");
         setSyncMessage("需要登录");
         return;
       }
 
+      console.log('📡 请求数据...');
       const response = await fetch('/api/silver-sync', {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
       });
 
+      console.log('📡 下载响应状态:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 云端数据:', {
+          productsCount: data.products?.length || 0,
+          historyCount: data.history?.length || 0,
+          silverPrice: data.silverPrice,
+          coefficients: data.coefficients,
+        });
 
         if (mode === "replace") {
+          console.log('🔄 覆盖模式：替换所有本地数据');
           // 覆盖模式：标记所有产品为已同步
           const syncedProducts = (data.products || []).map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
           setProducts(syncedProducts);
@@ -899,6 +935,7 @@ function SilverQuotePage() {
           setSilverCoefficients(data.coefficients || silverCoefficients);
           saveToLocalStorage(syncedProducts, data.history || []);
         } else {
+          console.log('🔀 合并模式：保留本地，添加云端数据');
           // 合并模式：保留本地数据，添加云端不存在的数据
           const existingIds = new Set(products.map(p => p.id));
           const newProducts = (data.products || [])
@@ -908,6 +945,7 @@ function SilverQuotePage() {
           setProducts(mergedProducts);
           setPriceHistory([...priceHistory, ...(data.history || [])]);
           saveToLocalStorage(mergedProducts, [...priceHistory, ...(data.history || [])]);
+          console.log(`📊 合并结果: 本地 ${products.length} + 云端 ${newProducts.length} = 总计 ${mergedProducts.length}`);
         }
 
         setSyncStatus("success");
@@ -918,12 +956,14 @@ function SilverQuotePage() {
           setShowSyncMenu(false);
         }, 2000);
       } else {
-        throw new Error('下载失败');
+        const errorText = await response.text();
+        console.error('❌ 下载失败:', response.status, errorText);
+        throw new Error(`下载失败: ${response.status} - ${errorText}`);
       }
     } catch (error) {
-      console.error('从云端下载失败:', error);
+      console.error('❌ 从云端下载失败:', error);
       setSyncStatus("error");
-      setSyncMessage("下载失败，请重试");
+      setSyncMessage(`下载失败: ${error instanceof Error ? error.message : '请重试'}`);
     }
   };
 
@@ -1172,6 +1212,7 @@ function SilverQuotePage() {
             <div className="relative">
               <button
                 onClick={() => {
+                  console.log('🖱️ 点击云端同步按钮，当前菜单状态:', showSyncMenu);
                   setShowSyncMenu(!showSyncMenu);
                   checkCloudData();
                 }}
@@ -1203,7 +1244,10 @@ function SilverQuotePage() {
                   {/* 操作按钮区 */}
                   <div className="p-4 space-y-2">
                     <button
-                      onClick={uploadToCloud}
+                      onClick={() => {
+                        console.log('🖱️ 点击上传到云端按钮');
+                        uploadToCloud();
+                      }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200"
                     >
@@ -1218,7 +1262,10 @@ function SilverQuotePage() {
                     </button>
 
                     <button
-                      onClick={() => downloadFromCloud("merge")}
+                      onClick={() => {
+                        console.log('🖱️ 点击合并下载按钮');
+                        downloadFromCloud("merge");
+                      }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-green-200"
                     >
@@ -1233,7 +1280,10 @@ function SilverQuotePage() {
                     </button>
 
                     <button
-                      onClick={() => downloadFromCloud("replace")}
+                      onClick={() => {
+                        console.log('🖱️ 点击覆盖下载按钮');
+                        downloadFromCloud("replace");
+                      }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-orange-200"
                     >
