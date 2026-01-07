@@ -497,23 +497,32 @@ function SilverQuotePage() {
     const coeff = silverCoefficients;
 
     // 判断是否为T字头供应商
-    const isTSupplier = supplierCode.toUpperCase().startsWith('T');
+    const isTSupplier = (supplierCode || "").toUpperCase().startsWith('T');
+
+    // 确保所有数值都有默认值
+    const safeWeight = weight ?? 0;
+    const safeLaborCost = laborCost ?? 0;
+    const safeSilverPrice = silverPrice ?? 20;
+    const safeAccessoryCost = accessoryCost ?? 0;
+    const safeStoneCost = stoneCost ?? 0;
+    const safePlatingCost = platingCost ?? 0;
+    const safeCommission = commission ?? 0;
 
     if (isTSupplier) {
       // ========== T字头供应商计算公式（美金基数折加币） ==========
 
       // 1. 材料价(US$) = 银价 × 克重 × 银材料损耗系数 × 材料浮动系数
-      const materialPriceUSD = silverPrice * weight * coeff.tSilverMaterialLoss * coeff.tMaterialFloatFactor;
+      const materialPriceUSD = safeSilverPrice * safeWeight * coeff.tSilverMaterialLoss * coeff.tMaterialFloatFactor;
 
       // 2. 工费(US$) = 输入工费（已是美金）
-      const laborFeeUSD = laborCost;
+      const laborFeeUSD = safeLaborCost;
 
       // 3. 损耗(US$) = 材料价(US$) × 损耗百分比
       const tLossPercentage = 0.1;
       const lossUSD = materialPriceUSD * tLossPercentage;
 
       // 4. 其他成本(US$) = (配件 + 石头 + 电镀 + 佣金) × 材料损耗系数2
-      const otherCostsUSD = ((accessoryCost || 0) + (stoneCost || 0) + (platingCost || 0) + (commission || 0)) * coeff.tMaterialLossFactor2;
+      const otherCostsUSD = (safeAccessoryCost + safeStoneCost + safePlatingCost + safeCommission) * coeff.tMaterialLossFactor2;
 
       // 5. 零售价/批发价(US$) -> 折算为加币(CAD)
       let finalPrice: number;
@@ -527,33 +536,35 @@ function SilverQuotePage() {
         finalPrice = (materialPriceUSD * coeff.tMaterialLossFactor2 * coeff.tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * coeff.tInternationalShippingTaxFactor * coeff.usdToCadExchangeRate;
       }
 
-      return Math.round(finalPrice * 100) / 100;
+      const result = Math.round(finalPrice * 100) / 100;
+      return isNaN(result) ? 0 : result;
     } else {
       // ========== 通用银制品计算公式（人民币基数转加币） ==========
 
       // 1. 材料价(CNY) = 银价 × 克重 × 银材料损耗系数 × 材料浮动系数
-      const materialPriceCNY = silverPrice * weight * coeff.silverMaterialLoss * coeff.silverMaterialFloat;
+      const materialPriceCNY = safeSilverPrice * safeWeight * coeff.silverMaterialLoss * coeff.silverMaterialFloat;
 
       // 2. 佣金 = 工费 × 佣金系数
-      const calculatedCommission = laborCost * coeff.commissionFactor;
+      const calculatedCommission = safeLaborCost * coeff.commissionFactor;
 
       // 3. 计算价格（加币）
       let finalPrice: number;
       if (isRetail) {
         // 零售价 = 材料价/汇率 + (工费/汇率 + 配件/汇率 + 电镀/汇率) × 零售工费系数 + 石头/汇率 × 石头加成系数 + 佣金/汇率
         finalPrice = (materialPriceCNY / coeff.exchangeRate) +
-                     ((laborCost / coeff.exchangeRate) + (accessoryCost / coeff.exchangeRate) + (platingCost / coeff.exchangeRate)) * coeff.laborFactorRetail +
-                     ((stoneCost / coeff.exchangeRate) * coeff.stoneMarkupFactor) +
+                     ((safeLaborCost / coeff.exchangeRate) + (safeAccessoryCost / coeff.exchangeRate) + (safePlatingCost / coeff.exchangeRate)) * coeff.laborFactorRetail +
+                     ((safeStoneCost / coeff.exchangeRate) * coeff.stoneMarkupFactor) +
                      (calculatedCommission / coeff.exchangeRate);
       } else {
         // 批发价 = 材料价/汇率 + (工费/汇率 + 配件/汇率 + 电镀/汇率) × 批发工费系数 + 石头/汇率 × 石头加成系数 + 佣金/汇率
         finalPrice = (materialPriceCNY / coeff.exchangeRate) +
-                     ((laborCost / coeff.exchangeRate) + (accessoryCost / coeff.exchangeRate) + (platingCost / coeff.exchangeRate)) * coeff.laborFactorWholesale +
-                     ((stoneCost / coeff.exchangeRate) * coeff.stoneMarkupFactor) +
+                     ((safeLaborCost / coeff.exchangeRate) + (safeAccessoryCost / coeff.exchangeRate) + (safePlatingCost / coeff.exchangeRate)) * coeff.laborFactorWholesale +
+                     ((safeStoneCost / coeff.exchangeRate) * coeff.stoneMarkupFactor) +
                      (calculatedCommission / coeff.exchangeRate);
       }
 
-      return Math.round(finalPrice * 100) / 100;
+      const result = Math.round(finalPrice * 100) / 100;
+      return isNaN(result) ? 0 : result;
     }
   };
 
@@ -632,8 +643,10 @@ function SilverQuotePage() {
     const updatedProducts = products.map(p => {
       if (selectedProductIds.has(p.id)) {
         const updated = { ...p, laborCost: laborCostNum };
-        updated.retailPrice = calculateSilverPrice(updated, true);
-        updated.wholesalePrice = calculateSilverPrice(updated, false);
+        const retail = calculateSilverPrice(updated, true);
+        const wholesale = calculateSilverPrice(updated, false);
+        updated.retailPrice = isNaN(retail) ? 0 : retail;
+        updated.wholesalePrice = isNaN(wholesale) ? 0 : wholesale;
         return updated;
       }
       return p;
@@ -1869,8 +1882,8 @@ function SilverQuotePage() {
                     // 搜索过滤
                     if (searchQuery) {
                       const query = searchQuery.toLowerCase();
-                      const matchesCode = p.productCode.toLowerCase().includes(query);
-                      const matchesName = p.productName.toLowerCase().includes(query);
+                      const matchesCode = (p.productCode || "").toLowerCase().includes(query);
+                      const matchesName = (p.productName || "").toLowerCase().includes(query);
                       return matchesCode || matchesName;
                     }
                     return true;
@@ -1906,7 +1919,7 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2">
                         <input
                           type="text"
-                          value={product.productCode}
+                          value={product.productCode || ""}
                           onChange={(e) => updateProduct(product.id, "productCode", e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         />
@@ -1914,7 +1927,7 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2">
                         <input
                           type="text"
-                          value={product.productName}
+                          value={product.productName || ""}
                           onChange={(e) => updateProduct(product.id, "productName", e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         />
@@ -1922,7 +1935,7 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2">
                         <input
                           type="text"
-                          value={product.specification}
+                          value={product.specification || ""}
                           onChange={(e) => updateProduct(product.id, "specification", e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         />
@@ -1931,7 +1944,7 @@ function SilverQuotePage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={product.weight}
+                          value={product.weight ?? 0}
                           onChange={(e) => updateProduct(product.id, "weight", Number(e.target.value))}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
@@ -1940,14 +1953,14 @@ function SilverQuotePage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={product.laborCost}
+                          value={product.laborCost ?? 0}
                           onChange={(e) => updateProduct(product.id, "laborCost", Number(e.target.value))}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 min-w-[160px]">
                         <select
-                          value={product.silverColor}
+                          value={product.silverColor || "银色"}
                           onChange={(e) => updateProduct(product.id, "silverColor", e.target.value as any)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         >
@@ -1961,7 +1974,7 @@ function SilverQuotePage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={product.accessoryCost}
+                          value={product.accessoryCost ?? 0}
                           onChange={(e) => updateProduct(product.id, "accessoryCost", Number(e.target.value))}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
@@ -1970,7 +1983,7 @@ function SilverQuotePage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={product.stoneCost}
+                          value={product.stoneCost ?? 0}
                           onChange={(e) => updateProduct(product.id, "stoneCost", Number(e.target.value))}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
@@ -1979,7 +1992,7 @@ function SilverQuotePage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={product.platingCost}
+                          value={product.platingCost ?? 0}
                           onChange={(e) => updateProduct(product.id, "platingCost", Number(e.target.value))}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
@@ -1987,7 +2000,7 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2">
                         <input
                           type="text"
-                          value={product.supplierCode}
+                          value={product.supplierCode || ""}
                           onChange={(e) => updateProduct(product.id, "supplierCode", e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         />
@@ -2013,7 +2026,7 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2">
                         <input
                           type="text"
-                          value={product.remarks}
+                          value={product.remarks || ""}
                           onChange={(e) => updateProduct(product.id, "remarks", e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black"
                         />
