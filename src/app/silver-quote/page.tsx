@@ -860,36 +860,67 @@ function SilverQuotePage() {
       const sheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-      const importedProducts: SilverProduct[] = jsonData.map((row: any, index) => ({
-        id: Date.now().toString() + index,
-        category: row["分类"] || row["分类"] || currentCategory,
-        subCategory: row["子分类"] || row["子分类"] || SILVER_SUB_CATEGORIES[currentCategory][0],
-        productCode: row["货号"] || "",
-        productName: row["产品名称"] || "",
-        specification: row["规格"] || "",
-        weight: Number(row["克重"]) || 0,
-        laborCost: Number(row["工费"]) || 0,
-        silverColor: row["银色"] || "银色",
-        silverPrice: silverPrice,
-        wholesalePrice: 0,
-        retailPrice: 0,
-        accessoryCost: Number(row["配件成本"]) || 0,
-        stoneCost: Number(row["石头成本"]) || 0,
-        platingCost: Number(row["电镀成本"]) || 0,
-        moldCost: 0,
-        commission: 0,
-        supplierCode: row["供应商代码"] || "E1",
-        remarks: row["备注"] || "",
-        quantity: Number(row["累计数量"]) || 0,
-        quantityDate: "",
-        laborCostDate: "",
-        accessoryCostDate: "",
-        stoneCostDate: "",
-        platingCostDate: "",
-        moldCostDate: "",
-        commissionDate: "",
-        timestamp: new Date().toISOString(),
-      }));
+      // 检查Excel中是否包含"分类"列
+      const hasCategoryColumn = jsonData.length > 0 && (jsonData[0] as any)["分类"] !== undefined;
+      const categoriesInFile = hasCategoryColumn
+        ? [...new Set(jsonData.map((row: any) => row["分类"]).filter(cat => cat))]
+        : [];
+
+      // 确认导入方式
+      let importMode: "all" | "current" = "all";
+
+      if (hasCategoryColumn && categoriesInFile.length > 0) {
+        // Excel中有分类列，询问用户导入模式
+        const message = `检测到Excel文件包含以下分类：\n${categoriesInFile.join(", ")}\n\n请选择导入方式：\n• 点击"确定"：导入所有分类的产品\n• 点击"取消"：仅导入当前选中分类（${currentCategory}）的产品`;
+        importMode = window.confirm(message) ? "all" : "current";
+      }
+
+      // 导入产品
+      const importedProducts: SilverProduct[] = jsonData
+        .filter((row: any) => {
+          // 如果选择了"仅导入当前分类"，则过滤
+          if (importMode === "current") {
+            const rowCategory = row["分类"];
+            if (!rowCategory) return false; // 没有分类的也不导入
+            return rowCategory === currentCategory;
+          }
+          return true;
+        })
+        .map((row: any, index) => ({
+          id: Date.now().toString() + index,
+          category: row["分类"] || currentCategory,
+          subCategory: row["子分类"] || SILVER_SUB_CATEGORIES[(row["分类"] as SilverProductCategory) || currentCategory]?.[0] || "",
+          productCode: row["货号"] || "",
+          productName: row["产品名称"] || "",
+          specification: row["规格"] || "",
+          weight: Number(row["克重"]) || 0,
+          laborCost: Number(row["工费"]) || 0,
+          silverColor: row["银色"] || "银色",
+          silverPrice: silverPrice,
+          wholesalePrice: 0,
+          retailPrice: 0,
+          accessoryCost: Number(row["配件成本"]) || 0,
+          stoneCost: Number(row["石头成本"]) || 0,
+          platingCost: Number(row["电镀成本"]) || 0,
+          moldCost: 0,
+          commission: 0,
+          supplierCode: row["供应商代码"] || "E1",
+          remarks: row["备注"] || "",
+          quantity: Number(row["累计数量"]) || 0,
+          quantityDate: "",
+          laborCostDate: "",
+          accessoryCostDate: "",
+          stoneCostDate: "",
+          platingCostDate: "",
+          moldCostDate: "",
+          commissionDate: "",
+          timestamp: new Date().toISOString(),
+        }));
+
+      if (importedProducts.length === 0) {
+        alert("没有找到符合导入条件的产品");
+        return;
+      }
 
       // 计算价格
       const withPrices = importedProducts.map(p => ({
@@ -900,7 +931,18 @@ function SilverQuotePage() {
 
       setProducts([...products, ...withPrices]);
       saveToLocalStorage([...products, ...withPrices]);
-      alert(`成功导入 ${importedProducts.length} 个产品`);
+
+      // 显示导入详情
+      const categoryCount = importedProducts.reduce((acc, p) => {
+        acc[p.category] = (acc[p.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const details = Object.entries(categoryCount)
+        .map(([cat, count]) => `${cat}: ${count}个`)
+        .join("\n");
+
+      alert(`✓ 成功导入 ${importedProducts.length} 个产品\n\n导入详情：\n${details}`);
     };
     reader.readAsBinaryString(file);
   };
