@@ -1071,8 +1071,8 @@ function SilverQuotePage() {
       "石头成本": p.stoneCost,
       "电镀成本": p.platingCost,
       "供应商代码": p.supplierCode,
-      "零售价(CAD$)": p.retailPrice.toFixed(2),
-      "批发价(CAD$)": p.wholesalePrice.toFixed(2),
+      "零售价(CAD$)": Number(p.retailPrice || 0).toFixed(2),
+      "批发价(CAD$)": Number(p.wholesalePrice || 0).toFixed(2),
       "数量": p.batchQuantity || 0,
       "累计数量": p.quantity || 0,
       "备注": p.remarks,
@@ -1897,10 +1897,10 @@ function SilverQuotePage() {
                         />
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right font-bold text-blue-700">
-                        {product.retailPrice.toFixed(2)}
+                        {Number(product.retailPrice || 0).toFixed(2)}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-right font-bold text-green-700">
-                        {product.wholesalePrice.toFixed(2)}
+                        {Number(product.wholesalePrice || 0).toFixed(2)}
                       </td>
                       <td className="border border-gray-200 px-3 py-2">
                         <input
@@ -1970,8 +1970,8 @@ function SilverQuotePage() {
                       <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.weight}</td>
                       <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.laborCost}</td>
                       <td className="border border-gray-200 px-3 py-2 text-black">{history.silverColor}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.retailPrice.toFixed(2)}</td>
-                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.wholesalePrice.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{Number(history.retailPrice || 0).toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{Number(history.wholesalePrice || 0).toFixed(2)}</td>
                     </tr>
                   ))}
                   {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
