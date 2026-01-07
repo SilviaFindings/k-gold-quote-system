@@ -2066,13 +2066,15 @@ function QuotePage() {
       // 6. 零售价/批发价(US$)
       let finalPrice: number;
       if (isRetail) {
-        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.35 + 模具费
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.35
+        // 注意：模具费单列，不参与此计算
         const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor;
       } else {
-        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.35 + 模具费
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.35
+        // 注意：模具费单列，不参与此计算
         const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
-        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
+        finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor;
       }
 
       // 保留两位小数
