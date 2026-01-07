@@ -1,0 +1,125 @@
+From 320098864839435f8dd58137235ef375197fb0c1 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:44:14 +0800
+Subject: [PATCH 08/13] =?UTF-8?q?feat(silver-quote):=20=E6=B7=BB=E5=8A=A0?=
+ =?UTF-8?q?=E4=BA=A7=E5=93=81=E5=BD=93=E6=89=B9=E6=AC=A1=E6=95=B0=E9=87=8F?=
+ =?UTF-8?q?=E5=88=97?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 在SilverProduct和SilverPriceHistory接口中添加batchQuantity字段
+- 产品列表表头添加当批次数量列，位于批发价和累计数量之间
+- 当批次数量支持行内编辑，step为1
+- 累计数量列加粗显示，突出重要性
+- Excel导出包含当批次数量列
+- Excel导入支持当批次数量列
+- 更新所有相关函数：addProduct、saveToHistory、导入导出等
+- 更新暂无数据提示的colSpan为20
+---
+ src/app/silver-quote/page.tsx | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index a87d8d1..c1cfd7e 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -272,6 +272,7 @@ interface SilverProduct {
+   commission: number;  // 佣金（人民币）
+   supplierCode: string;  // 供应商代码
+   remarks: string;  // 备注
++  batchQuantity: number;  // 当批次数量
+   quantity: number;  // 累计数量
+   quantityDate: string;  // 数量录入时间
+   laborCostDate: string;
+@@ -305,7 +306,8 @@ interface SilverPriceHistory {
+   commission: number;
+   supplierCode: string;
+   remarks: string;
+-  quantity: number;
++  batchQuantity: number;  // 当批次数量
++  quantity: number;  // 累计数量
+   quantityDate: string;
+   laborCostDate: string;
+   accessoryCostDate: string;
+@@ -583,6 +585,7 @@ function SilverQuotePage() {
+       commission: 0,
+       supplierCode: "E1",
+       remarks: "",
++      batchQuantity: 0,  // 当批次数量
+       quantity: 0,
+       quantityDate: "",
+       laborCostDate: "",
+@@ -670,6 +673,7 @@ function SilverQuotePage() {
+       commission: product.commission,
+       supplierCode: product.supplierCode,
+       remarks: product.remarks,
++      batchQuantity: product.batchQuantity,
+       quantity: product.quantity,
+       quantityDate: product.quantityDate,
+       laborCostDate: product.laborCostDate,
+@@ -903,8 +907,9 @@ function SilverQuotePage() {
+       "供应商代码": p.supplierCode,
+       "零售价(CAD$)": p.retailPrice.toFixed(2),
+       "批发价(CAD$)": p.wholesalePrice.toFixed(2),
++      "当批次数量": p.batchQuantity || 0,
++      "累计数量": p.quantity || 0,
+       "备注": p.remarks,
+-      "累计数量": p.quantity,
+       "更新时间": formatDate(p.timestamp),
+     }));
+ 
+@@ -973,6 +978,7 @@ function SilverQuotePage() {
+           commission: 0,
+           supplierCode: row["供应商代码"] || "E1",
+           remarks: row["备注"] || "",
++          batchQuantity: Number(row["当批次数量"]) || 0,
+           quantity: Number(row["累计数量"]) || 0,
+           quantityDate: "",
+           laborCostDate: "",
+@@ -1325,6 +1331,7 @@ function SilverQuotePage() {
+                   commission: 0,
+                   supplierCode: "E1",
+                   remarks: "",
++                  batchQuantity: 0,
+                   quantity: 0,
+                   quantityDate: "",
+                   laborCostDate: "",
+@@ -1494,6 +1501,7 @@ function SilverQuotePage() {
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">当批次数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
+@@ -1628,7 +1636,16 @@ function SilverQuotePage() {
+                       <td className="border border-gray-200 px-3 py-2 text-right font-bold text-green-700">
+                         {product.wholesalePrice.toFixed(2)}
+                       </td>
+-                      <td className="border border-gray-200 px-3 py-2 text-right">
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="1"
++                          value={product.batchQuantity || 0}
++                          onChange={(e) => updateProduct(product.id, "batchQuantity", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-black">
+                         {product.quantity || 0}
+                       </td>
+                       <td className="border border-gray-200 px-3 py-2">
+@@ -1646,7 +1663,7 @@ function SilverQuotePage() {
+                   ))}
+                   {products.filter(p => p.category === currentCategory).length === 0 && (
+                     <tr>
+-                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-black">
++                      <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-black">
+                         暂无{currentCategory}产品数据
+                       </td>
+                     </tr>
+-- 
+2.43.0
+

@@ -1,0 +1,772 @@
+From 63123f3b3081b637797ad7696ecd4099789f7034 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 13:16:05 +0800
+Subject: [PATCH 13/13] =?UTF-8?q?feat:=20=E9=93=B6=E5=88=B6=E5=93=81?=
+ =?UTF-8?q?=E9=A1=B5=E9=9D=A2=E5=85=A8=E9=9D=A2=E4=BC=98=E5=8C=96=E4=B8=8E?=
+ =?UTF-8?q?=E4=BF=AE=E5=A4=8D?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 创建银制品API接口 /api/silver-sync，支持云端同步功能
+- 添加返回金制品页面的导航按钮（页面顶部）
+- 新增银制品操作指引，帮助用户了解使用流程
+- 重新组织银制品页面结构，区分产品管理区和数据管理区
+- 在银制品列表中添加产品查询功能（支持按货号和产品名称搜索）
+- 实现Excel导入时自动选择最右边最新列的功能（金制品和银制品）
+  * 银制品：自动选择最右边的重量、工费、配件成本、石头成本、电镀成本列
+  * 金制品：修改findColumnIndex函数，返回最右边匹配的列索引
+- 修复银制品同步功能500错误问题
+- 修复TypeScript类型错误（PriceHistoryManager和AppConfigManager方法调用）
+---
+ src/app/api/silver-sync/route.ts | 320 +++++++++++++++++--------------
+ src/app/quote/page.tsx           |  52 ++++-
+ src/app/silver-quote/page.tsx    | 215 ++++++++++++++-------
+ 3 files changed, 365 insertions(+), 222 deletions(-)
+
+diff --git a/src/app/api/silver-sync/route.ts b/src/app/api/silver-sync/route.ts
+index 9ffd84a..1f6780e 100644
+--- a/src/app/api/silver-sync/route.ts
++++ b/src/app/api/silver-sync/route.ts
+@@ -1,187 +1,213 @@
+ import { NextRequest, NextResponse } from 'next/server';
+ import { isAuthenticated } from '@/lib/auth';
++import { ProductManager } from '@/storage/database/productManager';
++import { PriceHistoryManager } from '@/storage/database/priceHistoryManager';
++import { appConfigManager } from '@/storage/database/appConfigManager';
++import { getDb } from 'coze-coding-dev-sdk';
++import { sql } from 'drizzle-orm';
+ 
+-// 银制品数据类型定义
+-interface SilverProduct {
+-  id: string;
+-  category: string;
+-  subCategory: string;
+-  productCode: string;
+-  productName: string;
+-  specification: string;
+-  weight: number;
+-  laborCost: number;
+-  silverColor: string;
+-  silverPrice: number;
+-  wholesalePrice: number;
+-  retailPrice: number;
+-  accessoryCost: number;
+-  stoneCost: number;
+-  platingCost: number;
+-  moldCost: number;
+-  commission: number;
+-  supplierCode: string;
+-  remarks: string;
+-  batchQuantity: number;
+-  quantity: number;
+-  quantityDate: string;
+-  laborCostDate: string;
+-  accessoryCostDate: string;
+-  stoneCostDate: string;
+-  platingCostDate: string;
+-  moldCostDate: string;
+-  commissionDate: string;
+-  timestamp: string;
+-  syncStatus: "synced" | "unsynced";
+-}
+-
+-interface SilverPriceHistory {
+-  id: string;
+-  productId: string;
+-  category: string;
+-  subCategory: string;
+-  productCode: string;
+-  productName: string;
+-  specification: string;
+-  weight: number;
+-  laborCost: number;
+-  silverColor: string;
+-  silverPrice: number;
+-  wholesalePrice: number;
+-  retailPrice: number;
+-  accessoryCost: number;
+-  stoneCost: number;
+-  platingCost: number;
+-  moldCost: number;
+-  commission: number;
+-  supplierCode: string;
+-  remarks: string;
+-  batchQuantity: number;
+-  quantity: number;
+-  quantityDate: string;
+-  laborCostDate: string;
+-  accessoryCostDate: string;
+-  stoneCostDate: string;
+-  platingCostDate: string;
+-  moldCostDate: string;
+-  commissionDate: string;
+-  timestamp: string;
+-}
+-
+-// 简单的内存存储（生产环境应该使用数据库）
+-let silverDataStore: {
+-  products: SilverProduct[];
+-  history: SilverPriceHistory[];
+-  silverPrice: number;
+-  coefficients: any;
+-} = {
+-  products: [],
+-  history: [],
+-  silverPrice: 20,
+-  coefficients: {},
+-};
++// 创建管理器实例
++const productManager = new ProductManager();
++const priceHistoryManager = new PriceHistoryManager();
+ 
+ /**
+- * POST /api/silver-sync - 上传银制品数据到云端
+- * Body:
+- * - products: 产品数组
+- * - priceHistory: 价格历史数组
+- * - silverPrice: 银价
+- * - coefficients: 系数对象
++ * GET /api/silver-sync - 获取银制品数据
+  */
+-export async function POST(request: NextRequest) {
++export async function GET(request: NextRequest) {
+   try {
+     const user = await isAuthenticated(request);
+     if (!user) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+ 
+-    const body = await request.json();
+-    const { products, priceHistory, silverPrice, coefficients } = body;
+-
+-    console.log('📥 收到银制品同步请求:', {
+-      userId: user.id,
+-      userEmail: user.email,
+-      productsCount: Array.isArray(products) ? products.length : 0,
+-      historyCount: Array.isArray(priceHistory) ? priceHistory.length : 0,
+-    });
++    // 获取银制品分类列表
++    const silverCategories = ["配件", "宝石托", "链条", "其它"];
+ 
+-    // 存储数据到内存（实际应该使用数据库）
+-    if (Array.isArray(products)) {
+-      silverDataStore.products = products;
+-    }
+-    if (Array.isArray(priceHistory)) {
+-      silverDataStore.history = priceHistory;
+-    }
+-    if (silverPrice !== undefined) {
+-      silverDataStore.silverPrice = silverPrice;
+-    }
+-    if (coefficients) {
+-      silverDataStore.coefficients = coefficients;
+-    }
++    // 获取所有银制品
++    const allProducts = await productManager.getProducts(user.id, { limit: 10000 });
+ 
+-    console.log('✅ 银制品数据上传成功');
+-    return NextResponse.json({ success: true });
+-  } catch (error) {
+-    console.error('❌ 银制品同步失败:', error);
+-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+-  }
+-}
++    // 筛选银制品
++    const silverProducts = allProducts.filter(p => silverCategories.includes(p.category));
+ 
+-/**
+- * GET /api/silver-sync - 从云端下载银制品数据
+- */
+-export async function GET(request: NextRequest) {
+-  try {
+-    const user = await isAuthenticated(request);
+-    if (!user) {
+-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+-    }
++    // 获取银制品价格历史
++    const allHistory = await priceHistoryManager.getHistoryByUserId(user.id, { limit: 10000 });
++    const silverHistory = allHistory.filter((h: any) => silverCategories.includes(h.category));
+ 
+-    console.log('📤 发送银制品数据:', {
+-      userId: user.id,
+-      userEmail: user.email,
+-      productsCount: silverDataStore.products.length,
+-      historyCount: silverDataStore.history.length,
+-    });
++    // 获取银制品配置
++    const silverPriceConfig = await appConfigManager.getConfig(user.id, 'silver_price_config');
++    const silverPriceCoefficients = await appConfigManager.getConfig(user.id, 'silver_price_coefficients');
+ 
+     return NextResponse.json({
+-      products: silverDataStore.products,
+-      history: silverDataStore.history,
+-      silverPrice: silverDataStore.silverPrice,
+-      coefficients: silverDataStore.coefficients,
++      products: silverProducts,
++      history: silverHistory,
++      silverPrice: silverPriceConfig?.configValue || 20,
++      coefficients: silverPriceCoefficients?.configValue || {},
+     });
+   } catch (error) {
+-    console.error('❌ 银制品下载失败:', error);
++    console.error('获取银制品数据失败:', error);
+     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+   }
+ }
+ 
+ /**
+- * DELETE /api/silver-sync - 清除云端银制品数据
++ * POST /api/silver-sync - 同步银制品数据到数据库
++ * Body:
++ * - products: 产品数组
++ * - history: 价格历史数组
++ * - silverPrice: 银价
++ * - coefficients: 价格系数
+  */
+-export async function DELETE(request: NextRequest) {
++export async function POST(request: NextRequest) {
+   try {
+     const user = await isAuthenticated(request);
+     if (!user) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+ 
+-    console.log('🗑️ 清除银制品数据:', {
++    const body = await request.json();
++    const { products, history, silverPrice, coefficients } = body;
++
++    let syncedProducts = 0;
++    let updatedProducts = 0;
++    let newProducts = 0;
++    let syncedHistory = 0;
++
++    console.log('📥 收到银制品同步请求:', {
+       userId: user.id,
+-      userEmail: user.email,
++      productsCount: Array.isArray(products) ? products.length : 0,
++      historyCount: Array.isArray(history) ? history.length : 0,
+     });
+ 
+-    silverDataStore = {
+-      products: [],
+-      history: [],
+-      silverPrice: 20,
+-      coefficients: {},
+-    };
++    // 1. 同步产品数据
++    if (Array.isArray(products) && products.length > 0) {
++      console.log('📦 开始同步银制品产品数据...');
++      for (const product of products) {
++        try {
++          // 数据预处理：将银制品字段映射到金制品表结构
++          const normalizedProduct = {
++            ...product,
++            // 银制品不需要karat，设置为空字符串或默认值
++            karat: '925', // 银制品默认925
++            goldColor: product.silverColor || '银色', // 银制品的颜色映射到goldColor
++            goldPrice: product.silverPrice || 20, // 银价映射到goldPrice
++            // 确保必填字段有值
++            category: product.category || '配件',
++            subCategory: product.subCategory || '',
++            specification: product.specification || '',
++            supplierCode: product.supplierCode || '',
++            // 确保数值字段有默认值
++            weight: product.weight ?? 0,
++            laborCost: product.laborCost ?? 0,
++            wholesalePrice: product.wholesalePrice ?? 0,
++            retailPrice: product.retailPrice ?? 0,
++            accessoryCost: product.accessoryCost ?? 0,
++            stoneCost: product.stoneCost ?? 0,
++            platingCost: product.platingCost ?? 0,
++            moldCost: product.moldCost ?? 0,
++            commission: product.commission ?? 0,
++            // 确保可选字段有默认值
++            orderChannel: product.orderChannel || null,
++            shape: product.shape || null,
++            // 银制品没有特殊系数，设置为null
++            specialMaterialLoss: null,
++            specialMaterialCost: null,
++            specialProfitMargin: null,
++            specialLaborFactorRetail: null,
++            specialLaborFactorWholesale: null,
++            // 确保时间戳格式正确
++            laborCostDate: product.laborCostDate ? new Date(product.laborCostDate) : new Date(),
++            accessoryCostDate: product.accessoryCostDate ? new Date(product.accessoryCostDate) : new Date(),
++            stoneCostDate: product.stoneCostDate ? new Date(product.stoneCostDate) : new Date(),
++            platingCostDate: product.platingCostDate ? new Date(product.platingCostDate) : new Date(),
++            moldCostDate: product.moldCostDate ? new Date(product.moldCostDate) : new Date(),
++            commissionDate: product.commissionDate ? new Date(product.commissionDate) : new Date(),
++            timestamp: product.timestamp ? new Date(product.timestamp) : new Date(),
++          };
++
++          // 数据完整性检查
++          if (!normalizedProduct.id) {
++            console.error('  ✗ 产品缺少 id:', normalizedProduct.productCode);
++            continue;
++          }
+ 
+-    return NextResponse.json({ success: true });
++          if (!normalizedProduct.productCode) {
++            console.error('  ✗ 产品缺少 productCode:', normalizedProduct.id);
++            continue;
++          }
++
++          // 检查是否已存在（通过 id 和 userId）
++          const existing = await productManager.getProductById(product.id, user.id);
++          if (existing) {
++            // 已存在，更新
++            await productManager.updateProduct(product.id, user.id, normalizedProduct);
++            updatedProducts++;
++            console.log(`  ✓ 更新产品: ${normalizedProduct.productCode}`);
++          } else {
++            // 不存在，创建
++            const { userId: _userId, createdAt: _createdAt, updatedAt: _updatedAt, ...productToInsert } = normalizedProduct as any;
++            const dataToInsert = { ...productToInsert, id: product.id };
++            await productManager.createProductWithId(user.id, dataToInsert);
++            newProducts++;
++            console.log(`  + 新建产品: ${normalizedProduct.productCode} (id: ${product.id})`);
++          }
++          syncedProducts++;
++        } catch (e) {
++          console.error('  ✗ 同步产品失败:', product.productCode || product.id, e);
++        }
++      }
++      console.log(`✅ 银制品产品同步完成: 新建 ${newProducts} 个，更新 ${updatedProducts} 个`);
++    }
++
++    // 2. 同步价格历史
++    if (Array.isArray(history) && history.length > 0) {
++      console.log('📈 开始同步银制品价格历史...');
++      for (const hist of history) {
++        try {
++          const normalizedHistory = {
++            ...hist,
++            karat: '925',
++            goldColor: hist.silverColor || '银色',
++            goldPrice: hist.silverPrice || 20,
++          };
++
++          // 检查历史记录是否已存在
++          const existing = await priceHistoryManager.getHistoryById(hist.id, user.id);
++          if (existing) {
++            // 已存在，跳过
++            continue;
++          }
++
++          // 创建历史记录
++          const { userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
++          await priceHistoryManager.createPriceHistoryWithId(user.id, { ...historyToInsert, id: hist.id });
++          syncedHistory++;
++        } catch (e) {
++          console.error('  ✗ 同步历史记录失败:', hist.productCode || hist.id, e);
++        }
++      }
++      console.log(`✅ 银制品历史记录同步完成: ${syncedHistory} 条`);
++    }
++
++    // 3. 保存配置
++    if (silverPrice !== undefined) {
++      await appConfigManager.setConfig(user.id, 'silver_price_config', silverPrice);
++      console.log('✅ 银价配置已保存');
++    }
++
++    if (coefficients) {
++      await appConfigManager.setConfig(user.id, 'silver_price_coefficients', coefficients);
++      console.log('✅ 银制品价格系数已保存');
++    }
++
++    return NextResponse.json({
++      success: true,
++      syncedProducts,
++      updatedProducts,
++      newProducts,
++      syncedHistory,
++    });
+   } catch (error) {
+-    console.error('❌ 清除银制品数据失败:', error);
++    console.error('银制品同步失败:', error);
+     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+   }
+ }
+diff --git a/src/app/quote/page.tsx b/src/app/quote/page.tsx
+index 43a6ca6..78a8046 100644
+--- a/src/app/quote/page.tsx
++++ b/src/app/quote/page.tsx
+@@ -515,6 +515,44 @@ function QuotePage() {
+     return undefined;
+   };
+ 
++  // 查找最右边包含关键词的列的值（自动选择最新的一列）
++  // 用于处理Excel中有多列相同类型数据的情况（如重量1、重量2、重量3...）
++  const findLatestGoldColumnValue = (row: any, headers: string[], chineseColumnName: string, keywords: string[]): any => {
++    // 查找所有匹配的列索引
++    const matchingIndices: number[] = [];
++
++    // 尝试查找中文列名的精确匹配
++    const exactIndex = headers.findIndex(h => h && String(h).trim() === chineseColumnName);
++    if (exactIndex !== -1 && row[exactIndex] !== undefined) {
++      matchingIndices.push(exactIndex);
++    }
++
++    // 尝试查找英文列名
++    const englishColumnName = GOLD_COLUMN_MAPPING[chineseColumnName];
++    if (englishColumnName) {
++      const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
++      if (englishIndex !== -1 && row[englishIndex] !== undefined) {
++        matchingIndices.push(englishIndex);
++      }
++    }
++
++    // 尝试模糊匹配关键词（中文）
++    for (const keyword of keywords) {
++      const fuzzyIndex = headers.findIndex(h => h && String(h).includes(keyword));
++      if (fuzzyIndex !== -1 && row[fuzzyIndex] !== undefined && !matchingIndices.includes(fuzzyIndex)) {
++        matchingIndices.push(fuzzyIndex);
++      }
++    }
++
++    if (matchingIndices.length === 0) {
++      return undefined;
++    }
++
++    // 返回最右边一列的值（最新的值）
++    const latestIndex = Math.max(...matchingIndices);
++    return row[latestIndex];
++  };
++
+   // 导入Excel相关状态
+   const [importWeight, setImportWeight] = useState<boolean>(true);
+   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
+@@ -4137,17 +4175,23 @@ function QuotePage() {
+             }
+           }
+ 
+-          // 再尝试模糊匹配
++          // 再尝试模糊匹配，返回最右边的匹配列
++          const fuzzyIndices: number[] = [];
+           for (const keyword of keywords) {
+             const fuzzyIndex = headers.findIndex(h =>
+               h && String(h).includes(keyword)
+             );
+-            if (fuzzyIndex !== -1) {
+-              console.log(`列 "${keyword}" 模糊匹配到索引 ${fuzzyIndex} ("${headers[fuzzyIndex]}")`);
+-              return fuzzyIndex;
++            if (fuzzyIndex !== -1 && !fuzzyIndices.includes(fuzzyIndex)) {
++              fuzzyIndices.push(fuzzyIndex);
+             }
+           }
+ 
++          if (fuzzyIndices.length > 0) {
++            const latestIndex = Math.max(...fuzzyIndices);
++            console.log(`列 "${keywords.join(', ')}" 模糊匹配到索引 ${latestIndex} (最右边) ("${headers[latestIndex]}")`);
++            return latestIndex;
++          }
++
+           console.warn(`⚠️ 未找到包含关键词 [${keywords.join(', ')}] 的列`);
+           return -1;
+         };
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index a98ea26..1c3ce62 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -243,6 +243,41 @@ const getSilverColumnValue = (row: any, chineseColumnName: string): any => {
+   return undefined;
+ };
+ 
++// 查找最右边包含关键词的列的值（自动选择最新的一列）
++// 用于处理Excel中有多列相同类型数据的情况（如重量1、重量2、重量3...）
++const findLatestColumnValue = (row: any, chineseColumnName: string, ...keywords: string[]): any => {
++  const rowKeys = Object.keys(row);
++
++  // 查找所有匹配的列
++  const matchingColumns = rowKeys.filter(key => {
++    const keyLower = String(key).toLowerCase();
++    // 检查中文列名
++    if (chineseColumnName && keyLower === chineseColumnName.toLowerCase()) {
++      return true;
++    }
++    // 检查英文列名
++    const englishColumnName = SILVER_COLUMN_MAPPING[chineseColumnName];
++    if (englishColumnName && keyLower === englishColumnName.toLowerCase()) {
++      return true;
++    }
++    // 检查关键词
++    for (const keyword of keywords) {
++      if (keyLower.includes(keyword.toLowerCase())) {
++        return true;
++      }
++    }
++    return false;
++  });
++
++  if (matchingColumns.length === 0) {
++    return undefined;
++  }
++
++  // 返回最右边一列的值（最新的值）
++  const latestColumn = matchingColumns[matchingColumns.length - 1];
++  return row[latestColumn];
++};
++
+ // ========== 银制品货号识别 ==========
+ 
+ // 判断是否为银制品货号
+@@ -536,6 +571,10 @@ function SilverQuotePage() {
+   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
+   const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
+ 
++  // 搜索查询
++  const [searchQuery, setSearchQuery] = useState<string>("");
++  const [searchTrigger, setSearchTrigger] = useState<number>(0);
++
+   // 批量操作状态
+   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+ 
+@@ -1009,7 +1048,7 @@ function SilverQuotePage() {
+         importMode = window.confirm(message) ? "all" : "selected";
+       }
+ 
+-      // 导入产品
++      // 导入产品 - 使用智能查找最新列的功能
+       const importedProducts: SilverProduct[] = jsonData
+         .filter((row: any) => {
+           // 如果选择了"仅导入选中分类"，则过滤
+@@ -1027,15 +1066,18 @@ function SilverQuotePage() {
+           productCode: getSilverColumnValue(row, "货号") || "",
+           productName: getSilverColumnValue(row, "产品名称") || "",
+           specification: getSilverColumnValue(row, "规格") || "",
+-          weight: Number(getSilverColumnValue(row, "克重")) || 0,
+-          laborCost: Number(getSilverColumnValue(row, "工费")) || 0,
++          // 🔥 自动选择最右边的重量列（最新的重量）
++          weight: Number(findLatestColumnValue(row, "克重", "重量", "克重", "净重", "重量(g)", "重量(克)")) || 0,
++          // 🔥 自动选择最右边的工费列（最新的工费）
++          laborCost: Number(findLatestColumnValue(row, "工费", "工费", "人工费", "加工费", "手工费")) || 0,
+           silverColor: getSilverColumnValue(row, "银色") || "银色",
+           silverPrice: silverPrice,
+           wholesalePrice: 0,
+           retailPrice: 0,
+-          accessoryCost: Number(getSilverColumnValue(row, "配件成本")) || 0,
+-          stoneCost: Number(getSilverColumnValue(row, "石头成本")) || 0,
+-          platingCost: Number(getSilverColumnValue(row, "电镀成本")) || 0,
++          // 🔥 自动选择最右边的成本列（最新的成本）
++          accessoryCost: Number(findLatestColumnValue(row, "配件成本", "配件", "配件成本")) || 0,
++          stoneCost: Number(findLatestColumnValue(row, "石头成本", "石头", "石头成本")) || 0,
++          platingCost: Number(findLatestColumnValue(row, "电镀成本", "电镀", "电镀成本")) || 0,
+           moldCost: 0,
+           commission: 0,
+           supplierCode: getSilverColumnValue(row, "供应商代码") || "E1",
+@@ -1114,9 +1156,18 @@ function SilverQuotePage() {
+         <div className="max-w-7xl mx-auto">
+           {/* 页面标题 */}
+           <div className="mb-6 flex items-center justify-between">
+-            <div>
+-              <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
+-              <p className="text-black">925银制品价格计算和管理系统</p>
++            <div className="flex items-center gap-4">
++              <div>
++                <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
++                <p className="text-black">925银制品价格计算和管理系统</p>
++              </div>
++              <button
++                onClick={() => router.push('/quote')}
++                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center gap-2"
++              >
++                <span>←</span>
++                <span>返回金制品</span>
++              </button>
+             </div>
+             <div className="relative">
+               <button
+@@ -1207,6 +1258,40 @@ function SilverQuotePage() {
+             </div>
+           </div>
+ 
++          {/* 操作指引 */}
++          <div className="bg-blue-50 rounded-lg shadow-md p-6 mb-6 border border-blue-200">
++            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
++              <span>📖</span>
++              <span>操作指引</span>
++            </h2>
++            <div className="space-y-3 text-sm text-black">
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">1. 数据导入：</span>
++                <span>选择产品小类后导入Excel文件，系统会自动识别分类和字段</span>
++              </div>
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">2. 产品管理：</span>
++                <span>可以添加、编辑、删除产品，批量修改工费或删除</span>
++              </div>
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">3. 价格计算：</span>
++                <span>修改克重、工费等参数后，系统自动计算零售价和批发价</span>
++              </div>
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">4. 云端同步：</span>
++                <span>可将数据上传到云端，或从云端下载数据，支持合并和覆盖模式</span>
++              </div>
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">5. 数据导出：</span>
++                <span>支持导出Excel文件，方便备份和分享</span>
++              </div>
++              <div className="flex gap-2">
++                <span className="font-bold text-blue-600">6. 智能识别：</span>
++                <span>输入货号自动识别供应商代码，输入产品名称自动识别分类</span>
++              </div>
++            </div>
++          </div>
++
+           {/* 银价配置 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+             <h2 className="text-xl font-bold text-black mb-4">银价配置</h2>
+@@ -1368,57 +1453,12 @@ function SilverQuotePage() {
+             </div>
+           </div>
+ 
+-          {/* 测试区域 */}
+-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-black mb-4">测试计算</h2>
+-            <button
+-              onClick={() => {
+-                const testProduct: SilverProduct = {
+-                  id: "test",
+-                  category: "配件",
+-                  subCategory: "扣子",
+-                  productCode: "KEW001",
+-                  productName: "测试产品",
+-                  specification: "测试规格",
+-                  weight: 1.0,
+-                  laborCost: 10,
+-                  silverColor: "银色",
+-                  silverPrice: 20,
+-                  wholesalePrice: 0,
+-                  retailPrice: 0,
+-                  accessoryCost: 5,
+-                  stoneCost: 10,
+-                  platingCost: 5,
+-                  moldCost: 0,
+-                  commission: 0,
+-                  supplierCode: "E1",
+-                  remarks: "",
+-                  batchQuantity: 0,
+-                  quantity: 0,
+-                  quantityDate: "",
+-                  laborCostDate: "",
+-                  accessoryCostDate: "",
+-                  stoneCostDate: "",
+-                  platingCostDate: "",
+-                  moldCostDate: "",
+-                  commissionDate: "",
+-                  timestamp: new Date().toISOString(),
+-                  syncStatus: "unsynced",
+-                };
+-
+-                const retail = calculateSilverPrice(testProduct, true);
+-                const wholesale = calculateSilverPrice(testProduct, false);
+-
+-                alert(`零售价: $${retail.toFixed(2)}\n批发价: $${wholesale.toFixed(2)}`);
+-              }}
+-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+-            >
+-              测试计算
+-            </button>
+-          </div>
+-
+-          {/* 产品操作区 */}
++          {/* 产品管理区 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
++            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
++              <span>📦</span>
++              <span>产品管理区</span>
++            </h2>
+             <div className="flex items-center justify-between mb-4">
+               <div>
+                 <h2 className="text-xl font-bold text-black">产品管理</h2>
+@@ -1561,7 +1601,40 @@ function SilverQuotePage() {
+ 
+           {/* 产品列表 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-black mb-4">产品列表</h2>
++            <div className="flex items-center justify-between mb-4">
++              <h2 className="text-xl font-bold text-black">产品列表</h2>
++              <div className="flex items-center gap-2">
++                <input
++                  type="text"
++                  placeholder="搜索货号或产品名称..."
++                  value={searchQuery}
++                  onChange={(e) => setSearchQuery(e.target.value)}
++                  onKeyUp={(e) => {
++                    if (e.key === 'Enter') {
++                      setSearchTrigger(Date.now());
++                    }
++                  }}
++                  className="border border-gray-300 rounded px-3 py-1.5 w-64 text-sm text-black"
++                />
++                <button
++                  onClick={() => setSearchTrigger(Date.now())}
++                  className="bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 text-sm"
++                >
++                  搜索
++                </button>
++                {searchQuery && (
++                  <button
++                    onClick={() => {
++                      setSearchQuery('');
++                      setSearchTrigger(Date.now());
++                    }}
++                    className="text-gray-500 hover:text-gray-700 text-sm"
++                  >
++                    清除
++                  </button>
++                )}
++              </div>
++            </div>
+             <div className="overflow-x-auto">
+               <table className="w-full border-collapse border border-gray-200 text-sm">
+                 <thead className="bg-gray-100">
+@@ -1609,6 +1682,13 @@ function SilverQuotePage() {
+                   {products.filter(p => {
+                     if (p.category !== currentCategory) return false;
+                     if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
++                    // 搜索过滤
++                    if (searchQuery) {
++                      const query = searchQuery.toLowerCase();
++                      const matchesCode = p.productCode.toLowerCase().includes(query);
++                      const matchesName = p.productName.toLowerCase().includes(query);
++                      return matchesCode || matchesName;
++                    }
+                     return true;
+                   }).map(product => (
+                     <tr key={product.id}>
+@@ -1773,7 +1853,10 @@ function SilverQuotePage() {
+ 
+           {/* 历史记录 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-black mb-4">价格历史记录</h2>
++            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
++              <span>📊</span>
++              <span>数据管理区 - 价格历史记录</span>
++            </h2>
+             <div className="overflow-x-auto" style={{ maxHeight: '400px' }}>
+               <table className="w-full border-collapse border border-gray-200 text-sm">
+                 <thead className="bg-gray-100 sticky top-0">
+@@ -1814,16 +1897,6 @@ function SilverQuotePage() {
+               </table>
+             </div>
+           </div>
+-
+-          {/* 返回金制品页面 */}
+-          <div className="text-center">
+-            <button
+-              onClick={() => router.push('/quote')}
+-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+-            >
+-              返回金制品报价系统
+-            </button>
+-          </div>
+         </div>
+       </AuthProtection>
+     </div>
+-- 
+2.43.0
+

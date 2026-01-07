@@ -1,0 +1,2170 @@
+From 3f5eacbe5c97b493a0fb4a8510c83cfd5cd16c94 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:02:34 +0800
+Subject: [PATCH 01/13] =?UTF-8?q?fix:=20=E4=BF=AE=E6=AD=A3=E9=93=B6?=
+ =?UTF-8?q?=E5=88=B6=E5=93=81=E6=8A=A5=E4=BB=B7=E9=A1=B5=E9=9D=A2=E8=BE=93?=
+ =?UTF-8?q?=E5=85=A5=E6=A1=86=E6=96=87=E5=AD=97=E9=A2=9C=E8=89=B2=E4=B8=BA?=
+ =?UTF-8?q?=E9=BB=91=E8=89=B2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/silver-quote/page.tsx | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index 6af0bba..2d276cd 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -468,7 +468,7 @@ function SilverQuotePage() {
+                   setSilverPrice(value);
+                   localStorage.setItem("silverPrice", value.toString());
+                 }}
+-                className="border border-gray-300 rounded px-3 py-2 w-32"
++                className="border border-gray-300 rounded px-3 py-2 w-32 text-black"
+               />
+             </div>
+           </div>
+@@ -488,7 +488,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -502,7 +502,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -516,7 +516,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -530,7 +530,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -544,7 +544,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -558,7 +558,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -572,7 +572,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -586,7 +586,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+             </div>
+-- 
+2.43.0
+
+From 04951afe5d1076e534eaf093e8457a82ceef3aa7 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:04:12 +0800
+Subject: [PATCH 02/13] =?UTF-8?q?fix:=20=E4=BF=AE=E6=AD=A3=E9=93=B6?=
+ =?UTF-8?q?=E5=88=B6=E5=93=81=E6=8A=A5=E4=BB=B7=E9=A1=B5=E9=9D=A2=E6=89=80?=
+ =?UTF-8?q?=E6=9C=89=E6=96=87=E5=AD=97=E9=A2=9C=E8=89=B2=E4=B8=BA=E9=BB=91?=
+ =?UTF-8?q?=E8=89=B2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/silver-quote/page.tsx | 40 +++++++++++++++++------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index 2d276cd..38499ea 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -451,15 +451,15 @@ function SilverQuotePage() {
+         <div className="max-w-7xl mx-auto">
+           {/* 页面标题 */}
+           <div className="mb-6">
+-            <h1 className="text-3xl font-bold text-gray-900 mb-2">银制品报价操作平台</h1>
+-            <p className="text-gray-600">925银制品价格计算和管理系统</p>
++            <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
++            <p className="text-black">925银制品价格计算和管理系统</p>
+           </div>
+ 
+           {/* 银价配置 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-gray-900 mb-4">银价配置</h2>
++            <h2 className="text-xl font-bold text-black mb-4">银价配置</h2>
+             <div className="flex items-center gap-4">
+-              <label className="text-gray-700 font-medium">银价（人民币/克）:</label>
++              <label className="text-black font-medium">银价（人民币/克）:</label>
+               <input
+                 type="number"
+                 value={silverPrice}
+@@ -475,10 +475,10 @@ function SilverQuotePage() {
+ 
+           {/* 系数配置 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-gray-900 mb-4">价格系数配置</h2>
++            <h2 className="text-xl font-bold text-black mb-4">价格系数配置</h2>
+             <div className="grid grid-cols-2 gap-4">
+               <div>
+-                <label className="block text-gray-700 mb-1">零售工费系数</label>
++                <label className="block text-black mb-1">零售工费系数</label>
+                 <input
+                   type="number"
+                   step="0.1"
+@@ -492,7 +492,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">批发工费系数</label>
++                <label className="block text-black mb-1">批发工费系数</label>
+                 <input
+                   type="number"
+                   step="0.1"
+@@ -506,7 +506,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">银材料损耗系数</label>
++                <label className="block text-black mb-1">银材料损耗系数</label>
+                 <input
+                   type="number"
+                   step="0.01"
+@@ -520,7 +520,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">材料浮动系数</label>
++                <label className="block text-black mb-1">材料浮动系数</label>
+                 <input
+                   type="number"
+                   step="0.01"
+@@ -534,7 +534,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">国际运输和关税系数</label>
++                <label className="block text-black mb-1">国际运输和关税系数</label>
+                 <input
+                   type="number"
+                   step="0.01"
+@@ -548,7 +548,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">汇率（人民币/加币）</label>
++                <label className="block text-black mb-1">汇率（人民币/加币）</label>
+                 <input
+                   type="number"
+                   step="0.1"
+@@ -562,7 +562,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">佣金系数（工费×系数=佣金）</label>
++                <label className="block text-black mb-1">佣金系数（工费×系数=佣金）</label>
+                 <input
+                   type="number"
+                   step="0.1"
+@@ -576,7 +576,7 @@ function SilverQuotePage() {
+                 />
+               </div>
+               <div>
+-                <label className="block text-gray-700 mb-1">石头加成系数</label>
++                <label className="block text-black mb-1">石头加成系数</label>
+                 <input
+                   type="number"
+                   step="0.1"
+@@ -594,11 +594,11 @@ function SilverQuotePage() {
+ 
+           {/* 计算公式展示 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-gray-900 mb-4">计算公式</h2>
++            <h2 className="text-xl font-bold text-black mb-4">计算公式</h2>
+             <div className="space-y-4">
+               <div className="border-l-4 border-blue-500 pl-4">
+-                <h3 className="font-bold text-gray-900 mb-2">通用银制品（人民币基数为加币）</h3>
+-                <div className="bg-gray-50 p-4 rounded text-sm space-y-2">
++                <h3 className="font-bold text-black mb-2">通用银制品（人民币基数为加币）</h3>
++                <div className="bg-gray-50 p-4 rounded text-sm space-y-2 text-black">
+                   <p><strong>材料价</strong> = 银价 × 克重 × 1.05 × 1.1</p>
+                   <p><strong>佣金</strong> = 工费 × 1.1</p>
+                   <p><strong>零售价</strong> = 材料价/5 + (工费/5 + 配件/5 + 电镀/5) × 5 + 石头/5 × 1.3 + 佣金/5</p>
+@@ -606,11 +606,11 @@ function SilverQuotePage() {
+                 </div>
+               </div>
+               <div className="border-l-4 border-green-500 pl-4">
+-                <h3 className="font-bold text-gray-900 mb-2">T字头供应商（美金基数折加币）</h3>
+-                <div className="bg-gray-50 p-4 rounded text-sm space-y-2">
++                <h3 className="font-bold text-black mb-2">T字头供应商（美金基数折加币）</h3>
++                <div className="bg-gray-50 p-4 rounded text-sm space-y-2 text-black">
+                   <p><strong>零售价</strong> = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.25 × 1.4（美金折加币）</p>
+                   <p><strong>批发价</strong> = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.25 × 1.4（美金折加币）</p>
+-                  <p className="text-gray-600 mt-2">其中：其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15</p>
++                  <p className="text-black mt-2">其中：其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15</p>
+                 </div>
+               </div>
+             </div>
+@@ -618,7 +618,7 @@ function SilverQuotePage() {
+ 
+           {/* 测试区域 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+-            <h2 className="text-xl font-bold text-gray-900 mb-4">测试计算</h2>
++            <h2 className="text-xl font-bold text-black mb-4">测试计算</h2>
+             <button
+               onClick={() => {
+                 const testProduct: SilverProduct = {
+-- 
+2.43.0
+
+From e2690bbce722216a70704bd8684f63f5029d6b0c Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:09:16 +0800
+Subject: [PATCH 03/13] =?UTF-8?q?feat:=20=E5=AE=8C=E6=88=90=E9=93=B6?=
+ =?UTF-8?q?=E5=88=B6=E5=93=81=E6=8A=A5=E4=BB=B7=E5=B9=B3=E5=8F=B0=E6=89=80?=
+ =?UTF-8?q?=E6=9C=89=E5=8A=9F=E8=83=BD=E5=BC=80=E5=8F=91?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/silver-quote/page.tsx | 743 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 739 insertions(+), 4 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index 38499ea..4c5eb01 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -440,19 +440,479 @@ function SilverQuotePage() {
+     }
+   };
+ 
+-  // ========== 页面UI ==========
++  // ========== 产品和历史记录状态管理 ==========
+ 
+   const [products, setProducts] = useState<SilverProduct[]>([]);
++  const [priceHistory, setPriceHistory] = useState<SilverPriceHistory[]>([]);
+   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
++  const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
++
++  // 添加产品
++  const addProduct = () => {
++    const newProduct: SilverProduct = {
++      id: Date.now().toString(),
++      category: currentCategory,
++      subCategory: SILVER_SUB_CATEGORIES[currentCategory][0],
++      productCode: "",
++      productName: "",
++      specification: "",
++      weight: 0,
++      laborCost: 0,
++      silverColor: "银色",
++      silverPrice: silverPrice,
++      wholesalePrice: 0,
++      retailPrice: 0,
++      accessoryCost: 0,
++      stoneCost: 0,
++      platingCost: 0,
++      moldCost: 0,
++      commission: 0,
++      supplierCode: "E1",
++      remarks: "",
++      quantity: 0,
++      quantityDate: "",
++      laborCostDate: "",
++      accessoryCostDate: "",
++      stoneCostDate: "",
++      platingCostDate: "",
++      moldCostDate: "",
++      commissionDate: "",
++      timestamp: new Date().toISOString(),
++    };
++
++    setProducts([...products, newProduct]);
++  };
++
++  // 更新产品
++  const updateProduct = (id: string, field: keyof SilverProduct, value: any) => {
++    const updatedProducts = products.map(p => {
++      if (p.id === id) {
++        const updated = { ...p, [field]: value };
++
++        // 智能识别货号和分类
++        if (field === "productCode" && value) {
++          const parsed = parseSilverProductCode(value);
++          updated.supplierCode = parsed.supplierCode;
++        }
++
++        // 智能识别产品名称对应的分类
++        if (field === "productName" && value) {
++          const detectedCategory = detectSilverCategoryFromName(value);
++          const detectedSubCategory = detectSilverSubCategoryFromName(value);
++          if (detectedCategory) {
++            updated.category = detectedCategory;
++          }
++          if (detectedSubCategory) {
++            updated.subCategory = detectedSubCategory;
++          }
++        }
++
++        // 自动计算价格
++        updated.retailPrice = calculateSilverPrice(updated, true);
++        updated.wholesalePrice = calculateSilverPrice(updated, false);
++
++        return updated;
++      }
++      return p;
++    });
++
++    setProducts(updatedProducts);
++    saveToLocalStorage(updatedProducts);
++  };
++
++  // 删除产品
++  const deleteProduct = (id: string) => {
++    if (window.confirm("确认删除此产品？")) {
++      setProducts(products.filter(p => p.id !== id));
++      setPriceHistory(priceHistory.filter(h => h.productId !== id));
++      saveToLocalStorage(products.filter(p => p.id !== id), priceHistory.filter(h => h.productId !== id));
++    }
++  };
++
++  // 保存历史记录
++  const saveToHistory = (product: SilverProduct) => {
++    const historyItem: SilverPriceHistory = {
++      id: Date.now().toString(),
++      productId: product.id,
++      category: product.category,
++      subCategory: product.subCategory,
++      productCode: product.productCode,
++      productName: product.productName,
++      specification: product.specification,
++      weight: product.weight,
++      laborCost: product.laborCost,
++      silverColor: product.silverColor,
++      silverPrice: product.silverPrice,
++      wholesalePrice: product.wholesalePrice,
++      retailPrice: product.retailPrice,
++      accessoryCost: product.accessoryCost,
++      stoneCost: product.stoneCost,
++      platingCost: product.platingCost,
++      moldCost: product.moldCost,
++      commission: product.commission,
++      supplierCode: product.supplierCode,
++      remarks: product.remarks,
++      quantity: product.quantity,
++      quantityDate: product.quantityDate,
++      laborCostDate: product.laborCostDate,
++      accessoryCostDate: product.accessoryCostDate,
++      stoneCostDate: product.stoneCostDate,
++      platingCostDate: product.platingCostDate,
++      moldCostDate: product.moldCostDate,
++      commissionDate: product.commissionDate,
++      timestamp: new Date().toISOString(),
++    };
++
++    setPriceHistory([historyItem, ...priceHistory]);
++    saveToLocalStorage(products, [historyItem, ...priceHistory]);
++  };
++
++  // 本地存储操作
++  const saveToLocalStorage = (productsList?: SilverProduct[], historyList?: SilverPriceHistory[]) => {
++    const prods = productsList || products;
++    const hist = historyList || priceHistory;
++
++    localStorage.setItem("silverProducts", JSON.stringify(prods));
++    localStorage.setItem("silverPriceHistory", JSON.stringify(hist));
++  };
++
++  // ========== 云端同步功能 ==========
++
++  const [showSyncMenu, setShowSyncMenu] = useState(false);
++  const [cloudDataExists, setCloudDataExists] = useState(false);
++  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
++  const [syncMessage, setSyncMessage] = useState("");
++
++  // 检查云端数据是否存在
++  const checkCloudData = async () => {
++    try {
++      const token = localStorage.getItem('auth_token');
++      if (!token) {
++        setCloudDataExists(false);
++        return;
++      }
++
++      const response = await fetch('/api/silver-products?limit=1', {
++        headers: {
++          Authorization: `Bearer ${token}`,
++        }
++      });
++
++      if (response.ok) {
++        const data = await response.json();
++        setCloudDataExists(data && data.length > 0);
++      }
++    } catch (error) {
++      console.error('检查云端数据失败:', error);
++      setCloudDataExists(false);
++    }
++  };
++
++  // 上传数据到云端
++  const uploadToCloud = async () => {
++    setSyncStatus("syncing");
++    setSyncMessage("正在上传数据到云端...");
++
++    try {
++      const token = localStorage.getItem('auth_token');
++      if (!token) {
++        alert('请先登录');
++        setSyncStatus("error");
++        setSyncMessage("需要登录");
++        return;
++      }
++
++      // 上传银制品数据
++      const response = await fetch('/api/silver-sync', {
++        method: 'POST',
++        headers: {
++          'Content-Type': 'application/json',
++          'Authorization': `Bearer ${token}`,
++        },
++        body: JSON.stringify({
++          products: products,
++          history: priceHistory,
++          silverPrice: silverPrice,
++          coefficients: silverCoefficients,
++        }),
++      });
++
++      if (response.ok) {
++        setSyncStatus("success");
++        setSyncMessage("数据上传成功！");
++        setCloudDataExists(true);
++        setTimeout(() => {
++          setSyncStatus("idle");
++          setSyncMessage("");
++          setShowSyncMenu(false);
++        }, 2000);
++      } else {
++        throw new Error('上传失败');
++      }
++    } catch (error) {
++      console.error('上传到云端失败:', error);
++      setSyncStatus("error");
++      setSyncMessage("上传失败，请重试");
++    }
++  };
++
++  // 从云端下载数据
++  const downloadFromCloud = async (mode: "replace" | "merge") => {
++    setSyncStatus("syncing");
++    setSyncMessage("正在从云端下载数据...");
++
++    try {
++      const token = localStorage.getItem('auth_token');
++      if (!token) {
++        alert('请先登录');
++        setSyncStatus("error");
++        setSyncMessage("需要登录");
++        return;
++      }
++
++      const response = await fetch('/api/silver-sync', {
++        headers: {
++          'Authorization': `Bearer ${token}`,
++        }
++      });
++
++      if (response.ok) {
++        const data = await response.json();
++
++        if (mode === "replace") {
++          setProducts(data.products || []);
++          setPriceHistory(data.history || []);
++          setSilverPrice(data.silverPrice || 20);
++          setSilverCoefficients(data.coefficients || silverCoefficients);
++        } else {
++          // 合并模式：保留本地数据，添加云端不存在的数据
++          const existingIds = new Set(products.map(p => p.id));
++          const newProducts = (data.products || []).filter((p: SilverProduct) => !existingIds.has(p.id));
++          setProducts([...products, ...newProducts]);
++          setPriceHistory([...priceHistory, ...(data.history || [])]);
++        }
++
++        setSyncStatus("success");
++        setSyncMessage("数据下载成功！");
++        setTimeout(() => {
++          setSyncStatus("idle");
++          setSyncMessage("");
++          setShowSyncMenu(false);
++        }, 2000);
++      } else {
++        throw new Error('下载失败');
++      }
++    } catch (error) {
++      console.error('从云端下载失败:', error);
++      setSyncStatus("error");
++      setSyncMessage("下载失败，请重试");
++    }
++  };
++
++  // 初始化时检查云端数据
++  useEffect(() => {
++    checkCloudData();
++  }, []);
++
++  // 加载本地数据
++  useEffect(() => {
++    if (typeof window !== 'undefined') {
++      const savedProducts = localStorage.getItem("silverProducts");
++      const savedHistory = localStorage.getItem("silverPriceHistory");
++
++      if (savedProducts) {
++        setProducts(JSON.parse(savedProducts));
++      }
++      if (savedHistory) {
++        setPriceHistory(JSON.parse(savedHistory));
++      }
++    }
++  }, []);
++
++  // 格式化日期
++  const formatDate = (dateString: string) => {
++    if (!dateString) return "-";
++    const date = new Date(dateString);
++    return date.toLocaleString("zh-CN", {
++      year: 'numeric',
++      month: '2-digit',
++      day: '2-digit',
++      hour: '2-digit',
++      minute: '2-digit'
++    });
++  };
++
++  // Excel 导出
++  const exportToExcel = () => {
++    const filteredProducts = products.filter(p => p.category === currentCategory);
++
++    if (filteredProducts.length === 0) {
++      alert("没有数据可导出");
++      return;
++    }
++
++    const data = filteredProducts.map(p => ({
++      "分类": p.category,
++      "子分类": p.subCategory,
++      "货号": p.productCode,
++      "产品名称": p.productName,
++      "规格": p.specification,
++      "克重": p.weight,
++      "工费": p.laborCost,
++      "银色": p.silverColor,
++      "银价": p.silverPrice,
++      "配件成本": p.accessoryCost,
++      "石头成本": p.stoneCost,
++      "电镀成本": p.platingCost,
++      "供应商代码": p.supplierCode,
++      "零售价(CAD$)": p.retailPrice.toFixed(2),
++      "批发价(CAD$)": p.wholesalePrice.toFixed(2),
++      "备注": p.remarks,
++      "累计数量": p.quantity,
++      "更新时间": formatDate(p.timestamp),
++    }));
++
++    const ws = XLSX.utils.json_to_sheet(data);
++    const wb = XLSX.utils.book_new();
++    XLSX.utils.book_append_sheet(wb, ws, "银制品列表");
++    XLSX.writeFile(wb, `银制品报价_${currentCategory}_${new Date().toISOString().slice(0, 10)}.xlsx`);
++  };
++
++  // Excel 导入
++  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
++    const file = e.target.files?.[0];
++    if (!file) return;
++
++    const reader = new FileReader();
++    reader.onload = (event) => {
++      const data = event.target?.result;
++      const workbook = XLSX.read(data, { type: 'binary' });
++      const sheetName = workbook.SheetNames[0];
++      const sheet = workbook.Sheets[sheetName];
++      const jsonData = XLSX.utils.sheet_to_json(sheet);
++
++      const importedProducts: SilverProduct[] = jsonData.map((row: any, index) => ({
++        id: Date.now().toString() + index,
++        category: row["分类"] || row["分类"] || currentCategory,
++        subCategory: row["子分类"] || row["子分类"] || SILVER_SUB_CATEGORIES[currentCategory][0],
++        productCode: row["货号"] || "",
++        productName: row["产品名称"] || "",
++        specification: row["规格"] || "",
++        weight: Number(row["克重"]) || 0,
++        laborCost: Number(row["工费"]) || 0,
++        silverColor: row["银色"] || "银色",
++        silverPrice: silverPrice,
++        wholesalePrice: 0,
++        retailPrice: 0,
++        accessoryCost: Number(row["配件成本"]) || 0,
++        stoneCost: Number(row["石头成本"]) || 0,
++        platingCost: Number(row["电镀成本"]) || 0,
++        moldCost: 0,
++        commission: 0,
++        supplierCode: row["供应商代码"] || "E1",
++        remarks: row["备注"] || "",
++        quantity: Number(row["累计数量"]) || 0,
++        quantityDate: "",
++        laborCostDate: "",
++        accessoryCostDate: "",
++        stoneCostDate: "",
++        platingCostDate: "",
++        moldCostDate: "",
++        commissionDate: "",
++        timestamp: new Date().toISOString(),
++      }));
++
++      // 计算价格
++      const withPrices = importedProducts.map(p => ({
++        ...p,
++        retailPrice: calculateSilverPrice(p, true),
++        wholesalePrice: calculateSilverPrice(p, false),
++      }));
++
++      setProducts([...products, ...withPrices]);
++      saveToLocalStorage([...products, ...withPrices]);
++      alert(`成功导入 ${importedProducts.length} 个产品`);
++    };
++    reader.readAsBinaryString(file);
++  };
++
++  // ========== 页面UI ==========
+ 
+   return (
+     <div className="min-h-screen bg-gray-50 p-6">
+       <AuthProtection>
+         <div className="max-w-7xl mx-auto">
+           {/* 页面标题 */}
+-          <div className="mb-6">
+-            <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
+-            <p className="text-black">925银制品价格计算和管理系统</p>
++          <div className="mb-6 flex items-center justify-between">
++            <div>
++              <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
++              <p className="text-black">925银制品价格计算和管理系统</p>
++            </div>
++            <div className="relative">
++              <button
++                onClick={() => {
++                  setShowSyncMenu(!showSyncMenu);
++                  checkCloudData();
++                }}
++                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
++              >
++                <span>☁️</span>
++                <span>云端同步</span>
++              </button>
++
++              {/* 云端同步菜单 */}
++              {showSyncMenu && (
++                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
++                  <div className="py-3">
++                    <div className="px-4 pb-2 border-b border-gray-200">
++                      <div className="text-sm font-semibold text-black">云端数据同步</div>
++                      {cloudDataExists && (
++                        <div className="text-xs text-green-600 mt-1">✓ 云端已有数据</div>
++                      )}
++                    </div>
++
++                    {/* 同步状态消息 */}
++                    {syncStatus !== "idle" && (
++                      <div className="px-4 py-2">
++                        <div className={`text-sm ${syncStatus === "error" ? "text-red-600" : syncStatus === "success" ? "text-green-600" : "text-blue-600"}`}>
++                          {syncMessage}
++                        </div>
++                      </div>
++                    )}
++
++                    <div className="px-4 py-2 space-y-1">
++                      <button
++                        onClick={uploadToCloud}
++                        disabled={syncStatus === "syncing"}
++                        className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 text-black text-sm disabled:opacity-50"
++                      >
++                        📤 上传到云端
++                      </button>
++                      <button
++                        onClick={() => downloadFromCloud("merge")}
++                        disabled={syncStatus === "syncing"}
++                        className="w-full text-left px-3 py-2 rounded hover:bg-green-50 text-black text-sm disabled:opacity-50"
++                      >
++                        📥 合并下载（保留本地）
++                      </button>
++                      <button
++                        onClick={() => downloadFromCloud("replace")}
++                        disabled={syncStatus === "syncing"}
++                        className="w-full text-left px-3 py-2 rounded hover:bg-orange-50 text-black text-sm disabled:opacity-50"
++                      >
++                        🔄 覆盖下载（替换本地）
++                      </button>
++                    </div>
++
++                    <div className="px-4 pt-2 border-t border-gray-200">
++                      <div className="text-xs text-gray-500">
++                        上传包含：产品数据、历史记录、银价设置、价格系数
++                      </div>
++                    </div>
++                  </div>
++                </div>
++              )}
++            </div>
+           </div>
+ 
+           {/* 银价配置 */}
+@@ -663,6 +1123,281 @@ function SilverQuotePage() {
+             </button>
+           </div>
+ 
++          {/* 产品操作区 */}
++          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
++            <div className="flex items-center justify-between mb-4">
++              <h2 className="text-xl font-bold text-black">产品管理</h2>
++              <div className="flex gap-2">
++                <button
++                  onClick={addProduct}
++                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
++                >
++                  添加产品
++                </button>
++                <button
++                  onClick={exportToExcel}
++                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
++                >
++                  导出Excel
++                </button>
++                <label className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 cursor-pointer">
++                  导入Excel
++                  <input type="file" accept=".xlsx,.xls" onChange={handleExcelImport} className="hidden" />
++                </label>
++              </div>
++            </div>
++
++            {/* 分类选择 */}
++            <div className="flex items-center gap-4 mb-4">
++              <span className="text-black font-medium">选择分类:</span>
++              <div className="flex gap-2">
++                {SILVER_PRODUCT_CATEGORIES.map(cat => (
++                  <button
++                    key={cat}
++                    onClick={() => {
++                      setCurrentCategory(cat);
++                      setCurrentSubCategory(null);
++                    }}
++                    className={`px-4 py-2 rounded ${currentCategory === cat ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
++                  >
++                    {cat}
++                  </button>
++                ))}
++              </div>
++            </div>
++
++            {/* 子分类选择 */}
++            {currentCategory && SILVER_SUB_CATEGORIES[currentCategory] && (
++              <div className="flex items-center gap-4 mb-4">
++                <span className="text-black font-medium">选择子分类:</span>
++                <div className="flex gap-2 flex-wrap">
++                  <button
++                    onClick={() => setCurrentSubCategory(null)}
++                    className={`px-3 py-1 rounded text-sm ${currentSubCategory === null ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
++                  >
++                    全部
++                  </button>
++                  {SILVER_SUB_CATEGORIES[currentCategory].map(subCat => (
++                    <button
++                      key={subCat}
++                      onClick={() => setCurrentSubCategory(subCat)}
++                      className={`px-3 py-1 rounded text-sm ${currentSubCategory === subCat ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
++                    >
++                      {subCat}
++                    </button>
++                  ))}
++                </div>
++              </div>
++            )}
++          </div>
++
++          {/* 产品列表 */}
++          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
++            <h2 className="text-xl font-bold text-black mb-4">产品列表</h2>
++            <div className="overflow-x-auto">
++              <table className="w-full border-collapse border border-gray-200 text-sm">
++                <thead className="bg-gray-100">
++                  <tr>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">规格</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">配件成本</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">石头成本</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">电镀成本</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {products.filter(p => {
++                    if (p.category !== currentCategory) return false;
++                    if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
++                    return true;
++                  }).map(product => (
++                    <tr key={product.id}>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <button
++                          onClick={() => deleteProduct(product.id)}
++                          className="text-red-500 hover:text-red-700"
++                        >
++                          删除
++                        </button>
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="text"
++                          value={product.productCode}
++                          onChange={(e) => updateProduct(product.id, "productCode", e.target.value)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="text"
++                          value={product.productName}
++                          onChange={(e) => updateProduct(product.id, "productName", e.target.value)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="text"
++                          value={product.specification}
++                          onChange={(e) => updateProduct(product.id, "specification", e.target.value)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="0.01"
++                          value={product.weight}
++                          onChange={(e) => updateProduct(product.id, "weight", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="0.01"
++                          value={product.laborCost}
++                          onChange={(e) => updateProduct(product.id, "laborCost", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <select
++                          value={product.silverColor}
++                          onChange={(e) => updateProduct(product.id, "silverColor", e.target.value as any)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        >
++                          <option value="银色">银色</option>
++                          <option value="镀金">镀金</option>
++                          <option value="镀玫瑰金">镀玫瑰金</option>
++                          <option value="银色/镀金/镀玫瑰金">银色/镀金/镀玫瑰金</option>
++                        </select>
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="0.01"
++                          value={product.accessoryCost}
++                          onChange={(e) => updateProduct(product.id, "accessoryCost", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="0.01"
++                          value={product.stoneCost}
++                          onChange={(e) => updateProduct(product.id, "stoneCost", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="0.01"
++                          value={product.platingCost}
++                          onChange={(e) => updateProduct(product.id, "platingCost", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="text"
++                          value={product.supplierCode}
++                          onChange={(e) => updateProduct(product.id, "supplierCode", e.target.value)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-blue-700">
++                        {product.retailPrice.toFixed(2)}
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-green-700">
++                        {product.wholesalePrice.toFixed(2)}
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-right">
++                        {product.quantity || 0}
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="text"
++                          value={product.remarks}
++                          onChange={(e) => updateProduct(product.id, "remarks", e.target.value)}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-xs text-black">
++                        {formatDate(product.timestamp)}
++                      </td>
++                    </tr>
++                  ))}
++                  {products.filter(p => p.category === currentCategory).length === 0 && (
++                    <tr>
++                      <td colSpan={17} className="border border-gray-200 px-3 py-4 text-center text-black">
++                        暂无{currentCategory}产品数据
++                      </td>
++                    </tr>
++                  )}
++                </tbody>
++              </table>
++            </div>
++          </div>
++
++          {/* 历史记录 */}
++          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
++            <h2 className="text-xl font-bold text-black mb-4">价格历史记录</h2>
++            <div className="overflow-x-auto" style={{ maxHeight: '400px' }}>
++              <table className="w-full border-collapse border border-gray-200 text-sm">
++                <thead className="bg-gray-100 sticky top-0">
++                  <tr>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">时间</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">名称</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {priceHistory.filter(h => h.category === currentCategory).slice(0, 100).map(history => (
++                    <tr key={history.id}>
++                      <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-black text-xs">
++                        {formatDate(history.timestamp)}
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-black">{history.productCode}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-black">{history.productName}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.weight}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.laborCost}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-black">{history.silverColor}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.retailPrice.toFixed(2)}</td>
++                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.wholesalePrice.toFixed(2)}</td>
++                    </tr>
++                  ))}
++                  {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
++                    <tr>
++                      <td colSpan={8} className="border border-gray-200 px-3 py-4 text-center text-black">
++                        暂无历史记录
++                      </td>
++                    </tr>
++                  )}
++                </tbody>
++              </table>
++            </div>
++          </div>
++
+           {/* 返回金制品页面 */}
+           <div className="text-center">
+             <button
+-- 
+2.43.0
+
+From 36ed0253fc88c63ae7d9ce7a5bce60163e664f90 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:19:54 +0800
+Subject: [PATCH 04/13] =?UTF-8?q?fix(silver-quote):=20=E4=BF=AE=E5=A4=8D?=
+ =?UTF-8?q?=E4=BA=A7=E5=93=81=E5=88=97=E8=A1=A8=E9=A2=9C=E8=89=B2=E5=88=97?=
+ =?UTF-8?q?=E6=98=BE=E7=A4=BA=E3=80=81=E4=BC=98=E5=8C=96=E4=BA=91=E7=AB=AF?=
+ =?UTF-8?q?=E5=90=8C=E6=AD=A5UI=E3=80=81=E6=B7=BB=E5=8A=A0=E6=89=B9?=
+ =?UTF-8?q?=E9=87=8F=E6=93=8D=E4=BD=9C=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 修复银色列显示问题：添加最小宽度min-w-[160px]，确保银色/镀金/镀玫瑰金完整显示
+- 重构云端同步菜单UI：美化界面，添加渐变头部，清晰显示上传/合并下载/覆盖下载/同步状态
+- 新增批量操作功能：添加全选复选框、批量选择、批量删除、批量编辑工费
+- 新增数据管理按钮：验证数据功能检查数据完整性，同步数据按钮快速打开云同步
+- 所有修改通过TypeScript类型检查，服务正常运行
+---
+ src/app/silver-quote/page.tsx | 275 ++++++++++++++++++++++++++++------
+ 1 file changed, 227 insertions(+), 48 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index 4c5eb01..b203da2 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -447,6 +447,75 @@ function SilverQuotePage() {
+   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
+   const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
+ 
++  // 批量操作状态
++  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
++
++  // 批量选择操作
++  const toggleSelectAll = (checked: boolean) => {
++    const filtered = products.filter(p => {
++      if (p.category !== currentCategory) return false;
++      if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
++      return true;
++    });
++    setSelectedProductIds(checked ? new Set(filtered.map(p => p.id)) : new Set());
++  };
++
++  const toggleSelectProduct = (id: string) => {
++    const newSelected = new Set(selectedProductIds);
++    if (newSelected.has(id)) {
++      newSelected.delete(id);
++    } else {
++      newSelected.add(id);
++    }
++    setSelectedProductIds(newSelected);
++  };
++
++  // 批量删除
++  const batchDelete = () => {
++    if (selectedProductIds.size === 0) {
++      alert("请先选择要删除的产品");
++      return;
++    }
++    if (window.confirm(`确认删除选中的 ${selectedProductIds.size} 个产品？`)) {
++      const newProducts = products.filter(p => !selectedProductIds.has(p.id));
++      const newHistory = priceHistory.filter(h => !selectedProductIds.has(h.productId));
++      setProducts(newProducts);
++      setPriceHistory(newHistory);
++      saveToLocalStorage(newProducts, newHistory);
++      setSelectedProductIds(new Set());
++    }
++  };
++
++  // 批量编辑 - 修改工费
++  const batchEditLaborCost = () => {
++    if (selectedProductIds.size === 0) {
++      alert("请先选择要编辑的产品");
++      return;
++    }
++    const newLaborCost = prompt(`请输入新的工费值（将应用于 ${selectedProductIds.size} 个产品）:`);
++    if (newLaborCost === null || newLaborCost.trim() === "") return;
++
++    const laborCostNum = Number(newLaborCost);
++    if (isNaN(laborCostNum)) {
++      alert("请输入有效的数字");
++      return;
++    }
++
++    const updatedProducts = products.map(p => {
++      if (selectedProductIds.has(p.id)) {
++        const updated = { ...p, laborCost: laborCostNum };
++        updated.retailPrice = calculateSilverPrice(updated, true);
++        updated.wholesalePrice = calculateSilverPrice(updated, false);
++        return updated;
++      }
++      return p;
++    });
++
++    setProducts(updatedProducts);
++    saveToLocalStorage(updatedProducts);
++    alert(`已更新 ${selectedProductIds.size} 个产品的工费`);
++  };
++
+   // 添加产品
+   const addProduct = () => {
+     const newProduct: SilverProduct = {
+@@ -836,6 +905,29 @@ function SilverQuotePage() {
+     reader.readAsBinaryString(file);
+   };
+ 
++  // 验证数据
++  const validateData = () => {
++    const errors: string[] = [];
++
++    products.forEach(p => {
++      if (!p.productName) {
++        errors.push(`货号 ${p.productCode || "未填写"}：产品名称为空`);
++      }
++      if (p.weight <= 0) {
++        errors.push(`货号 ${p.productCode || "未填写"}：克重必须大于0`);
++      }
++      if (!p.productCode) {
++        errors.push(`产品 ${p.productName || "未填写"}：货号为空`);
++      }
++    });
++
++    if (errors.length === 0) {
++      alert(`✓ 数据验证通过！共 ${products.length} 个产品`);
++    } else {
++      alert(`✗ 发现 ${errors.length} 个问题：\n\n${errors.slice(0, 10).join("\n")}${errors.length > 10 ? `\n...还有 ${errors.length - 10} 个问题` : ""}`);
++    }
++  };
++
+   // ========== 页面UI ==========
+ 
+   return (
+@@ -854,61 +946,83 @@ function SilverQuotePage() {
+                   setShowSyncMenu(!showSyncMenu);
+                   checkCloudData();
+                 }}
+-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
++                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-md transition-all"
+               >
+-                <span>☁️</span>
+-                <span>云端同步</span>
++                <span className="text-lg">☁️</span>
++                <span className="font-medium">云端同步</span>
+               </button>
+ 
+               {/* 云端同步菜单 */}
+               {showSyncMenu && (
+-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+-                  <div className="py-3">
+-                    <div className="px-4 pb-2 border-b border-gray-200">
+-                      <div className="text-sm font-semibold text-black">云端数据同步</div>
+-                      {cloudDataExists && (
+-                        <div className="text-xs text-green-600 mt-1">✓ 云端已有数据</div>
+-                      )}
++                <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
++                  {/* 菜单头部 - 始终显示同步状态 */}
++                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4">
++                    <div className="text-white font-bold text-lg mb-1">云端数据同步</div>
++                    <div className="flex items-center gap-2">
++                      <span className={`text-sm font-medium ${cloudDataExists ? "text-green-200" : "text-yellow-200"}`}>
++                        {cloudDataExists ? "● 云端已有数据" : "○ 云端暂无数据"}
++                      </span>
+                     </div>
+-
+-                    {/* 同步状态消息 */}
+                     {syncStatus !== "idle" && (
+-                      <div className="px-4 py-2">
+-                        <div className={`text-sm ${syncStatus === "error" ? "text-red-600" : syncStatus === "success" ? "text-green-600" : "text-blue-600"}`}>
+-                          {syncMessage}
+-                        </div>
++                      <div className="mt-2 text-sm text-white bg-white/20 rounded px-3 py-2">
++                        {syncStatus === "syncing" && "⏳ "}{syncStatus === "error" && "❌ "}{syncStatus === "success" && "✅ "}
++                        {syncMessage}
+                       </div>
+                     )}
++                  </div>
+ 
+-                    <div className="px-4 py-2 space-y-1">
+-                      <button
+-                        onClick={uploadToCloud}
+-                        disabled={syncStatus === "syncing"}
+-                        className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 text-black text-sm disabled:opacity-50"
+-                      >
+-                        📤 上传到云端
+-                      </button>
+-                      <button
+-                        onClick={() => downloadFromCloud("merge")}
+-                        disabled={syncStatus === "syncing"}
+-                        className="w-full text-left px-3 py-2 rounded hover:bg-green-50 text-black text-sm disabled:opacity-50"
+-                      >
+-                        📥 合并下载（保留本地）
+-                      </button>
+-                      <button
+-                        onClick={() => downloadFromCloud("replace")}
+-                        disabled={syncStatus === "syncing"}
+-                        className="w-full text-left px-3 py-2 rounded hover:bg-orange-50 text-black text-sm disabled:opacity-50"
+-                      >
+-                        🔄 覆盖下载（替换本地）
+-                      </button>
+-                    </div>
++                  {/* 操作按钮区 */}
++                  <div className="p-4 space-y-2">
++                    <button
++                      onClick={uploadToCloud}
++                      disabled={syncStatus === "syncing"}
++                      className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200"
++                    >
++                      <div className="flex items-center gap-3">
++                        <span className="text-xl">📤</span>
++                        <div className="text-left">
++                          <div className="font-semibold">上传到云端</div>
++                          <div className="text-xs text-blue-600">将本地数据上传到服务器</div>
++                        </div>
++                      </div>
++                      <span className="text-blue-400">→</span>
++                    </button>
+ 
+-                    <div className="px-4 pt-2 border-t border-gray-200">
+-                      <div className="text-xs text-gray-500">
+-                        上传包含：产品数据、历史记录、银价设置、价格系数
++                    <button
++                      onClick={() => downloadFromCloud("merge")}
++                      disabled={syncStatus === "syncing"}
++                      className="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-green-200"
++                    >
++                      <div className="flex items-center gap-3">
++                        <span className="text-xl">📥</span>
++                        <div className="text-left">
++                          <div className="font-semibold">合并下载</div>
++                          <div className="text-xs text-green-600">保留本地数据，添加云端数据</div>
++                        </div>
+                       </div>
+-                    </div>
++                      <span className="text-green-400">→</span>
++                    </button>
++
++                    <button
++                      onClick={() => downloadFromCloud("replace")}
++                      disabled={syncStatus === "syncing"}
++                      className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-orange-200"
++                    >
++                      <div className="flex items-center gap-3">
++                        <span className="text-xl">🔄</span>
++                        <div className="text-left">
++                          <div className="font-semibold">覆盖下载</div>
++                          <div className="text-xs text-orange-600">完全替换本地数据</div>
++                        </div>
++                      </div>
++                      <span className="text-orange-400">→</span>
++                    </button>
++                  </div>
++
++                  {/* 底部说明 */}
++                  <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
++                    <div className="text-xs text-gray-600 font-medium mb-1">同步内容包含:</div>
++                    <div className="text-xs text-gray-500">产品数据、历史记录、银价设置、价格系数</div>
+                   </div>
+                 </div>
+               )}
+@@ -1126,14 +1240,52 @@ function SilverQuotePage() {
+           {/* 产品操作区 */}
+           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+             <div className="flex items-center justify-between mb-4">
+-              <h2 className="text-xl font-bold text-black">产品管理</h2>
+-              <div className="flex gap-2">
++              <div>
++                <h2 className="text-xl font-bold text-black">产品管理</h2>
++                {selectedProductIds.size > 0 && (
++                  <div className="text-sm text-blue-600 mt-1">
++                    已选择 {selectedProductIds.size} 个产品
++                  </div>
++                )}
++              </div>
++              <div className="flex gap-2 flex-wrap">
+                 <button
+                   onClick={addProduct}
+                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                 >
+                   添加产品
+                 </button>
++                {selectedProductIds.size > 0 && (
++                  <>
++                    <button
++                      onClick={batchEditLaborCost}
++                      className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
++                    >
++                      批量修改工费
++                    </button>
++                    <button
++                      onClick={batchDelete}
++                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
++                    >
++                      批量删除
++                    </button>
++                  </>
++                )}
++                <button
++                  onClick={validateData}
++                  className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
++                >
++                  验证数据
++                </button>
++                <button
++                  onClick={() => {
++                    setShowSyncMenu(!showSyncMenu);
++                    checkCloudData();
++                  }}
++                  className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
++                >
++                  同步数据
++                </button>
+                 <button
+                   onClick={exportToExcel}
+                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+@@ -1198,13 +1350,32 @@ function SilverQuotePage() {
+               <table className="w-full border-collapse border border-gray-200 text-sm">
+                 <thead className="bg-gray-100">
+                   <tr>
++                    <th className="border border-gray-200 px-3 py-2 text-center w-12">
++                      <input
++                        type="checkbox"
++                        checked={
++                          products.filter(p => {
++                            if (p.category !== currentCategory) return false;
++                            if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
++                            return true;
++                          }).length > 0 &&
++                          products.filter(p => {
++                            if (p.category !== currentCategory) return false;
++                            if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
++                            return true;
++                          }).every(p => selectedProductIds.has(p.id))
++                        }
++                        onChange={(e) => toggleSelectAll(e.target.checked)}
++                        className="w-4 h-4"
++                      />
++                    </th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">规格</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
+-                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
++                    <th className="border border-gray-200 px-3 py-2 text-left text-black min-w-[160px]">银色</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">配件成本</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">石头成本</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">电镀成本</th>
+@@ -1223,6 +1394,14 @@ function SilverQuotePage() {
+                     return true;
+                   }).map(product => (
+                     <tr key={product.id}>
++                      <td className="border border-gray-200 px-3 py-2 text-center">
++                        <input
++                          type="checkbox"
++                          checked={selectedProductIds.has(product.id)}
++                          onChange={() => toggleSelectProduct(product.id)}
++                          className="w-4 h-4"
++                        />
++                      </td>
+                       <td className="border border-gray-200 px-3 py-2">
+                         <button
+                           onClick={() => deleteProduct(product.id)}
+@@ -1273,7 +1452,7 @@ function SilverQuotePage() {
+                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                         />
+                       </td>
+-                      <td className="border border-gray-200 px-3 py-2">
++                      <td className="border border-gray-200 px-3 py-2 min-w-[160px]">
+                         <select
+                           value={product.silverColor}
+                           onChange={(e) => updateProduct(product.id, "silverColor", e.target.value as any)}
+@@ -1344,7 +1523,7 @@ function SilverQuotePage() {
+                   ))}
+                   {products.filter(p => p.category === currentCategory).length === 0 && (
+                     <tr>
+-                      <td colSpan={17} className="border border-gray-200 px-3 py-4 text-center text-black">
++                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-black">
+                         暂无{currentCategory}产品数据
+                       </td>
+                     </tr>
+-- 
+2.43.0
+
+From e274abbb6efa6fce0c54ad852a8c744c79adc130 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:22:01 +0800
+Subject: [PATCH 05/13] =?UTF-8?q?feat(silver-quote):=20=E4=BC=98=E5=8C=96E?=
+ =?UTF-8?q?xcel=E5=AF=BC=E5=85=A5=E5=8A=9F=E8=83=BD=EF=BC=8C=E6=94=AF?=
+ =?UTF-8?q?=E6=8C=81=E5=88=86=E7=B1=BB=E9=80=89=E6=8B=A9=E5=AF=BC=E5=85=A5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 导入时自动检测Excel中包含的产品分类
+- 当Excel包含多个分类时，弹出确认框让用户选择导入方式
+- 支持导入所有分类或仅导入当前分类两种模式
+- 导入完成后显示详细的分类统计信息
+- 提升用户体验，避免意外导入不需要的分类数据
+---
+ src/app/silver-quote/page.tsx | 104 ++++++++++++++++++++++++----------
+ 1 file changed, 73 insertions(+), 31 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index b203da2..d2f463e 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -860,36 +860,67 @@ function SilverQuotePage() {
+       const sheet = workbook.Sheets[sheetName];
+       const jsonData = XLSX.utils.sheet_to_json(sheet);
+ 
+-      const importedProducts: SilverProduct[] = jsonData.map((row: any, index) => ({
+-        id: Date.now().toString() + index,
+-        category: row["分类"] || row["分类"] || currentCategory,
+-        subCategory: row["子分类"] || row["子分类"] || SILVER_SUB_CATEGORIES[currentCategory][0],
+-        productCode: row["货号"] || "",
+-        productName: row["产品名称"] || "",
+-        specification: row["规格"] || "",
+-        weight: Number(row["克重"]) || 0,
+-        laborCost: Number(row["工费"]) || 0,
+-        silverColor: row["银色"] || "银色",
+-        silverPrice: silverPrice,
+-        wholesalePrice: 0,
+-        retailPrice: 0,
+-        accessoryCost: Number(row["配件成本"]) || 0,
+-        stoneCost: Number(row["石头成本"]) || 0,
+-        platingCost: Number(row["电镀成本"]) || 0,
+-        moldCost: 0,
+-        commission: 0,
+-        supplierCode: row["供应商代码"] || "E1",
+-        remarks: row["备注"] || "",
+-        quantity: Number(row["累计数量"]) || 0,
+-        quantityDate: "",
+-        laborCostDate: "",
+-        accessoryCostDate: "",
+-        stoneCostDate: "",
+-        platingCostDate: "",
+-        moldCostDate: "",
+-        commissionDate: "",
+-        timestamp: new Date().toISOString(),
+-      }));
++      // 检查Excel中是否包含"分类"列
++      const hasCategoryColumn = jsonData.length > 0 && (jsonData[0] as any)["分类"] !== undefined;
++      const categoriesInFile = hasCategoryColumn
++        ? [...new Set(jsonData.map((row: any) => row["分类"]).filter(cat => cat))]
++        : [];
++
++      // 确认导入方式
++      let importMode: "all" | "current" = "all";
++
++      if (hasCategoryColumn && categoriesInFile.length > 0) {
++        // Excel中有分类列，询问用户导入模式
++        const message = `检测到Excel文件包含以下分类：\n${categoriesInFile.join(", ")}\n\n请选择导入方式：\n• 点击"确定"：导入所有分类的产品\n• 点击"取消"：仅导入当前选中分类（${currentCategory}）的产品`;
++        importMode = window.confirm(message) ? "all" : "current";
++      }
++
++      // 导入产品
++      const importedProducts: SilverProduct[] = jsonData
++        .filter((row: any) => {
++          // 如果选择了"仅导入当前分类"，则过滤
++          if (importMode === "current") {
++            const rowCategory = row["分类"];
++            if (!rowCategory) return false; // 没有分类的也不导入
++            return rowCategory === currentCategory;
++          }
++          return true;
++        })
++        .map((row: any, index) => ({
++          id: Date.now().toString() + index,
++          category: row["分类"] || currentCategory,
++          subCategory: row["子分类"] || SILVER_SUB_CATEGORIES[(row["分类"] as SilverProductCategory) || currentCategory]?.[0] || "",
++          productCode: row["货号"] || "",
++          productName: row["产品名称"] || "",
++          specification: row["规格"] || "",
++          weight: Number(row["克重"]) || 0,
++          laborCost: Number(row["工费"]) || 0,
++          silverColor: row["银色"] || "银色",
++          silverPrice: silverPrice,
++          wholesalePrice: 0,
++          retailPrice: 0,
++          accessoryCost: Number(row["配件成本"]) || 0,
++          stoneCost: Number(row["石头成本"]) || 0,
++          platingCost: Number(row["电镀成本"]) || 0,
++          moldCost: 0,
++          commission: 0,
++          supplierCode: row["供应商代码"] || "E1",
++          remarks: row["备注"] || "",
++          quantity: Number(row["累计数量"]) || 0,
++          quantityDate: "",
++          laborCostDate: "",
++          accessoryCostDate: "",
++          stoneCostDate: "",
++          platingCostDate: "",
++          moldCostDate: "",
++          commissionDate: "",
++          timestamp: new Date().toISOString(),
++        }));
++
++      if (importedProducts.length === 0) {
++        alert("没有找到符合导入条件的产品");
++        return;
++      }
+ 
+       // 计算价格
+       const withPrices = importedProducts.map(p => ({
+@@ -900,7 +931,18 @@ function SilverQuotePage() {
+ 
+       setProducts([...products, ...withPrices]);
+       saveToLocalStorage([...products, ...withPrices]);
+-      alert(`成功导入 ${importedProducts.length} 个产品`);
++
++      // 显示导入详情
++      const categoryCount = importedProducts.reduce((acc, p) => {
++        acc[p.category] = (acc[p.category] || 0) + 1;
++        return acc;
++      }, {} as Record<string, number>);
++
++      const details = Object.entries(categoryCount)
++        .map(([cat, count]) => `${cat}: ${count}个`)
++        .join("\n");
++
++      alert(`✓ 成功导入 ${importedProducts.length} 个产品\n\n导入详情：\n${details}`);
+     };
+     reader.readAsBinaryString(file);
+   };
+-- 
+2.43.0
+
+From 345ffa7d0c742a38aed0b27912c98d7ec116d175 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:24:47 +0800
+Subject: [PATCH 06/13] =?UTF-8?q?feat(silver-quote):=20=E6=B7=BB=E5=8A=A0?=
+ =?UTF-8?q?=E4=BA=A7=E5=93=81=E5=90=8C=E6=AD=A5=E7=8A=B6=E6=80=81=E6=98=BE?=
+ =?UTF-8?q?=E7=A4=BA=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 在产品数据结构中添加syncStatus字段（synced/unsynced）
+- 产品列表新增同步状态列，显示图标：
+  - ✓ 绿色圆点表示已同步
+  - ! 黄色圆点表示未同步
+- 添加产品时自动标记为未同步
+- 编辑产品时自动标记为未同步
+- Excel导入产品时自动标记为未同步
+- 上传到云端成功后标记所有产品为已同步
+- 从云端下载后标记所有产品为已同步
+- 兼容旧数据，自动为没有syncStatus的产品添加默认值
+---
+ src/app/silver-quote/page.tsx | 47 +++++++++++++++++++++++++++++++----
+ 1 file changed, 42 insertions(+), 5 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index d2f463e..f12c1df 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -237,6 +237,7 @@ interface SilverProduct {
+   moldCostDate: string;
+   commissionDate: string;
+   timestamp: string;
++  syncStatus: "synced" | "unsynced";  // 同步状态：已同步/未同步
+ }
+ 
+ interface SilverPriceHistory {
+@@ -547,6 +548,7 @@ function SilverQuotePage() {
+       moldCostDate: "",
+       commissionDate: "",
+       timestamp: new Date().toISOString(),
++      syncStatus: "unsynced",
+     };
+ 
+     setProducts([...products, newProduct]);
+@@ -580,6 +582,9 @@ function SilverQuotePage() {
+         updated.retailPrice = calculateSilverPrice(updated, true);
+         updated.wholesalePrice = calculateSilverPrice(updated, false);
+ 
++        // 修改产品后标记为未同步
++        updated.syncStatus = "unsynced";
++
+         return updated;
+       }
+       return p;
+@@ -707,6 +712,11 @@ function SilverQuotePage() {
+       });
+ 
+       if (response.ok) {
++        // 上传成功后，标记所有产品为已同步
++        const syncedProducts = products.map(p => ({ ...p, syncStatus: "synced" as const }));
++        setProducts(syncedProducts);
++        saveToLocalStorage(syncedProducts);
++
+         setSyncStatus("success");
+         setSyncMessage("数据上传成功！");
+         setCloudDataExists(true);
+@@ -749,16 +759,23 @@ function SilverQuotePage() {
+         const data = await response.json();
+ 
+         if (mode === "replace") {
+-          setProducts(data.products || []);
++          // 覆盖模式：标记所有产品为已同步
++          const syncedProducts = (data.products || []).map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
++          setProducts(syncedProducts);
+           setPriceHistory(data.history || []);
+           setSilverPrice(data.silverPrice || 20);
+           setSilverCoefficients(data.coefficients || silverCoefficients);
++          saveToLocalStorage(syncedProducts, data.history || []);
+         } else {
+           // 合并模式：保留本地数据，添加云端不存在的数据
+           const existingIds = new Set(products.map(p => p.id));
+-          const newProducts = (data.products || []).filter((p: SilverProduct) => !existingIds.has(p.id));
+-          setProducts([...products, ...newProducts]);
++          const newProducts = (data.products || [])
++            .filter((p: SilverProduct) => !existingIds.has(p.id))
++            .map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
++          const mergedProducts = [...products, ...newProducts];
++          setProducts(mergedProducts);
+           setPriceHistory([...priceHistory, ...(data.history || [])]);
++          saveToLocalStorage(mergedProducts, [...priceHistory, ...(data.history || [])]);
+         }
+ 
+         setSyncStatus("success");
+@@ -790,7 +807,13 @@ function SilverQuotePage() {
+       const savedHistory = localStorage.getItem("silverPriceHistory");
+ 
+       if (savedProducts) {
+-        setProducts(JSON.parse(savedProducts));
++        // 兼容旧数据，为没有 syncStatus 的产品添加默认值
++        const loadedProducts: SilverProduct[] = JSON.parse(savedProducts);
++        const productsWithSyncStatus = loadedProducts.map(p => ({
++          ...p,
++          syncStatus: p.syncStatus || "unsynced"
++        }));
++        setProducts(productsWithSyncStatus);
+       }
+       if (savedHistory) {
+         setPriceHistory(JSON.parse(savedHistory));
+@@ -915,6 +938,7 @@ function SilverQuotePage() {
+           moldCostDate: "",
+           commissionDate: "",
+           timestamp: new Date().toISOString(),
++          syncStatus: "unsynced",
+         }));
+ 
+       if (importedProducts.length === 0) {
+@@ -1266,6 +1290,7 @@ function SilverQuotePage() {
+                   moldCostDate: "",
+                   commissionDate: "",
+                   timestamp: new Date().toISOString(),
++                  syncStatus: "unsynced",
+                 };
+ 
+                 const retail = calculateSilverPrice(testProduct, true);
+@@ -1411,6 +1436,7 @@ function SilverQuotePage() {
+                         className="w-4 h-4"
+                       />
+                     </th>
++                    <th className="border border-gray-200 px-3 py-2 text-center text-black w-16">同步</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
+@@ -1444,6 +1470,17 @@ function SilverQuotePage() {
+                           className="w-4 h-4"
+                         />
+                       </td>
++                      <td className="border border-gray-200 px-3 py-2 text-center">
++                        {product.syncStatus === "synced" ? (
++                          <span className="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full" title="已同步">
++                            ✓
++                          </span>
++                        ) : (
++                          <span className="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full" title="未同步">
++                            !
++                          </span>
++                        )}
++                      </td>
+                       <td className="border border-gray-200 px-3 py-2">
+                         <button
+                           onClick={() => deleteProduct(product.id)}
+@@ -1565,7 +1602,7 @@ function SilverQuotePage() {
+                   ))}
+                   {products.filter(p => p.category === currentCategory).length === 0 && (
+                     <tr>
+-                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-black">
++                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-black">
+                         暂无{currentCategory}产品数据
+                       </td>
+                     </tr>
+-- 
+2.43.0
+
+From f5456e959296dd7f33726644c1298a650fc6c455 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:42:16 +0800
+Subject: [PATCH 07/13] =?UTF-8?q?feat(silver-quote):=20=E6=9B=B4=E6=96=B0?=
+ =?UTF-8?q?=E9=93=B6=E5=88=B6=E5=93=81=E5=88=86=E7=B1=BB=E7=BB=93=E6=9E=84?=
+ =?UTF-8?q?=EF=BC=8C=E6=B7=BB=E5=8A=A0=E5=85=B6=E5=AE=83=E5=A4=A7=E7=B1=BB?=
+ =?UTF-8?q?=E5=8F=8A=E5=AE=8C=E6=95=B4=E5=AD=90=E5=88=86=E7=B1=BB?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+更新银制品分类系统：
+- 新增其它大类，包含：银板、银线、银花边
+- 更新配件大类子类：吊坠夹、间珠、珠托、花边、水滴扣/方扣/弹簧扣、排扣、磁铁扣、异形扣、链接件、耳环/耳钩、耳钉、耳逼、链头夹、边框、珠针、尾圈、OT扣、间通、字印牌
+- 更新宝石托大类子类：戒子托、耳环托、耳钉托、吊坠托、手链托、手镯托、首饰配件托
+- 更新链条大类子类：延长链、项链、散链、皮绳
+- 更新智能识别逻辑，支持新分类的自动识别
+- Excel导入已有分类选择功能，可选择导入所有分类或仅当前分类
+- 产品列表已有同步状态列，显示产品同步状态
+---
+ src/app/silver-quote/page.tsx | 144 ++++++++++++++++++++++------------
+ 1 file changed, 94 insertions(+), 50 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index f12c1df..a87d8d1 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -12,6 +12,7 @@ export const SILVER_PRODUCT_CATEGORIES = [
+   "配件",
+   "宝石托",
+   "链条",
++  "其它",
+ ] as const;
+ 
+ export type SilverProductCategory = typeof SILVER_PRODUCT_CATEGORIES[number];
+@@ -19,31 +20,45 @@ export type SilverProductCategory = typeof SILVER_PRODUCT_CATEGORIES[number];
+ // 大分类和子分类的映射关系
+ export const SILVER_SUB_CATEGORIES: Record<SilverProductCategory, string[]> = {
+   "配件": [
+-    "耳环/耳逼",
+-    "扣子",
+-    "开口圈/闭口圈",
+-    "圆珠",
+-    "车花珠",
+-    "定位珠/短管",
+-    "包扣",
+-    "字印片/吊牌",
+-    "珠针",
+-    "空心管",
+-    "珠托",
+     "吊坠夹",
+-    "镶嵌配件",
+-    "珍珠配件",
+-    "银线",
++    "间珠",
++    "珠托",
++    "花边",
++    "水滴扣/方扣/弹簧扣",
++    "排扣",
++    "磁铁扣",
++    "异形扣",
++    "链接件",
++    "耳环/耳钩",
++    "耳钉",
++    "耳逼",
++    "链头夹",
++    "边框",
++    "珠针",
++    "尾圈",
++    "OT扣",
++    "间通",
++    "字印牌",
+   ],
+   "宝石托": [
+     "戒子托",
+     "耳环托",
+     "耳钉托",
+     "吊坠托",
++    "手链托",
++    "手镯托",
++    "首饰配件托",
+   ],
+   "链条": [
+-    "银链",
+     "延长链",
++    "项链",
++    "散链",
++    "皮绳",
++  ],
++  "其它": [
++    "银板",
++    "银线",
++    "银花边",
+   ],
+ };
+ 
+@@ -56,37 +71,52 @@ const SILVER_DATA_VERSION = 1;
+ const detectSilverCategoryFromName = (productName: string): SilverProductCategory | null => {
+   const name = productName.toLowerCase();
+ 
+-  // 宝石托类关键词 - 必须放在前面，避免被其他关键词匹配
++  // 其它类关键词 - 优先级最高
++  const otherKeywords = [
++    "银板", "银花边"
++  ];
++
++  // 宝石托类关键词
+   const settingsKeywords = [
+-    "戒子托", "耳环托", "耳钉托", "吊坠托",
++    "戒子托", "耳环托", "耳钉托", "吊坠托", "手链托", "手镯托", "首饰配件托",
+     "戒指托", "耳饰托", "吊饰托", "镶嵌托"
+   ];
+ 
+   // 链条类关键词
+   const chainKeywords = [
+-    "银链", "延长链", "项链", "手链", "链子"
++    "延长链", "项链", "散链", "皮绳", "手链", "链子"
+   ];
+ 
+-  // 配件类关键词 - 放在最后，使用更具体的关键词，避免误匹配
++  // 配件类关键词 - 使用更具体的关键词
+   const accessoriesKeywords = [
+-    "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣",
+-    "开口圈", "闭口圈",
+-    "圆珠", "车花珠", "车花",
+-    "定位珠", "短管",
+-    "包扣",
+-    "字印", "吊牌",
++    "吊坠夹",
++    "间珠",
++    "花边",
++    "水滴扣", "方扣", "弹簧扣",
++    "排扣",
++    "磁铁扣",
++    "异形扣",
++    "链接件",
++    "耳环", "耳钩",
++    "耳逼",
++    "链头夹",
++    "边框",
+     "珠针",
+-    "空心管",
++    "尾圈",
++    "OT扣",
++    "间通",
++    "字印牌",
+     "珠托", "托珠",
+-    "镶嵌配件", "镶嵌",
+-    "珍珠配件", "珍珠",
+-    "银线",
+-    "耳逼", "耳夹",
+   ];
+ 
+-  // 按优先级检查：宝石托 > 链条 > 配件
++  // 按优先级检查：其它 > 宝石托 > 链条 > 配件
++
++  // 先检查其它类（优先级最高）
++  if (otherKeywords.some(keyword => name.includes(keyword))) {
++    return "其它";
++  }
+ 
+-  // 先检查宝石托类（优先级最高）
++  // 再检查宝石托类
+   if (settingsKeywords.some(keyword => name.includes(keyword))) {
+     return "宝石托";
+   }
+@@ -110,32 +140,46 @@ const detectSilverSubCategoryFromName = (productName: string): string | null =>
+ 
+   // 定义子分类关键词（按优先级排序：具体关键词优先）
+   const subCategoryKeywords: Array<{ subCat: string; keywords: string[] }> = [
+-    // 宝石托类（优先级最高）
++    // 其它类（优先级最高）
++    { subCat: "银板", keywords: ["银板"] },
++    { subCat: "银线", keywords: ["银线"] },
++    { subCat: "银花边", keywords: ["银花边", "花边"] },
++
++    // 宝石托类
+     { subCat: "戒子托", keywords: ["戒子托", "戒指托"] },
+     { subCat: "耳环托", keywords: ["耳环托"] },
+     { subCat: "耳钉托", keywords: ["耳钉托"] },
+     { subCat: "吊坠托", keywords: ["吊坠托"] },
++    { subCat: "手链托", keywords: ["手链托"] },
++    { subCat: "手镯托", keywords: ["手镯托"] },
++    { subCat: "首饰配件托", keywords: ["首饰配件托"] },
++
++    // 链条类
++    { subCat: "延长链", keywords: ["延长链"] },
++    { subCat: "项链", keywords: ["项链", "银链"] },
++    { subCat: "散链", keywords: ["散链"] },
++    { subCat: "皮绳", keywords: ["皮绳"] },
+ 
+     // 配件类 - 使用更具体的关键词
+-    { subCat: "扣子", keywords: ["水滴扣", "龙虾扣", "螺丝扣", "弹簧扣", "弹簧夹扣"] },
+-    { subCat: "开口圈/闭口圈", keywords: ["开口圈", "闭口圈"] },
+-    { subCat: "圆珠", keywords: ["圆珠"] },
+-    { subCat: "车花珠", keywords: ["车花珠", "车花"] },
+-    { subCat: "定位珠/短管", keywords: ["定位珠", "短管"] },
+-    { subCat: "包扣", keywords: ["包扣"] },
+-    { subCat: "字印片/吊牌", keywords: ["字印", "吊牌"] },
++    { subCat: "吊坠夹", keywords: ["吊坠夹"] },
++    { subCat: "间珠", keywords: ["间珠"] },
++    { subCat: "花边", keywords: ["花边"] },
++    { subCat: "水滴扣/方扣/弹簧扣", keywords: ["水滴扣", "方扣", "弹簧扣"] },
++    { subCat: "排扣", keywords: ["排扣"] },
++    { subCat: "磁铁扣", keywords: ["磁铁扣"] },
++    { subCat: "异形扣", keywords: ["异形扣"] },
++    { subCat: "链接件", keywords: ["链接件"] },
++    { subCat: "耳环/耳钩", keywords: ["耳环", "耳钩"] },
++    { subCat: "耳钉", keywords: ["耳钉"] },
++    { subCat: "耳逼", keywords: ["耳逼", "耳夹"] },
++    { subCat: "链头夹", keywords: ["链头夹"] },
++    { subCat: "边框", keywords: ["边框"] },
+     { subCat: "珠针", keywords: ["珠针"] },
+-    { subCat: "空心管", keywords: ["空心管"] },
++    { subCat: "尾圈", keywords: ["尾圈"] },
++    { subCat: "OT扣", keywords: ["OT扣", "ot扣"] },
++    { subCat: "间通", keywords: ["间通"] },
++    { subCat: "字印牌", keywords: ["字印牌"] },
+     { subCat: "珠托", keywords: ["珠托", "托珠"] },
+-    { subCat: "吊坠夹", keywords: ["吊坠夹"] },
+-    { subCat: "镶嵌配件", keywords: ["镶嵌配件", "镶嵌"] },
+-    { subCat: "珍珠配件", keywords: ["珍珠配件", "珍珠"] },
+-    { subCat: "银线", keywords: ["银线"] },
+-    { subCat: "耳环/耳逼", keywords: ["耳环", "耳逼", "耳夹"] },
+-
+-    // 链条类
+-    { subCat: "银链", keywords: ["银链", "项链", "手链"] },
+-    { subCat: "延长链", keywords: ["延长链"] },
+   ];
+ 
+   // 找出所有匹配的子分类及其匹配的关键词
+-- 
+2.43.0
+
+From 320098864839435f8dd58137235ef375197fb0c1 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:44:14 +0800
+Subject: [PATCH 08/13] =?UTF-8?q?feat(silver-quote):=20=E6=B7=BB=E5=8A=A0?=
+ =?UTF-8?q?=E4=BA=A7=E5=93=81=E5=BD=93=E6=89=B9=E6=AC=A1=E6=95=B0=E9=87=8F?=
+ =?UTF-8?q?=E5=88=97?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 在SilverProduct和SilverPriceHistory接口中添加batchQuantity字段
+- 产品列表表头添加当批次数量列，位于批发价和累计数量之间
+- 当批次数量支持行内编辑，step为1
+- 累计数量列加粗显示，突出重要性
+- Excel导出包含当批次数量列
+- Excel导入支持当批次数量列
+- 更新所有相关函数：addProduct、saveToHistory、导入导出等
+- 更新暂无数据提示的colSpan为20
+---
+ src/app/silver-quote/page.tsx | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index a87d8d1..c1cfd7e 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -272,6 +272,7 @@ interface SilverProduct {
+   commission: number;  // 佣金（人民币）
+   supplierCode: string;  // 供应商代码
+   remarks: string;  // 备注
++  batchQuantity: number;  // 当批次数量
+   quantity: number;  // 累计数量
+   quantityDate: string;  // 数量录入时间
+   laborCostDate: string;
+@@ -305,7 +306,8 @@ interface SilverPriceHistory {
+   commission: number;
+   supplierCode: string;
+   remarks: string;
+-  quantity: number;
++  batchQuantity: number;  // 当批次数量
++  quantity: number;  // 累计数量
+   quantityDate: string;
+   laborCostDate: string;
+   accessoryCostDate: string;
+@@ -583,6 +585,7 @@ function SilverQuotePage() {
+       commission: 0,
+       supplierCode: "E1",
+       remarks: "",
++      batchQuantity: 0,  // 当批次数量
+       quantity: 0,
+       quantityDate: "",
+       laborCostDate: "",
+@@ -670,6 +673,7 @@ function SilverQuotePage() {
+       commission: product.commission,
+       supplierCode: product.supplierCode,
+       remarks: product.remarks,
++      batchQuantity: product.batchQuantity,
+       quantity: product.quantity,
+       quantityDate: product.quantityDate,
+       laborCostDate: product.laborCostDate,
+@@ -903,8 +907,9 @@ function SilverQuotePage() {
+       "供应商代码": p.supplierCode,
+       "零售价(CAD$)": p.retailPrice.toFixed(2),
+       "批发价(CAD$)": p.wholesalePrice.toFixed(2),
++      "当批次数量": p.batchQuantity || 0,
++      "累计数量": p.quantity || 0,
+       "备注": p.remarks,
+-      "累计数量": p.quantity,
+       "更新时间": formatDate(p.timestamp),
+     }));
+ 
+@@ -973,6 +978,7 @@ function SilverQuotePage() {
+           commission: 0,
+           supplierCode: row["供应商代码"] || "E1",
+           remarks: row["备注"] || "",
++          batchQuantity: Number(row["当批次数量"]) || 0,
+           quantity: Number(row["累计数量"]) || 0,
+           quantityDate: "",
+           laborCostDate: "",
+@@ -1325,6 +1331,7 @@ function SilverQuotePage() {
+                   commission: 0,
+                   supplierCode: "E1",
+                   remarks: "",
++                  batchQuantity: 0,
+                   quantity: 0,
+                   quantityDate: "",
+                   laborCostDate: "",
+@@ -1494,6 +1501,7 @@ function SilverQuotePage() {
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">当批次数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
+@@ -1628,7 +1636,16 @@ function SilverQuotePage() {
+                       <td className="border border-gray-200 px-3 py-2 text-right font-bold text-green-700">
+                         {product.wholesalePrice.toFixed(2)}
+                       </td>
+-                      <td className="border border-gray-200 px-3 py-2 text-right">
++                      <td className="border border-gray-200 px-3 py-2">
++                        <input
++                          type="number"
++                          step="1"
++                          value={product.batchQuantity || 0}
++                          onChange={(e) => updateProduct(product.id, "batchQuantity", Number(e.target.value))}
++                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
++                        />
++                      </td>
++                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-black">
+                         {product.quantity || 0}
+                       </td>
+                       <td className="border border-gray-200 px-3 py-2">
+@@ -1646,7 +1663,7 @@ function SilverQuotePage() {
+                   ))}
+                   {products.filter(p => p.category === currentCategory).length === 0 && (
+                     <tr>
+-                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-black">
++                      <td colSpan={20} className="border border-gray-200 px-3 py-4 text-center text-black">
+                         暂无{currentCategory}产品数据
+                       </td>
+                     </tr>
+-- 
+2.43.0
+
+From 065a346e4fcca0954873c063b09eb7b385867579 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:46:31 +0800
+Subject: [PATCH 09/13] =?UTF-8?q?fix:=20=E5=B0=86=E9=93=B6=E5=88=B6?=
+ =?UTF-8?q?=E5=93=81=E9=A1=B5=E9=9D=A2=E7=9A=84=E5=BD=93=E6=89=B9=E6=AC=A1?=
+ =?UTF-8?q?=E6=95=B0=E9=87=8F=E6=94=B9=E4=B8=BA=E6=95=B0=E9=87=8F?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/silver-quote/page.tsx | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index c1cfd7e..ad85417 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -272,7 +272,7 @@ interface SilverProduct {
+   commission: number;  // 佣金（人民币）
+   supplierCode: string;  // 供应商代码
+   remarks: string;  // 备注
+-  batchQuantity: number;  // 当批次数量
++  batchQuantity: number;  // 数量
+   quantity: number;  // 累计数量
+   quantityDate: string;  // 数量录入时间
+   laborCostDate: string;
+@@ -306,7 +306,7 @@ interface SilverPriceHistory {
+   commission: number;
+   supplierCode: string;
+   remarks: string;
+-  batchQuantity: number;  // 当批次数量
++  batchQuantity: number;  // 数量
+   quantity: number;  // 累计数量
+   quantityDate: string;
+   laborCostDate: string;
+@@ -585,7 +585,7 @@ function SilverQuotePage() {
+       commission: 0,
+       supplierCode: "E1",
+       remarks: "",
+-      batchQuantity: 0,  // 当批次数量
++      batchQuantity: 0,  // 数量
+       quantity: 0,
+       quantityDate: "",
+       laborCostDate: "",
+@@ -907,7 +907,7 @@ function SilverQuotePage() {
+       "供应商代码": p.supplierCode,
+       "零售价(CAD$)": p.retailPrice.toFixed(2),
+       "批发价(CAD$)": p.wholesalePrice.toFixed(2),
+-      "当批次数量": p.batchQuantity || 0,
++      "数量": p.batchQuantity || 0,
+       "累计数量": p.quantity || 0,
+       "备注": p.remarks,
+       "更新时间": formatDate(p.timestamp),
+@@ -978,7 +978,7 @@ function SilverQuotePage() {
+           commission: 0,
+           supplierCode: row["供应商代码"] || "E1",
+           remarks: row["备注"] || "",
+-          batchQuantity: Number(row["当批次数量"]) || 0,
++          batchQuantity: Number(row["数量"]) || 0,
+           quantity: Number(row["累计数量"]) || 0,
+           quantityDate: "",
+           laborCostDate: "",
+@@ -1501,7 +1501,7 @@ function SilverQuotePage() {
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
+-                    <th className="border border-gray-200 px-3 py-2 text-right text-black">当批次数量</th>
++                    <th className="border border-gray-200 px-3 py-2 text-right text-black">数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
+-- 
+2.43.0
+

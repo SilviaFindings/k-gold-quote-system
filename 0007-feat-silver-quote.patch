@@ -1,0 +1,234 @@
+From f5456e959296dd7f33726644c1298a650fc6c455 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:42:16 +0800
+Subject: [PATCH 07/13] =?UTF-8?q?feat(silver-quote):=20=E6=9B=B4=E6=96=B0?=
+ =?UTF-8?q?=E9=93=B6=E5=88=B6=E5=93=81=E5=88=86=E7=B1=BB=E7=BB=93=E6=9E=84?=
+ =?UTF-8?q?=EF=BC=8C=E6=B7=BB=E5=8A=A0=E5=85=B6=E5=AE=83=E5=A4=A7=E7=B1=BB?=
+ =?UTF-8?q?=E5=8F=8A=E5=AE=8C=E6=95=B4=E5=AD=90=E5=88=86=E7=B1=BB?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+更新银制品分类系统：
+- 新增其它大类，包含：银板、银线、银花边
+- 更新配件大类子类：吊坠夹、间珠、珠托、花边、水滴扣/方扣/弹簧扣、排扣、磁铁扣、异形扣、链接件、耳环/耳钩、耳钉、耳逼、链头夹、边框、珠针、尾圈、OT扣、间通、字印牌
+- 更新宝石托大类子类：戒子托、耳环托、耳钉托、吊坠托、手链托、手镯托、首饰配件托
+- 更新链条大类子类：延长链、项链、散链、皮绳
+- 更新智能识别逻辑，支持新分类的自动识别
+- Excel导入已有分类选择功能，可选择导入所有分类或仅当前分类
+- 产品列表已有同步状态列，显示产品同步状态
+---
+ src/app/silver-quote/page.tsx | 144 ++++++++++++++++++++++------------
+ 1 file changed, 94 insertions(+), 50 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index f12c1df..a87d8d1 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -12,6 +12,7 @@ export const SILVER_PRODUCT_CATEGORIES = [
+   "配件",
+   "宝石托",
+   "链条",
++  "其它",
+ ] as const;
+ 
+ export type SilverProductCategory = typeof SILVER_PRODUCT_CATEGORIES[number];
+@@ -19,31 +20,45 @@ export type SilverProductCategory = typeof SILVER_PRODUCT_CATEGORIES[number];
+ // 大分类和子分类的映射关系
+ export const SILVER_SUB_CATEGORIES: Record<SilverProductCategory, string[]> = {
+   "配件": [
+-    "耳环/耳逼",
+-    "扣子",
+-    "开口圈/闭口圈",
+-    "圆珠",
+-    "车花珠",
+-    "定位珠/短管",
+-    "包扣",
+-    "字印片/吊牌",
+-    "珠针",
+-    "空心管",
+-    "珠托",
+     "吊坠夹",
+-    "镶嵌配件",
+-    "珍珠配件",
+-    "银线",
++    "间珠",
++    "珠托",
++    "花边",
++    "水滴扣/方扣/弹簧扣",
++    "排扣",
++    "磁铁扣",
++    "异形扣",
++    "链接件",
++    "耳环/耳钩",
++    "耳钉",
++    "耳逼",
++    "链头夹",
++    "边框",
++    "珠针",
++    "尾圈",
++    "OT扣",
++    "间通",
++    "字印牌",
+   ],
+   "宝石托": [
+     "戒子托",
+     "耳环托",
+     "耳钉托",
+     "吊坠托",
++    "手链托",
++    "手镯托",
++    "首饰配件托",
+   ],
+   "链条": [
+-    "银链",
+     "延长链",
++    "项链",
++    "散链",
++    "皮绳",
++  ],
++  "其它": [
++    "银板",
++    "银线",
++    "银花边",
+   ],
+ };
+ 
+@@ -56,37 +71,52 @@ const SILVER_DATA_VERSION = 1;
+ const detectSilverCategoryFromName = (productName: string): SilverProductCategory | null => {
+   const name = productName.toLowerCase();
+ 
+-  // 宝石托类关键词 - 必须放在前面，避免被其他关键词匹配
++  // 其它类关键词 - 优先级最高
++  const otherKeywords = [
++    "银板", "银花边"
++  ];
++
++  // 宝石托类关键词
+   const settingsKeywords = [
+-    "戒子托", "耳环托", "耳钉托", "吊坠托",
++    "戒子托", "耳环托", "耳钉托", "吊坠托", "手链托", "手镯托", "首饰配件托",
+     "戒指托", "耳饰托", "吊饰托", "镶嵌托"
+   ];
+ 
+   // 链条类关键词
+   const chainKeywords = [
+-    "银链", "延长链", "项链", "手链", "链子"
++    "延长链", "项链", "散链", "皮绳", "手链", "链子"
+   ];
+ 
+-  // 配件类关键词 - 放在最后，使用更具体的关键词，避免误匹配
++  // 配件类关键词 - 使用更具体的关键词
+   const accessoriesKeywords = [
+-    "水滴扣", "龙虾扣", "螺丝扣", "弹簧扣",
+-    "开口圈", "闭口圈",
+-    "圆珠", "车花珠", "车花",
+-    "定位珠", "短管",
+-    "包扣",
+-    "字印", "吊牌",
++    "吊坠夹",
++    "间珠",
++    "花边",
++    "水滴扣", "方扣", "弹簧扣",
++    "排扣",
++    "磁铁扣",
++    "异形扣",
++    "链接件",
++    "耳环", "耳钩",
++    "耳逼",
++    "链头夹",
++    "边框",
+     "珠针",
+-    "空心管",
++    "尾圈",
++    "OT扣",
++    "间通",
++    "字印牌",
+     "珠托", "托珠",
+-    "镶嵌配件", "镶嵌",
+-    "珍珠配件", "珍珠",
+-    "银线",
+-    "耳逼", "耳夹",
+   ];
+ 
+-  // 按优先级检查：宝石托 > 链条 > 配件
++  // 按优先级检查：其它 > 宝石托 > 链条 > 配件
++
++  // 先检查其它类（优先级最高）
++  if (otherKeywords.some(keyword => name.includes(keyword))) {
++    return "其它";
++  }
+ 
+-  // 先检查宝石托类（优先级最高）
++  // 再检查宝石托类
+   if (settingsKeywords.some(keyword => name.includes(keyword))) {
+     return "宝石托";
+   }
+@@ -110,32 +140,46 @@ const detectSilverSubCategoryFromName = (productName: string): string | null =>
+ 
+   // 定义子分类关键词（按优先级排序：具体关键词优先）
+   const subCategoryKeywords: Array<{ subCat: string; keywords: string[] }> = [
+-    // 宝石托类（优先级最高）
++    // 其它类（优先级最高）
++    { subCat: "银板", keywords: ["银板"] },
++    { subCat: "银线", keywords: ["银线"] },
++    { subCat: "银花边", keywords: ["银花边", "花边"] },
++
++    // 宝石托类
+     { subCat: "戒子托", keywords: ["戒子托", "戒指托"] },
+     { subCat: "耳环托", keywords: ["耳环托"] },
+     { subCat: "耳钉托", keywords: ["耳钉托"] },
+     { subCat: "吊坠托", keywords: ["吊坠托"] },
++    { subCat: "手链托", keywords: ["手链托"] },
++    { subCat: "手镯托", keywords: ["手镯托"] },
++    { subCat: "首饰配件托", keywords: ["首饰配件托"] },
++
++    // 链条类
++    { subCat: "延长链", keywords: ["延长链"] },
++    { subCat: "项链", keywords: ["项链", "银链"] },
++    { subCat: "散链", keywords: ["散链"] },
++    { subCat: "皮绳", keywords: ["皮绳"] },
+ 
+     // 配件类 - 使用更具体的关键词
+-    { subCat: "扣子", keywords: ["水滴扣", "龙虾扣", "螺丝扣", "弹簧扣", "弹簧夹扣"] },
+-    { subCat: "开口圈/闭口圈", keywords: ["开口圈", "闭口圈"] },
+-    { subCat: "圆珠", keywords: ["圆珠"] },
+-    { subCat: "车花珠", keywords: ["车花珠", "车花"] },
+-    { subCat: "定位珠/短管", keywords: ["定位珠", "短管"] },
+-    { subCat: "包扣", keywords: ["包扣"] },
+-    { subCat: "字印片/吊牌", keywords: ["字印", "吊牌"] },
++    { subCat: "吊坠夹", keywords: ["吊坠夹"] },
++    { subCat: "间珠", keywords: ["间珠"] },
++    { subCat: "花边", keywords: ["花边"] },
++    { subCat: "水滴扣/方扣/弹簧扣", keywords: ["水滴扣", "方扣", "弹簧扣"] },
++    { subCat: "排扣", keywords: ["排扣"] },
++    { subCat: "磁铁扣", keywords: ["磁铁扣"] },
++    { subCat: "异形扣", keywords: ["异形扣"] },
++    { subCat: "链接件", keywords: ["链接件"] },
++    { subCat: "耳环/耳钩", keywords: ["耳环", "耳钩"] },
++    { subCat: "耳钉", keywords: ["耳钉"] },
++    { subCat: "耳逼", keywords: ["耳逼", "耳夹"] },
++    { subCat: "链头夹", keywords: ["链头夹"] },
++    { subCat: "边框", keywords: ["边框"] },
+     { subCat: "珠针", keywords: ["珠针"] },
+-    { subCat: "空心管", keywords: ["空心管"] },
++    { subCat: "尾圈", keywords: ["尾圈"] },
++    { subCat: "OT扣", keywords: ["OT扣", "ot扣"] },
++    { subCat: "间通", keywords: ["间通"] },
++    { subCat: "字印牌", keywords: ["字印牌"] },
+     { subCat: "珠托", keywords: ["珠托", "托珠"] },
+-    { subCat: "吊坠夹", keywords: ["吊坠夹"] },
+-    { subCat: "镶嵌配件", keywords: ["镶嵌配件", "镶嵌"] },
+-    { subCat: "珍珠配件", keywords: ["珍珠配件", "珍珠"] },
+-    { subCat: "银线", keywords: ["银线"] },
+-    { subCat: "耳环/耳逼", keywords: ["耳环", "耳逼", "耳夹"] },
+-
+-    // 链条类
+-    { subCat: "银链", keywords: ["银链", "项链", "手链"] },
+-    { subCat: "延长链", keywords: ["延长链"] },
+   ];
+ 
+   // 找出所有匹配的子分类及其匹配的关键词
+-- 
+2.43.0
+

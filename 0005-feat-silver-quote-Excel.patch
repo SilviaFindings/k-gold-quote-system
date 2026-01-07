@@ -1,0 +1,144 @@
+From e274abbb6efa6fce0c54ad852a8c744c79adc130 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:22:01 +0800
+Subject: [PATCH 05/13] =?UTF-8?q?feat(silver-quote):=20=E4=BC=98=E5=8C=96E?=
+ =?UTF-8?q?xcel=E5=AF=BC=E5=85=A5=E5=8A=9F=E8=83=BD=EF=BC=8C=E6=94=AF?=
+ =?UTF-8?q?=E6=8C=81=E5=88=86=E7=B1=BB=E9=80=89=E6=8B=A9=E5=AF=BC=E5=85=A5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 导入时自动检测Excel中包含的产品分类
+- 当Excel包含多个分类时，弹出确认框让用户选择导入方式
+- 支持导入所有分类或仅导入当前分类两种模式
+- 导入完成后显示详细的分类统计信息
+- 提升用户体验，避免意外导入不需要的分类数据
+---
+ src/app/silver-quote/page.tsx | 104 ++++++++++++++++++++++++----------
+ 1 file changed, 73 insertions(+), 31 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index b203da2..d2f463e 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -860,36 +860,67 @@ function SilverQuotePage() {
+       const sheet = workbook.Sheets[sheetName];
+       const jsonData = XLSX.utils.sheet_to_json(sheet);
+ 
+-      const importedProducts: SilverProduct[] = jsonData.map((row: any, index) => ({
+-        id: Date.now().toString() + index,
+-        category: row["分类"] || row["分类"] || currentCategory,
+-        subCategory: row["子分类"] || row["子分类"] || SILVER_SUB_CATEGORIES[currentCategory][0],
+-        productCode: row["货号"] || "",
+-        productName: row["产品名称"] || "",
+-        specification: row["规格"] || "",
+-        weight: Number(row["克重"]) || 0,
+-        laborCost: Number(row["工费"]) || 0,
+-        silverColor: row["银色"] || "银色",
+-        silverPrice: silverPrice,
+-        wholesalePrice: 0,
+-        retailPrice: 0,
+-        accessoryCost: Number(row["配件成本"]) || 0,
+-        stoneCost: Number(row["石头成本"]) || 0,
+-        platingCost: Number(row["电镀成本"]) || 0,
+-        moldCost: 0,
+-        commission: 0,
+-        supplierCode: row["供应商代码"] || "E1",
+-        remarks: row["备注"] || "",
+-        quantity: Number(row["累计数量"]) || 0,
+-        quantityDate: "",
+-        laborCostDate: "",
+-        accessoryCostDate: "",
+-        stoneCostDate: "",
+-        platingCostDate: "",
+-        moldCostDate: "",
+-        commissionDate: "",
+-        timestamp: new Date().toISOString(),
+-      }));
++      // 检查Excel中是否包含"分类"列
++      const hasCategoryColumn = jsonData.length > 0 && (jsonData[0] as any)["分类"] !== undefined;
++      const categoriesInFile = hasCategoryColumn
++        ? [...new Set(jsonData.map((row: any) => row["分类"]).filter(cat => cat))]
++        : [];
++
++      // 确认导入方式
++      let importMode: "all" | "current" = "all";
++
++      if (hasCategoryColumn && categoriesInFile.length > 0) {
++        // Excel中有分类列，询问用户导入模式
++        const message = `检测到Excel文件包含以下分类：\n${categoriesInFile.join(", ")}\n\n请选择导入方式：\n• 点击"确定"：导入所有分类的产品\n• 点击"取消"：仅导入当前选中分类（${currentCategory}）的产品`;
++        importMode = window.confirm(message) ? "all" : "current";
++      }
++
++      // 导入产品
++      const importedProducts: SilverProduct[] = jsonData
++        .filter((row: any) => {
++          // 如果选择了"仅导入当前分类"，则过滤
++          if (importMode === "current") {
++            const rowCategory = row["分类"];
++            if (!rowCategory) return false; // 没有分类的也不导入
++            return rowCategory === currentCategory;
++          }
++          return true;
++        })
++        .map((row: any, index) => ({
++          id: Date.now().toString() + index,
++          category: row["分类"] || currentCategory,
++          subCategory: row["子分类"] || SILVER_SUB_CATEGORIES[(row["分类"] as SilverProductCategory) || currentCategory]?.[0] || "",
++          productCode: row["货号"] || "",
++          productName: row["产品名称"] || "",
++          specification: row["规格"] || "",
++          weight: Number(row["克重"]) || 0,
++          laborCost: Number(row["工费"]) || 0,
++          silverColor: row["银色"] || "银色",
++          silverPrice: silverPrice,
++          wholesalePrice: 0,
++          retailPrice: 0,
++          accessoryCost: Number(row["配件成本"]) || 0,
++          stoneCost: Number(row["石头成本"]) || 0,
++          platingCost: Number(row["电镀成本"]) || 0,
++          moldCost: 0,
++          commission: 0,
++          supplierCode: row["供应商代码"] || "E1",
++          remarks: row["备注"] || "",
++          quantity: Number(row["累计数量"]) || 0,
++          quantityDate: "",
++          laborCostDate: "",
++          accessoryCostDate: "",
++          stoneCostDate: "",
++          platingCostDate: "",
++          moldCostDate: "",
++          commissionDate: "",
++          timestamp: new Date().toISOString(),
++        }));
++
++      if (importedProducts.length === 0) {
++        alert("没有找到符合导入条件的产品");
++        return;
++      }
+ 
+       // 计算价格
+       const withPrices = importedProducts.map(p => ({
+@@ -900,7 +931,18 @@ function SilverQuotePage() {
+ 
+       setProducts([...products, ...withPrices]);
+       saveToLocalStorage([...products, ...withPrices]);
+-      alert(`成功导入 ${importedProducts.length} 个产品`);
++
++      // 显示导入详情
++      const categoryCount = importedProducts.reduce((acc, p) => {
++        acc[p.category] = (acc[p.category] || 0) + 1;
++        return acc;
++      }, {} as Record<string, number>);
++
++      const details = Object.entries(categoryCount)
++        .map(([cat, count]) => `${cat}: ${count}个`)
++        .join("\n");
++
++      alert(`✓ 成功导入 ${importedProducts.length} 个产品\n\n导入详情：\n${details}`);
+     };
+     reader.readAsBinaryString(file);
+   };
+-- 
+2.43.0
+

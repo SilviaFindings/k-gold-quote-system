@@ -1,0 +1,162 @@
+From 345ffa7d0c742a38aed0b27912c98d7ec116d175 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:24:47 +0800
+Subject: [PATCH 06/13] =?UTF-8?q?feat(silver-quote):=20=E6=B7=BB=E5=8A=A0?=
+ =?UTF-8?q?=E4=BA=A7=E5=93=81=E5=90=8C=E6=AD=A5=E7=8A=B6=E6=80=81=E6=98=BE?=
+ =?UTF-8?q?=E7=A4=BA=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 在产品数据结构中添加syncStatus字段（synced/unsynced）
+- 产品列表新增同步状态列，显示图标：
+  - ✓ 绿色圆点表示已同步
+  - ! 黄色圆点表示未同步
+- 添加产品时自动标记为未同步
+- 编辑产品时自动标记为未同步
+- Excel导入产品时自动标记为未同步
+- 上传到云端成功后标记所有产品为已同步
+- 从云端下载后标记所有产品为已同步
+- 兼容旧数据，自动为没有syncStatus的产品添加默认值
+---
+ src/app/silver-quote/page.tsx | 47 +++++++++++++++++++++++++++++++----
+ 1 file changed, 42 insertions(+), 5 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index d2f463e..f12c1df 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -237,6 +237,7 @@ interface SilverProduct {
+   moldCostDate: string;
+   commissionDate: string;
+   timestamp: string;
++  syncStatus: "synced" | "unsynced";  // 同步状态：已同步/未同步
+ }
+ 
+ interface SilverPriceHistory {
+@@ -547,6 +548,7 @@ function SilverQuotePage() {
+       moldCostDate: "",
+       commissionDate: "",
+       timestamp: new Date().toISOString(),
++      syncStatus: "unsynced",
+     };
+ 
+     setProducts([...products, newProduct]);
+@@ -580,6 +582,9 @@ function SilverQuotePage() {
+         updated.retailPrice = calculateSilverPrice(updated, true);
+         updated.wholesalePrice = calculateSilverPrice(updated, false);
+ 
++        // 修改产品后标记为未同步
++        updated.syncStatus = "unsynced";
++
+         return updated;
+       }
+       return p;
+@@ -707,6 +712,11 @@ function SilverQuotePage() {
+       });
+ 
+       if (response.ok) {
++        // 上传成功后，标记所有产品为已同步
++        const syncedProducts = products.map(p => ({ ...p, syncStatus: "synced" as const }));
++        setProducts(syncedProducts);
++        saveToLocalStorage(syncedProducts);
++
+         setSyncStatus("success");
+         setSyncMessage("数据上传成功！");
+         setCloudDataExists(true);
+@@ -749,16 +759,23 @@ function SilverQuotePage() {
+         const data = await response.json();
+ 
+         if (mode === "replace") {
+-          setProducts(data.products || []);
++          // 覆盖模式：标记所有产品为已同步
++          const syncedProducts = (data.products || []).map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
++          setProducts(syncedProducts);
+           setPriceHistory(data.history || []);
+           setSilverPrice(data.silverPrice || 20);
+           setSilverCoefficients(data.coefficients || silverCoefficients);
++          saveToLocalStorage(syncedProducts, data.history || []);
+         } else {
+           // 合并模式：保留本地数据，添加云端不存在的数据
+           const existingIds = new Set(products.map(p => p.id));
+-          const newProducts = (data.products || []).filter((p: SilverProduct) => !existingIds.has(p.id));
+-          setProducts([...products, ...newProducts]);
++          const newProducts = (data.products || [])
++            .filter((p: SilverProduct) => !existingIds.has(p.id))
++            .map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
++          const mergedProducts = [...products, ...newProducts];
++          setProducts(mergedProducts);
+           setPriceHistory([...priceHistory, ...(data.history || [])]);
++          saveToLocalStorage(mergedProducts, [...priceHistory, ...(data.history || [])]);
+         }
+ 
+         setSyncStatus("success");
+@@ -790,7 +807,13 @@ function SilverQuotePage() {
+       const savedHistory = localStorage.getItem("silverPriceHistory");
+ 
+       if (savedProducts) {
+-        setProducts(JSON.parse(savedProducts));
++        // 兼容旧数据，为没有 syncStatus 的产品添加默认值
++        const loadedProducts: SilverProduct[] = JSON.parse(savedProducts);
++        const productsWithSyncStatus = loadedProducts.map(p => ({
++          ...p,
++          syncStatus: p.syncStatus || "unsynced"
++        }));
++        setProducts(productsWithSyncStatus);
+       }
+       if (savedHistory) {
+         setPriceHistory(JSON.parse(savedHistory));
+@@ -915,6 +938,7 @@ function SilverQuotePage() {
+           moldCostDate: "",
+           commissionDate: "",
+           timestamp: new Date().toISOString(),
++          syncStatus: "unsynced",
+         }));
+ 
+       if (importedProducts.length === 0) {
+@@ -1266,6 +1290,7 @@ function SilverQuotePage() {
+                   moldCostDate: "",
+                   commissionDate: "",
+                   timestamp: new Date().toISOString(),
++                  syncStatus: "unsynced",
+                 };
+ 
+                 const retail = calculateSilverPrice(testProduct, true);
+@@ -1411,6 +1436,7 @@ function SilverQuotePage() {
+                         className="w-4 h-4"
+                       />
+                     </th>
++                    <th className="border border-gray-200 px-3 py-2 text-center text-black w-16">同步</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                     <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
+@@ -1444,6 +1470,17 @@ function SilverQuotePage() {
+                           className="w-4 h-4"
+                         />
+                       </td>
++                      <td className="border border-gray-200 px-3 py-2 text-center">
++                        {product.syncStatus === "synced" ? (
++                          <span className="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full" title="已同步">
++                            ✓
++                          </span>
++                        ) : (
++                          <span className="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full" title="未同步">
++                            !
++                          </span>
++                        )}
++                      </td>
+                       <td className="border border-gray-200 px-3 py-2">
+                         <button
+                           onClick={() => deleteProduct(product.id)}
+@@ -1565,7 +1602,7 @@ function SilverQuotePage() {
+                   ))}
+                   {products.filter(p => p.category === currentCategory).length === 0 && (
+                     <tr>
+-                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-black">
++                      <td colSpan={19} className="border border-gray-200 px-3 py-4 text-center text-black">
+                         暂无{currentCategory}产品数据
+                       </td>
+                     </tr>
+-- 
+2.43.0
+

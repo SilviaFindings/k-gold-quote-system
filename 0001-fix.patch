@@ -1,0 +1,103 @@
+From 3f5eacbe5c97b493a0fb4a8510c83cfd5cd16c94 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:02:34 +0800
+Subject: [PATCH 01/13] =?UTF-8?q?fix:=20=E4=BF=AE=E6=AD=A3=E9=93=B6?=
+ =?UTF-8?q?=E5=88=B6=E5=93=81=E6=8A=A5=E4=BB=B7=E9=A1=B5=E9=9D=A2=E8=BE=93?=
+ =?UTF-8?q?=E5=85=A5=E6=A1=86=E6=96=87=E5=AD=97=E9=A2=9C=E8=89=B2=E4=B8=BA?=
+ =?UTF-8?q?=E9=BB=91=E8=89=B2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/silver-quote/page.tsx | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index 6af0bba..2d276cd 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -468,7 +468,7 @@ function SilverQuotePage() {
+                   setSilverPrice(value);
+                   localStorage.setItem("silverPrice", value.toString());
+                 }}
+-                className="border border-gray-300 rounded px-3 py-2 w-32"
++                className="border border-gray-300 rounded px-3 py-2 w-32 text-black"
+               />
+             </div>
+           </div>
+@@ -488,7 +488,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -502,7 +502,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -516,7 +516,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -530,7 +530,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -544,7 +544,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -558,7 +558,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -572,7 +572,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+               <div>
+@@ -586,7 +586,7 @@ function SilverQuotePage() {
+                     setSilverCoefficients(updated);
+                     localStorage.setItem("silverPriceCoefficients", JSON.stringify(updated));
+                   }}
+-                  className="border border-gray-300 rounded px-3 py-2 w-full"
++                  className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                 />
+               </div>
+             </div>
+-- 
+2.43.0
+

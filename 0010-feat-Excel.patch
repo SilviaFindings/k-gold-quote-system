@@ -1,0 +1,205 @@
+From a78d9566908a82197de8dd67ae8125ae867c0909 Mon Sep 17 00:00:00 2001
+From: Marblee <3440803185179952-Marblee@noreply.coze.cn>
+Date: Wed, 7 Jan 2026 12:48:37 +0800
+Subject: [PATCH 10/13] =?UTF-8?q?feat:=20=E4=B8=BA=E9=93=B6=E5=88=B6?=
+ =?UTF-8?q?=E5=93=81=E5=92=8C=E9=87=91=E5=88=B6=E5=93=81=E9=A1=B5=E9=9D=A2?=
+ =?UTF-8?q?=E6=B7=BB=E5=8A=A0Excel=E5=AF=BC=E5=85=A5=E7=9A=84=E4=B8=AD?=
+ =?UTF-8?q?=E8=8B=B1=E6=96=87=E5=88=97=E5=90=8D=E8=87=AA=E5=8A=A8=E8=AF=86?=
+ =?UTF-8?q?=E5=88=AB=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/app/quote/page.tsx        | 64 +++++++++++++++++++++++++++++++--
+ src/app/silver-quote/page.tsx | 67 ++++++++++++++++++++++++++---------
+ 2 files changed, 112 insertions(+), 19 deletions(-)
+
+diff --git a/src/app/quote/page.tsx b/src/app/quote/page.tsx
+index c820374..ac50c2d 100644
+--- a/src/app/quote/page.tsx
++++ b/src/app/quote/page.tsx
+@@ -467,6 +467,54 @@ function QuotePage() {
+     specialLaborFactorWholesale: undefined,
+   });
+ 
++  // ========== 金制品Excel导入列名映射（支持中英文） ==========
++
++  // 定义列名映射表：{ 中文列名: 英文列名 }
++  const GOLD_COLUMN_MAPPING: Record<string, string> = {
++    "货号": "Product Code",
++    "产品名称": "Product Name",
++    "规格": "Specification",
++    "重量": "Weight",
++    "工费": "Labor Cost",
++    "成色": "Karat",
++    "金子颜色": "Gold Color",
++    "形状": "Shape",
++    "配件成本": "Accessory Cost",
++    "石头成本": "Stone Cost",
++    "电镀成本": "Plating Cost",
++    "供应商代码": "Supplier Code",
++    "下单口": "Order Channel",
++    "数量": "Quantity",
++  };
++
++  // 从行中获取值，支持中英文列名（基于索引）
++  const getGoldColumnValue = (row: any, headers: string[], chineseColumnName: string, keywords: string[]): any => {
++    // 尝试查找中文列名的精确匹配
++    const exactIndex = headers.findIndex(h => h && String(h).trim() === chineseColumnName);
++    if (exactIndex !== -1 && row[exactIndex] !== undefined) {
++      return row[exactIndex];
++    }
++
++    // 尝试查找英文列名
++    const englishColumnName = GOLD_COLUMN_MAPPING[chineseColumnName];
++    if (englishColumnName) {
++      const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
++      if (englishIndex !== -1 && row[englishIndex] !== undefined) {
++        return row[englishIndex];
++      }
++    }
++
++    // 尝试模糊匹配关键词（中文）
++    for (const keyword of keywords) {
++      const fuzzyIndex = headers.findIndex(h => h && String(h).includes(keyword));
++      if (fuzzyIndex !== -1 && row[fuzzyIndex] !== undefined) {
++        return row[fuzzyIndex];
++      }
++    }
++
++    return undefined;
++  };
++
+   // 导入Excel相关状态
+   const [importWeight, setImportWeight] = useState<boolean>(true);
+   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
+@@ -4070,15 +4118,25 @@ function QuotePage() {
+           console.log(`  名称:`, row[1]);
+         });
+ 
+-        // 改进的列索引查找：先精确匹配，再模糊匹配
++        // 改进的列索引查找：先精确匹配（中英文），再模糊匹配（中文）
+         const findColumnIndex = (exactMatch: string, ...keywords: string[]): number => {
+-          // 先尝试精确匹配
++          // 先尝试精确匹配中文
+           const exactIndex = headers.findIndex(h => h && String(h).trim() === exactMatch);
+           if (exactIndex !== -1) {
+-            console.log(`列 "${exactMatch}" 精确匹配到索引 ${exactIndex}`);
++            console.log(`列 "${exactMatch}" 精确匹配（中文）到索引 ${exactIndex}`);
+             return exactIndex;
+           }
+ 
++          // 尝试精确匹配英文
++          const englishColumnName = GOLD_COLUMN_MAPPING[exactMatch];
++          if (englishColumnName) {
++            const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
++            if (englishIndex !== -1) {
++              console.log(`列 "${exactMatch}" 精确匹配（英文: ${englishColumnName}）到索引 ${englishIndex}`);
++              return englishIndex;
++            }
++          }
++
+           // 再尝试模糊匹配
+           for (const keyword of keywords) {
+             const fuzzyIndex = headers.findIndex(h =>
+diff --git a/src/app/silver-quote/page.tsx b/src/app/silver-quote/page.tsx
+index ad85417..48f4b93 100644
+--- a/src/app/silver-quote/page.tsx
++++ b/src/app/silver-quote/page.tsx
+@@ -208,6 +208,41 @@ const detectSilverSubCategoryFromName = (productName: string): string | null =>
+   return matches[0].subCat;
+ };
+ 
++// ========== 银制品Excel导入列名映射（支持中英文） ==========
++
++// 定义列名映射表：{ 中文列名: 英文列名 }
++const SILVER_COLUMN_MAPPING: Record<string, string> = {
++  "分类": "Category",
++  "子分类": "Sub Category",
++  "货号": "Product Code",
++  "产品名称": "Product Name",
++  "规格": "Specification",
++  "克重": "Weight",
++  "工费": "Labor Cost",
++  "银色": "Silver Color",
++  "配件成本": "Accessory Cost",
++  "石头成本": "Stone Cost",
++  "电镀成本": "Plating Cost",
++  "供应商代码": "Supplier Code",
++  "备注": "Remarks",
++  "数量": "Quantity",
++  "累计数量": "Cumulative Quantity",
++};
++
++// 从行中获取值，支持中英文列名
++const getSilverColumnValue = (row: any, chineseColumnName: string): any => {
++  // 优先使用中文列名
++  if (row[chineseColumnName] !== undefined) {
++    return row[chineseColumnName];
++  }
++  // 尝试使用英文列名
++  const englishColumnName = SILVER_COLUMN_MAPPING[chineseColumnName];
++  if (englishColumnName && row[englishColumnName] !== undefined) {
++    return row[englishColumnName];
++  }
++  return undefined;
++};
++
+ // ========== 银制品货号识别 ==========
+ 
+ // 判断是否为银制品货号
+@@ -952,7 +987,7 @@ function SilverQuotePage() {
+         .filter((row: any) => {
+           // 如果选择了"仅导入当前分类"，则过滤
+           if (importMode === "current") {
+-            const rowCategory = row["分类"];
++            const rowCategory = getSilverColumnValue(row, "分类");
+             if (!rowCategory) return false; // 没有分类的也不导入
+             return rowCategory === currentCategory;
+           }
+@@ -960,26 +995,26 @@ function SilverQuotePage() {
+         })
+         .map((row: any, index) => ({
+           id: Date.now().toString() + index,
+-          category: row["分类"] || currentCategory,
+-          subCategory: row["子分类"] || SILVER_SUB_CATEGORIES[(row["分类"] as SilverProductCategory) || currentCategory]?.[0] || "",
+-          productCode: row["货号"] || "",
+-          productName: row["产品名称"] || "",
+-          specification: row["规格"] || "",
+-          weight: Number(row["克重"]) || 0,
+-          laborCost: Number(row["工费"]) || 0,
+-          silverColor: row["银色"] || "银色",
++          category: getSilverColumnValue(row, "分类") || currentCategory,
++          subCategory: getSilverColumnValue(row, "子分类") || SILVER_SUB_CATEGORIES[(getSilverColumnValue(row, "分类") as SilverProductCategory) || currentCategory]?.[0] || "",
++          productCode: getSilverColumnValue(row, "货号") || "",
++          productName: getSilverColumnValue(row, "产品名称") || "",
++          specification: getSilverColumnValue(row, "规格") || "",
++          weight: Number(getSilverColumnValue(row, "克重")) || 0,
++          laborCost: Number(getSilverColumnValue(row, "工费")) || 0,
++          silverColor: getSilverColumnValue(row, "银色") || "银色",
+           silverPrice: silverPrice,
+           wholesalePrice: 0,
+           retailPrice: 0,
+-          accessoryCost: Number(row["配件成本"]) || 0,
+-          stoneCost: Number(row["石头成本"]) || 0,
+-          platingCost: Number(row["电镀成本"]) || 0,
++          accessoryCost: Number(getSilverColumnValue(row, "配件成本")) || 0,
++          stoneCost: Number(getSilverColumnValue(row, "石头成本")) || 0,
++          platingCost: Number(getSilverColumnValue(row, "电镀成本")) || 0,
+           moldCost: 0,
+           commission: 0,
+-          supplierCode: row["供应商代码"] || "E1",
+-          remarks: row["备注"] || "",
+-          batchQuantity: Number(row["数量"]) || 0,
+-          quantity: Number(row["累计数量"]) || 0,
++          supplierCode: getSilverColumnValue(row, "供应商代码") || "E1",
++          remarks: getSilverColumnValue(row, "备注") || "",
++          batchQuantity: Number(getSilverColumnValue(row, "数量")) || 0,
++          quantity: Number(getSilverColumnValue(row, "累计数量")) || 0,
+           quantityDate: "",
+           laborCostDate: "",
+           accessoryCostDate: "",
+-- 
+2.43.0
+
