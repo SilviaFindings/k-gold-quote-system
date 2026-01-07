@@ -6704,6 +6704,34 @@ function QuotePage() {
           </div>
         </div>
 
+        {/* 计算公式展示 */}
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-bold text-black">计算公式</h2>
+          <div className="space-y-4">
+            <div className="border-l-4 border-blue-500 pl-4">
+              <h3 className="mb-2 font-bold text-black">通用金制品（加币报价）</h3>
+              <div className="space-y-2 rounded bg-gray-50 p-4 text-sm text-black">
+                <p><strong>材料价</strong> = 金价 × 克重 × 成色含量 × 1.15 × 1.1</p>
+                <p><strong>其他成本</strong> = (配件 + 石头 + 电镀 + 佣金) × 1.15</p>
+                <p><strong>佣金</strong> = 工费 × 佣金率（默认10%）</p>
+                <p><strong>零售价</strong> = (材料价 + 工费 × 5 + 其他成本) × 1.25 / 5</p>
+                <p><strong>批发价</strong> = (材料价 + 工费 × 3 + 其他成本) × 1.25 / 5</p>
+              </div>
+            </div>
+            <div className="border-l-4 border-green-500 pl-4">
+              <h3 className="mb-2 font-bold text-black">T字头供应商（特殊公式）</h3>
+              <div className="space-y-2 rounded bg-gray-50 p-4 text-sm text-black">
+                <p><strong>材料价</strong> = 金价 × 克重 × 材质系数(14K为0.585) × 1.15 × 1.1 × (1 + 损耗百分比)</p>
+                <p><strong>其他成本</strong> = (配件 + 石头 + 电镀 + 佣金) × SF材料损耗系数(1.15)</p>
+                <p><strong>佣金</strong> = 工费 × 佣金率（默认10%）</p>
+                <p><strong>零售价</strong> = (材料价 + 工费 × 5 + 其他成本) × 1.35 + 模具费</p>
+                <p><strong>批发价</strong> = (材料价 + 工费 × 3 + 其他成本) × 1.35 + 模具费</p>
+                <p className="mt-2 text-black"><strong>💰 注意</strong>：T字头供应商使用美金报价，但页面统一显示加币，系统会自动进行汇率转换（1美金 = 1.4加币）</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 产品录入区域 */}
           <div className="rounded-lg bg-white p-6 shadow">

@@ -740,6 +740,9 @@ function SilverQuotePage() {
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncMessage, setSyncMessage] = useState("");
 
+  // 导入Excel相关状态
+  const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的子分类
+
   // 检查云端数据是否存在
   const checkCloudData = async () => {
     try {
@@ -749,7 +752,7 @@ function SilverQuotePage() {
         return;
       }
 
-      const response = await fetch('/api/silver-products?limit=1', {
+      const response = await fetch('/api/silver-sync', {
         headers: {
           Authorization: `Bearer ${token}`,
         }
@@ -757,7 +760,7 @@ function SilverQuotePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCloudDataExists(data && data.length > 0);
+        setCloudDataExists(data && data.products && data.products.length > 0);
       }
     } catch (error) {
       console.error('检查云端数据失败:', error);
@@ -959,6 +962,13 @@ function SilverQuotePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 🔥 检查是否选择了子分类
+    if (!importSubCategory) {
+      alert("⚠️ 请先选择要导入的产品小类！\n\n在页面左侧的'导入选项'区域选择产品小类后再导入。");
+      e.target.value = ""; // 清空文件输入
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const data = event.target?.result;
@@ -967,36 +977,45 @@ function SilverQuotePage() {
       const sheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(sheet);
 
+      // 获取用户选择的子分类对应的大分类
+      let importCategory: SilverProductCategory = currentCategory;
+      for (const [cat, subList] of Object.entries(SILVER_SUB_CATEGORIES)) {
+        if (subList.includes(importSubCategory)) {
+          importCategory = cat as SilverProductCategory;
+          break;
+        }
+      }
+
       // 检查Excel中是否包含"分类"列
-      const hasCategoryColumn = jsonData.length > 0 && (jsonData[0] as any)["分类"] !== undefined;
+      const hasCategoryColumn = jsonData.length > 0 && getSilverColumnValue(jsonData[0] as any, "分类") !== undefined;
       const categoriesInFile = hasCategoryColumn
-        ? [...new Set(jsonData.map((row: any) => row["分类"]).filter(cat => cat))]
+        ? [...new Set(jsonData.map((row: any) => getSilverColumnValue(row, "分类")).filter(cat => cat))]
         : [];
 
       // 确认导入方式
-      let importMode: "all" | "current" = "all";
+      let importMode: "all" | "selected" = "selected";
 
       if (hasCategoryColumn && categoriesInFile.length > 0) {
         // Excel中有分类列，询问用户导入模式
-        const message = `检测到Excel文件包含以下分类：\n${categoriesInFile.join(", ")}\n\n请选择导入方式：\n• 点击"确定"：导入所有分类的产品\n• 点击"取消"：仅导入当前选中分类（${currentCategory}）的产品`;
-        importMode = window.confirm(message) ? "all" : "current";
+        const message = `检测到Excel文件包含以下分类：\n${categoriesInFile.join(", ")}\n\n请选择导入方式：\n• 点击"确定"：导入所有分类的产品\n• 点击"取消"：仅导入您选择的子分类（${importSubCategory}）的产品`;
+        importMode = window.confirm(message) ? "all" : "selected";
       }
 
       // 导入产品
       const importedProducts: SilverProduct[] = jsonData
         .filter((row: any) => {
-          // 如果选择了"仅导入当前分类"，则过滤
-          if (importMode === "current") {
-            const rowCategory = getSilverColumnValue(row, "分类");
-            if (!rowCategory) return false; // 没有分类的也不导入
-            return rowCategory === currentCategory;
+          // 如果选择了"仅导入选中分类"，则过滤
+          if (importMode === "selected") {
+            const rowSubCategory = getSilverColumnValue(row, "子分类");
+            if (!rowSubCategory) return false; // 没有子分类的也不导入
+            return rowSubCategory === importSubCategory;
           }
           return true;
         })
         .map((row: any, index) => ({
           id: Date.now().toString() + index,
-          category: getSilverColumnValue(row, "分类") || currentCategory,
-          subCategory: getSilverColumnValue(row, "子分类") || SILVER_SUB_CATEGORIES[(getSilverColumnValue(row, "分类") as SilverProductCategory) || currentCategory]?.[0] || "",
+          category: importMode === "all" ? (getSilverColumnValue(row, "分类") || importCategory) : importCategory,
+          subCategory: importMode === "all" ? (getSilverColumnValue(row, "子分类") || importSubCategory) : importSubCategory,
           productCode: getSilverColumnValue(row, "货号") || "",
           productName: getSilverColumnValue(row, "产品名称") || "",
           specification: getSilverColumnValue(row, "规格") || "",
@@ -1450,9 +1469,45 @@ function SilverQuotePage() {
                   <input type="file" accept=".xlsx,.xls" onChange={handleExcelImport} className="hidden" />
                 </label>
               </div>
-            </div>
 
-            {/* 分类选择 */}
+            {/* 导入选项 */}
+            <div className="rounded-lg bg-gray-50 border-2 border-blue-200 p-3">
+              <p className="mb-2 text-sm font-medium text-black">导入选项：</p>
+              <div className="space-y-3">
+                <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-3">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    🎯 选择产品小类（导入前必选）
+                  </label>
+                  <p className="text-xs text-black mb-2">
+                    选择要导入的产品小类，系统将使用您选择的小类
+                  </p>
+                  <select
+                    value={importSubCategory}
+                    onChange={(e) => setImportSubCategory(e.target.value)}
+                    className="w-full rounded border-2 border-blue-300 px-3 py-2 bg-white focus:border-blue-500 focus:outline-none text-black font-medium"
+                  >
+                    <option value="">请选择产品小类...</option>
+                    {Object.entries(SILVER_SUB_CATEGORIES).map(([category, subCats]) => (
+                      <optgroup key={category} label={category}>
+                        {subCats.map(subCat => (
+                          <option key={subCat} value={subCat}>
+                            {subCat}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {!importSubCategory && (
+                    <p className="mt-2 text-xs text-red-600">
+                      ⚠️ 请先选择产品小类再导入！
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 分类选择 */}
             <div className="flex items-center gap-4 mb-4">
               <span className="text-black font-medium">选择分类:</span>
               <div className="flex gap-2">
