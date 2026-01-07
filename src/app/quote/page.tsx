@@ -667,7 +667,7 @@ function QuotePage() {
     tLaborFactorWholesale: number;  // 批发工费系数（默认3）
     tMaterialLossFactor2: number;  // 材料损耗系数2（默认1.15）
     tMaterialFloatFactor: number;  // 材料浮动系数（默认1.1）
-    tInternationalShippingTaxFactor: number;  // 国际运输和关税系数（默认1.30）
+    tInternationalShippingTaxFactor: number;  // 国际运输和关税系数（默认1.35）
     tLossPercentage: number;  // 损耗百分比（默认0.1即10%）
   }>(() => {
     if (typeof window === 'undefined') {
@@ -690,7 +690,7 @@ function QuotePage() {
         tLaborFactorWholesale: 3,
         tMaterialLossFactor2: 1.15,
         tMaterialFloatFactor: 1.1,
-        tInternationalShippingTaxFactor: 1.30,
+        tInternationalShippingTaxFactor: 1.35,
         tLossPercentage: 0.1,
       };
     }
@@ -717,7 +717,7 @@ function QuotePage() {
         tLaborFactorWholesale: parsed.tLaborFactorWholesale ?? 3,
         tMaterialLossFactor2: parsed.tMaterialLossFactor2 ?? 1.15,
         tMaterialFloatFactor: parsed.tMaterialFloatFactor ?? 1.1,
-        tInternationalShippingTaxFactor: parsed.tInternationalShippingTaxFactor ?? 1.30,
+        tInternationalShippingTaxFactor: parsed.tInternationalShippingTaxFactor ?? 1.35,
         tLossPercentage: parsed.tLossPercentage ?? 0.1,
       };
     }
@@ -740,7 +740,7 @@ function QuotePage() {
       tLaborFactorWholesale: 3,
       tMaterialLossFactor2: 1.15,
       tMaterialFloatFactor: 1.1,
-      tInternationalShippingTaxFactor: 1.30,
+      tInternationalShippingTaxFactor: 1.35,
       tLossPercentage: 0.1,
     };
   });
@@ -1312,7 +1312,7 @@ function QuotePage() {
           tLaborFactorWholesale: coeff.tLaborFactorWholesale ?? 3,
           tMaterialLossFactor2: coeff.tMaterialLossFactor2 ?? 1.15,
           tMaterialFloatFactor: coeff.tMaterialFloatFactor ?? 1.1,
-          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.30,
+          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.35,
           tLossPercentage: coeff.tLossPercentage ?? 0.1,
         };
         console.log("设置系数:", completeCoeff);
@@ -1615,7 +1615,7 @@ function QuotePage() {
           tLaborFactorWholesale: coeff.tLaborFactorWholesale ?? 3,
           tMaterialLossFactor2: coeff.tMaterialLossFactor2 ?? 1.15,
           tMaterialFloatFactor: coeff.tMaterialFloatFactor ?? 1.1,
-          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.30,
+          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.35,
           tLossPercentage: coeff.tLossPercentage ?? 0.1,
         };
         console.log("✅ 加载系数:", completeCoeff);
@@ -2032,7 +2032,7 @@ function QuotePage() {
       // T字头成本系数
       const tMaterialLossFactor2 = coefficients.tMaterialLossFactor2;  // 默认1.15
       const tMaterialFloatFactor = coefficients.tMaterialFloatFactor;  // 默认1.1
-      const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.30
+      const tInternationalShippingTaxFactor = coefficients.tInternationalShippingTaxFactor;  // 默认1.35
 
       // 5. T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) x 1.15（T字头其它成本加成系数）
       // 注意：这些成本值已经是美金单位；模具费单列，不计入其他成本
@@ -6587,7 +6587,7 @@ function QuotePage() {
                 step="0.01"
                 suppressHydrationWarning
               />
-              <div className="mt-1 text-xs text-black">默认: 1.30</div>
+              <div className="mt-1 text-xs text-black">默认: 1.35</div>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-black">
