@@ -243,6 +243,41 @@ const getSilverColumnValue = (row: any, chineseColumnName: string): any => {
   return undefined;
 };
 
+// 查找最右边包含关键词的列的值（自动选择最新的一列）
+// 用于处理Excel中有多列相同类型数据的情况（如重量1、重量2、重量3...）
+const findLatestColumnValue = (row: any, chineseColumnName: string, ...keywords: string[]): any => {
+  const rowKeys = Object.keys(row);
+
+  // 查找所有匹配的列
+  const matchingColumns = rowKeys.filter(key => {
+    const keyLower = String(key).toLowerCase();
+    // 检查中文列名
+    if (chineseColumnName && keyLower === chineseColumnName.toLowerCase()) {
+      return true;
+    }
+    // 检查英文列名
+    const englishColumnName = SILVER_COLUMN_MAPPING[chineseColumnName];
+    if (englishColumnName && keyLower === englishColumnName.toLowerCase()) {
+      return true;
+    }
+    // 检查关键词
+    for (const keyword of keywords) {
+      if (keyLower.includes(keyword.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (matchingColumns.length === 0) {
+    return undefined;
+  }
+
+  // 返回最右边一列的值（最新的值）
+  const latestColumn = matchingColumns[matchingColumns.length - 1];
+  return row[latestColumn];
+};
+
 // ========== 银制品货号识别 ==========
 
 // 判断是否为银制品货号
@@ -535,6 +570,10 @@ function SilverQuotePage() {
 
   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
   const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
+
+  // 搜索查询
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchTrigger, setSearchTrigger] = useState<number>(0);
 
   // 批量操作状态
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
@@ -1009,7 +1048,7 @@ function SilverQuotePage() {
         importMode = window.confirm(message) ? "all" : "selected";
       }
 
-      // 导入产品
+      // 导入产品 - 使用智能查找最新列的功能
       const importedProducts: SilverProduct[] = jsonData
         .filter((row: any) => {
           // 如果选择了"仅导入选中分类"，则过滤
@@ -1027,15 +1066,18 @@ function SilverQuotePage() {
           productCode: getSilverColumnValue(row, "货号") || "",
           productName: getSilverColumnValue(row, "产品名称") || "",
           specification: getSilverColumnValue(row, "规格") || "",
-          weight: Number(getSilverColumnValue(row, "克重")) || 0,
-          laborCost: Number(getSilverColumnValue(row, "工费")) || 0,
+          // 🔥 自动选择最右边的重量列（最新的重量）
+          weight: Number(findLatestColumnValue(row, "克重", "重量", "克重", "净重", "重量(g)", "重量(克)")) || 0,
+          // 🔥 自动选择最右边的工费列（最新的工费）
+          laborCost: Number(findLatestColumnValue(row, "工费", "工费", "人工费", "加工费", "手工费")) || 0,
           silverColor: getSilverColumnValue(row, "银色") || "银色",
           silverPrice: silverPrice,
           wholesalePrice: 0,
           retailPrice: 0,
-          accessoryCost: Number(getSilverColumnValue(row, "配件成本")) || 0,
-          stoneCost: Number(getSilverColumnValue(row, "石头成本")) || 0,
-          platingCost: Number(getSilverColumnValue(row, "电镀成本")) || 0,
+          // 🔥 自动选择最右边的成本列（最新的成本）
+          accessoryCost: Number(findLatestColumnValue(row, "配件成本", "配件", "配件成本")) || 0,
+          stoneCost: Number(findLatestColumnValue(row, "石头成本", "石头", "石头成本")) || 0,
+          platingCost: Number(findLatestColumnValue(row, "电镀成本", "电镀", "电镀成本")) || 0,
           moldCost: 0,
           commission: 0,
           supplierCode: getSilverColumnValue(row, "供应商代码") || "E1",
@@ -1114,9 +1156,18 @@ function SilverQuotePage() {
         <div className="max-w-7xl mx-auto">
           {/* 页面标题 */}
           <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
-              <p className="text-black">925银制品价格计算和管理系统</p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
+                <p className="text-black">925银制品价格计算和管理系统</p>
+              </div>
+              <button
+                onClick={() => router.push('/quote')}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center gap-2"
+              >
+                <span>←</span>
+                <span>返回金制品</span>
+              </button>
             </div>
             <div className="relative">
               <button
@@ -1204,6 +1255,40 @@ function SilverQuotePage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* 操作指引 */}
+          <div className="bg-blue-50 rounded-lg shadow-md p-6 mb-6 border border-blue-200">
+            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+              <span>📖</span>
+              <span>操作指引</span>
+            </h2>
+            <div className="space-y-3 text-sm text-black">
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">1. 数据导入：</span>
+                <span>选择产品小类后导入Excel文件，系统会自动识别分类和字段</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">2. 产品管理：</span>
+                <span>可以添加、编辑、删除产品，批量修改工费或删除</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">3. 价格计算：</span>
+                <span>修改克重、工费等参数后，系统自动计算零售价和批发价</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">4. 云端同步：</span>
+                <span>可将数据上传到云端，或从云端下载数据，支持合并和覆盖模式</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">5. 数据导出：</span>
+                <span>支持导出Excel文件，方便备份和分享</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-bold text-blue-600">6. 智能识别：</span>
+                <span>输入货号自动识别供应商代码，输入产品名称自动识别分类</span>
+              </div>
             </div>
           </div>
 
@@ -1368,57 +1453,12 @@ function SilverQuotePage() {
             </div>
           </div>
 
-          {/* 测试区域 */}
+          {/* 产品管理区 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">测试计算</h2>
-            <button
-              onClick={() => {
-                const testProduct: SilverProduct = {
-                  id: "test",
-                  category: "配件",
-                  subCategory: "扣子",
-                  productCode: "KEW001",
-                  productName: "测试产品",
-                  specification: "测试规格",
-                  weight: 1.0,
-                  laborCost: 10,
-                  silverColor: "银色",
-                  silverPrice: 20,
-                  wholesalePrice: 0,
-                  retailPrice: 0,
-                  accessoryCost: 5,
-                  stoneCost: 10,
-                  platingCost: 5,
-                  moldCost: 0,
-                  commission: 0,
-                  supplierCode: "E1",
-                  remarks: "",
-                  batchQuantity: 0,
-                  quantity: 0,
-                  quantityDate: "",
-                  laborCostDate: "",
-                  accessoryCostDate: "",
-                  stoneCostDate: "",
-                  platingCostDate: "",
-                  moldCostDate: "",
-                  commissionDate: "",
-                  timestamp: new Date().toISOString(),
-                  syncStatus: "unsynced",
-                };
-
-                const retail = calculateSilverPrice(testProduct, true);
-                const wholesale = calculateSilverPrice(testProduct, false);
-
-                alert(`零售价: $${retail.toFixed(2)}\n批发价: $${wholesale.toFixed(2)}`);
-              }}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              测试计算
-            </button>
-          </div>
-
-          {/* 产品操作区 */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+              <span>📦</span>
+              <span>产品管理区</span>
+            </h2>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-black">产品管理</h2>
@@ -1561,7 +1601,40 @@ function SilverQuotePage() {
 
           {/* 产品列表 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">产品列表</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-black">产品列表</h2>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="搜索货号或产品名称..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyUp={(e) => {
+                    if (e.key === 'Enter') {
+                      setSearchTrigger(Date.now());
+                    }
+                  }}
+                  className="border border-gray-300 rounded px-3 py-1.5 w-64 text-sm text-black"
+                />
+                <button
+                  onClick={() => setSearchTrigger(Date.now())}
+                  className="bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 text-sm"
+                >
+                  搜索
+                </button>
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchTrigger(Date.now());
+                    }}
+                    className="text-gray-500 hover:text-gray-700 text-sm"
+                  >
+                    清除
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
@@ -1609,6 +1682,13 @@ function SilverQuotePage() {
                   {products.filter(p => {
                     if (p.category !== currentCategory) return false;
                     if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                    // 搜索过滤
+                    if (searchQuery) {
+                      const query = searchQuery.toLowerCase();
+                      const matchesCode = p.productCode.toLowerCase().includes(query);
+                      const matchesName = p.productName.toLowerCase().includes(query);
+                      return matchesCode || matchesName;
+                    }
                     return true;
                   }).map(product => (
                     <tr key={product.id}>
@@ -1773,7 +1853,10 @@ function SilverQuotePage() {
 
           {/* 历史记录 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">价格历史记录</h2>
+            <h2 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
+              <span>📊</span>
+              <span>数据管理区 - 价格历史记录</span>
+            </h2>
             <div className="overflow-x-auto" style={{ maxHeight: '400px' }}>
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100 sticky top-0">
@@ -1813,16 +1896,6 @@ function SilverQuotePage() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* 返回金制品页面 */}
-          <div className="text-center">
-            <button
-              onClick={() => router.push('/quote')}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-            >
-              返回金制品报价系统
-            </button>
           </div>
         </div>
       </AuthProtection>

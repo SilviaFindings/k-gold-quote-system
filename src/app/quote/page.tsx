@@ -515,6 +515,44 @@ function QuotePage() {
     return undefined;
   };
 
+  // 查找最右边包含关键词的列的值（自动选择最新的一列）
+  // 用于处理Excel中有多列相同类型数据的情况（如重量1、重量2、重量3...）
+  const findLatestGoldColumnValue = (row: any, headers: string[], chineseColumnName: string, keywords: string[]): any => {
+    // 查找所有匹配的列索引
+    const matchingIndices: number[] = [];
+
+    // 尝试查找中文列名的精确匹配
+    const exactIndex = headers.findIndex(h => h && String(h).trim() === chineseColumnName);
+    if (exactIndex !== -1 && row[exactIndex] !== undefined) {
+      matchingIndices.push(exactIndex);
+    }
+
+    // 尝试查找英文列名
+    const englishColumnName = GOLD_COLUMN_MAPPING[chineseColumnName];
+    if (englishColumnName) {
+      const englishIndex = headers.findIndex(h => h && String(h).trim() === englishColumnName);
+      if (englishIndex !== -1 && row[englishIndex] !== undefined) {
+        matchingIndices.push(englishIndex);
+      }
+    }
+
+    // 尝试模糊匹配关键词（中文）
+    for (const keyword of keywords) {
+      const fuzzyIndex = headers.findIndex(h => h && String(h).includes(keyword));
+      if (fuzzyIndex !== -1 && row[fuzzyIndex] !== undefined && !matchingIndices.includes(fuzzyIndex)) {
+        matchingIndices.push(fuzzyIndex);
+      }
+    }
+
+    if (matchingIndices.length === 0) {
+      return undefined;
+    }
+
+    // 返回最右边一列的值（最新的值）
+    const latestIndex = Math.max(...matchingIndices);
+    return row[latestIndex];
+  };
+
   // 导入Excel相关状态
   const [importWeight, setImportWeight] = useState<boolean>(true);
   const [importLaborCost, setImportLaborCost] = useState<boolean>(true);
@@ -4137,15 +4175,21 @@ function QuotePage() {
             }
           }
 
-          // 再尝试模糊匹配
+          // 再尝试模糊匹配，返回最右边的匹配列
+          const fuzzyIndices: number[] = [];
           for (const keyword of keywords) {
             const fuzzyIndex = headers.findIndex(h =>
               h && String(h).includes(keyword)
             );
-            if (fuzzyIndex !== -1) {
-              console.log(`列 "${keyword}" 模糊匹配到索引 ${fuzzyIndex} ("${headers[fuzzyIndex]}")`);
-              return fuzzyIndex;
+            if (fuzzyIndex !== -1 && !fuzzyIndices.includes(fuzzyIndex)) {
+              fuzzyIndices.push(fuzzyIndex);
             }
+          }
+
+          if (fuzzyIndices.length > 0) {
+            const latestIndex = Math.max(...fuzzyIndices);
+            console.log(`列 "${keywords.join(', ')}" 模糊匹配到索引 ${latestIndex} (最右边) ("${headers[latestIndex]}")`);
+            return latestIndex;
           }
 
           console.warn(`⚠️ 未找到包含关键词 [${keywords.join(', ')}] 的列`);
