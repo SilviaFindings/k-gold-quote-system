@@ -946,8 +946,39 @@ function SilverQuotePage() {
 
         if (mode === "replace") {
           console.log('🔄 覆盖模式：替换所有本地数据');
-          // 覆盖模式：标记所有产品为已同步
-          const syncedProducts = (data.products || []).map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
+          // 覆盖模式：标记所有产品为已同步，并标准化字段
+          const syncedProducts = (data.products || []).map((p: any): SilverProduct => ({
+            id: p.id || "",
+            category: p.category || "",
+            subCategory: p.subCategory || "",
+            productCode: p.productCode || "",
+            productName: p.productName || "",
+            specification: p.specification || "",
+            weight: p.weight ?? 0,
+            laborCost: p.laborCost ?? 0,
+            silverColor: p.silverColor || "银色",
+            silverPrice: p.silverPrice ?? data.silverPrice ?? silverPrice,
+            wholesalePrice: p.wholesalePrice ?? 0,
+            retailPrice: p.retailPrice ?? 0,
+            accessoryCost: p.accessoryCost ?? 0,
+            stoneCost: p.stoneCost ?? 0,
+            platingCost: p.platingCost ?? 0,
+            moldCost: p.moldCost ?? 0,
+            commission: p.commission ?? 0,
+            supplierCode: p.supplierCode || "E1",
+            remarks: p.remarks || "",
+            batchQuantity: p.batchQuantity ?? 0,
+            quantity: p.quantity ?? 0,
+            quantityDate: p.quantityDate || "",
+            laborCostDate: p.laborCostDate || "",
+            accessoryCostDate: p.accessoryCostDate || "",
+            stoneCostDate: p.stoneCostDate || "",
+            platingCostDate: p.platingCostDate || "",
+            moldCostDate: p.moldCostDate || "",
+            commissionDate: p.commissionDate || "",
+            timestamp: p.timestamp || new Date().toISOString(),
+            syncStatus: "synced" as const,
+          }));
           setProducts(syncedProducts);
           setPriceHistory(data.history || []);
           setSilverPrice(data.silverPrice || 20);
@@ -955,11 +986,42 @@ function SilverQuotePage() {
           saveToLocalStorage(syncedProducts, data.history || []);
         } else {
           console.log('🔀 合并模式：保留本地，添加云端数据');
-          // 合并模式：保留本地数据，添加云端不存在的数据
+          // 合并模式：保留本地数据，添加云端不存在的数据，并标准化字段
           const existingIds = new Set(products.map(p => p.id));
           const newProducts = (data.products || [])
-            .filter((p: SilverProduct) => !existingIds.has(p.id))
-            .map((p: SilverProduct) => ({ ...p, syncStatus: "synced" as const }));
+            .filter((p: any) => !existingIds.has(p.id))
+            .map((p: any): SilverProduct => ({
+              id: p.id || "",
+              category: p.category || "",
+              subCategory: p.subCategory || "",
+              productCode: p.productCode || "",
+              productName: p.productName || "",
+              specification: p.specification || "",
+              weight: p.weight ?? 0,
+              laborCost: p.laborCost ?? 0,
+              silverColor: p.silverColor || "银色",
+              silverPrice: p.silverPrice ?? data.silverPrice ?? silverPrice,
+              wholesalePrice: p.wholesalePrice ?? 0,
+              retailPrice: p.retailPrice ?? 0,
+              accessoryCost: p.accessoryCost ?? 0,
+              stoneCost: p.stoneCost ?? 0,
+              platingCost: p.platingCost ?? 0,
+              moldCost: p.moldCost ?? 0,
+              commission: p.commission ?? 0,
+              supplierCode: p.supplierCode || "E1",
+              remarks: p.remarks || "",
+              batchQuantity: p.batchQuantity ?? 0,
+              quantity: p.quantity ?? 0,
+              quantityDate: p.quantityDate || "",
+              laborCostDate: p.laborCostDate || "",
+              accessoryCostDate: p.accessoryCostDate || "",
+              stoneCostDate: p.stoneCostDate || "",
+              platingCostDate: p.platingCostDate || "",
+              moldCostDate: p.moldCostDate || "",
+              commissionDate: p.commissionDate || "",
+              timestamp: p.timestamp || new Date().toISOString(),
+              syncStatus: "synced" as const,
+            }));
           const mergedProducts = [...products, ...newProducts];
           setProducts(mergedProducts);
           setPriceHistory([...priceHistory, ...(data.history || [])]);
@@ -1004,13 +1066,41 @@ function SilverQuotePage() {
       const savedHistory = localStorage.getItem("silverPriceHistory");
 
       if (savedProducts) {
-        // 兼容旧数据，为没有 syncStatus 的产品添加默认值
-        const loadedProducts: SilverProduct[] = JSON.parse(savedProducts);
-        const productsWithSyncStatus = loadedProducts.map(p => ({
-          ...p,
-          syncStatus: p.syncStatus || "unsynced"
+        // 兼容旧数据，为所有可能缺失的字段添加默认值
+        const loadedProducts: any[] = JSON.parse(savedProducts);
+        const normalizedProducts: SilverProduct[] = loadedProducts.map(p => ({
+          id: p.id || "",
+          category: p.category || "",
+          subCategory: p.subCategory || "",
+          productCode: p.productCode || "",
+          productName: p.productName || "",
+          specification: p.specification || "",
+          weight: p.weight ?? 0,
+          laborCost: p.laborCost ?? 0,
+          silverColor: p.silverColor || "银色",
+          silverPrice: p.silverPrice ?? silverPrice,
+          wholesalePrice: p.wholesalePrice ?? 0,
+          retailPrice: p.retailPrice ?? 0,
+          accessoryCost: p.accessoryCost ?? 0,
+          stoneCost: p.stoneCost ?? 0,
+          platingCost: p.platingCost ?? 0,
+          moldCost: p.moldCost ?? 0,
+          commission: p.commission ?? 0,
+          supplierCode: p.supplierCode || "E1",
+          remarks: p.remarks || "",
+          batchQuantity: p.batchQuantity ?? 0,
+          quantity: p.quantity ?? 0,
+          quantityDate: p.quantityDate || "",
+          laborCostDate: p.laborCostDate || "",
+          accessoryCostDate: p.accessoryCostDate || "",
+          stoneCostDate: p.stoneCostDate || "",
+          platingCostDate: p.platingCostDate || "",
+          moldCostDate: p.moldCostDate || "",
+          commissionDate: p.commissionDate || "",
+          timestamp: p.timestamp || new Date().toISOString(),
+          syncStatus: p.syncStatus || "unsynced",
         }));
-        setProducts(productsWithSyncStatus);
+        setProducts(normalizedProducts);
       }
       if (savedHistory) {
         setPriceHistory(JSON.parse(savedHistory));
