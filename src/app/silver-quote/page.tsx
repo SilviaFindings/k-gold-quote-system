@@ -440,19 +440,479 @@ function SilverQuotePage() {
     }
   };
 
-  // ========== 页面UI ==========
+  // ========== 产品和历史记录状态管理 ==========
 
   const [products, setProducts] = useState<SilverProduct[]>([]);
+  const [priceHistory, setPriceHistory] = useState<SilverPriceHistory[]>([]);
   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
+  const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
+
+  // 添加产品
+  const addProduct = () => {
+    const newProduct: SilverProduct = {
+      id: Date.now().toString(),
+      category: currentCategory,
+      subCategory: SILVER_SUB_CATEGORIES[currentCategory][0],
+      productCode: "",
+      productName: "",
+      specification: "",
+      weight: 0,
+      laborCost: 0,
+      silverColor: "银色",
+      silverPrice: silverPrice,
+      wholesalePrice: 0,
+      retailPrice: 0,
+      accessoryCost: 0,
+      stoneCost: 0,
+      platingCost: 0,
+      moldCost: 0,
+      commission: 0,
+      supplierCode: "E1",
+      remarks: "",
+      quantity: 0,
+      quantityDate: "",
+      laborCostDate: "",
+      accessoryCostDate: "",
+      stoneCostDate: "",
+      platingCostDate: "",
+      moldCostDate: "",
+      commissionDate: "",
+      timestamp: new Date().toISOString(),
+    };
+
+    setProducts([...products, newProduct]);
+  };
+
+  // 更新产品
+  const updateProduct = (id: string, field: keyof SilverProduct, value: any) => {
+    const updatedProducts = products.map(p => {
+      if (p.id === id) {
+        const updated = { ...p, [field]: value };
+
+        // 智能识别货号和分类
+        if (field === "productCode" && value) {
+          const parsed = parseSilverProductCode(value);
+          updated.supplierCode = parsed.supplierCode;
+        }
+
+        // 智能识别产品名称对应的分类
+        if (field === "productName" && value) {
+          const detectedCategory = detectSilverCategoryFromName(value);
+          const detectedSubCategory = detectSilverSubCategoryFromName(value);
+          if (detectedCategory) {
+            updated.category = detectedCategory;
+          }
+          if (detectedSubCategory) {
+            updated.subCategory = detectedSubCategory;
+          }
+        }
+
+        // 自动计算价格
+        updated.retailPrice = calculateSilverPrice(updated, true);
+        updated.wholesalePrice = calculateSilverPrice(updated, false);
+
+        return updated;
+      }
+      return p;
+    });
+
+    setProducts(updatedProducts);
+    saveToLocalStorage(updatedProducts);
+  };
+
+  // 删除产品
+  const deleteProduct = (id: string) => {
+    if (window.confirm("确认删除此产品？")) {
+      setProducts(products.filter(p => p.id !== id));
+      setPriceHistory(priceHistory.filter(h => h.productId !== id));
+      saveToLocalStorage(products.filter(p => p.id !== id), priceHistory.filter(h => h.productId !== id));
+    }
+  };
+
+  // 保存历史记录
+  const saveToHistory = (product: SilverProduct) => {
+    const historyItem: SilverPriceHistory = {
+      id: Date.now().toString(),
+      productId: product.id,
+      category: product.category,
+      subCategory: product.subCategory,
+      productCode: product.productCode,
+      productName: product.productName,
+      specification: product.specification,
+      weight: product.weight,
+      laborCost: product.laborCost,
+      silverColor: product.silverColor,
+      silverPrice: product.silverPrice,
+      wholesalePrice: product.wholesalePrice,
+      retailPrice: product.retailPrice,
+      accessoryCost: product.accessoryCost,
+      stoneCost: product.stoneCost,
+      platingCost: product.platingCost,
+      moldCost: product.moldCost,
+      commission: product.commission,
+      supplierCode: product.supplierCode,
+      remarks: product.remarks,
+      quantity: product.quantity,
+      quantityDate: product.quantityDate,
+      laborCostDate: product.laborCostDate,
+      accessoryCostDate: product.accessoryCostDate,
+      stoneCostDate: product.stoneCostDate,
+      platingCostDate: product.platingCostDate,
+      moldCostDate: product.moldCostDate,
+      commissionDate: product.commissionDate,
+      timestamp: new Date().toISOString(),
+    };
+
+    setPriceHistory([historyItem, ...priceHistory]);
+    saveToLocalStorage(products, [historyItem, ...priceHistory]);
+  };
+
+  // 本地存储操作
+  const saveToLocalStorage = (productsList?: SilverProduct[], historyList?: SilverPriceHistory[]) => {
+    const prods = productsList || products;
+    const hist = historyList || priceHistory;
+
+    localStorage.setItem("silverProducts", JSON.stringify(prods));
+    localStorage.setItem("silverPriceHistory", JSON.stringify(hist));
+  };
+
+  // ========== 云端同步功能 ==========
+
+  const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const [cloudDataExists, setCloudDataExists] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [syncMessage, setSyncMessage] = useState("");
+
+  // 检查云端数据是否存在
+  const checkCloudData = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setCloudDataExists(false);
+        return;
+      }
+
+      const response = await fetch('/api/silver-products?limit=1', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCloudDataExists(data && data.length > 0);
+      }
+    } catch (error) {
+      console.error('检查云端数据失败:', error);
+      setCloudDataExists(false);
+    }
+  };
+
+  // 上传数据到云端
+  const uploadToCloud = async () => {
+    setSyncStatus("syncing");
+    setSyncMessage("正在上传数据到云端...");
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('请先登录');
+        setSyncStatus("error");
+        setSyncMessage("需要登录");
+        return;
+      }
+
+      // 上传银制品数据
+      const response = await fetch('/api/silver-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          products: products,
+          history: priceHistory,
+          silverPrice: silverPrice,
+          coefficients: silverCoefficients,
+        }),
+      });
+
+      if (response.ok) {
+        setSyncStatus("success");
+        setSyncMessage("数据上传成功！");
+        setCloudDataExists(true);
+        setTimeout(() => {
+          setSyncStatus("idle");
+          setSyncMessage("");
+          setShowSyncMenu(false);
+        }, 2000);
+      } else {
+        throw new Error('上传失败');
+      }
+    } catch (error) {
+      console.error('上传到云端失败:', error);
+      setSyncStatus("error");
+      setSyncMessage("上传失败，请重试");
+    }
+  };
+
+  // 从云端下载数据
+  const downloadFromCloud = async (mode: "replace" | "merge") => {
+    setSyncStatus("syncing");
+    setSyncMessage("正在从云端下载数据...");
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('请先登录');
+        setSyncStatus("error");
+        setSyncMessage("需要登录");
+        return;
+      }
+
+      const response = await fetch('/api/silver-sync', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (mode === "replace") {
+          setProducts(data.products || []);
+          setPriceHistory(data.history || []);
+          setSilverPrice(data.silverPrice || 20);
+          setSilverCoefficients(data.coefficients || silverCoefficients);
+        } else {
+          // 合并模式：保留本地数据，添加云端不存在的数据
+          const existingIds = new Set(products.map(p => p.id));
+          const newProducts = (data.products || []).filter((p: SilverProduct) => !existingIds.has(p.id));
+          setProducts([...products, ...newProducts]);
+          setPriceHistory([...priceHistory, ...(data.history || [])]);
+        }
+
+        setSyncStatus("success");
+        setSyncMessage("数据下载成功！");
+        setTimeout(() => {
+          setSyncStatus("idle");
+          setSyncMessage("");
+          setShowSyncMenu(false);
+        }, 2000);
+      } else {
+        throw new Error('下载失败');
+      }
+    } catch (error) {
+      console.error('从云端下载失败:', error);
+      setSyncStatus("error");
+      setSyncMessage("下载失败，请重试");
+    }
+  };
+
+  // 初始化时检查云端数据
+  useEffect(() => {
+    checkCloudData();
+  }, []);
+
+  // 加载本地数据
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedProducts = localStorage.getItem("silverProducts");
+      const savedHistory = localStorage.getItem("silverPriceHistory");
+
+      if (savedProducts) {
+        setProducts(JSON.parse(savedProducts));
+      }
+      if (savedHistory) {
+        setPriceHistory(JSON.parse(savedHistory));
+      }
+    }
+  }, []);
+
+  // 格式化日期
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleString("zh-CN", {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Excel 导出
+  const exportToExcel = () => {
+    const filteredProducts = products.filter(p => p.category === currentCategory);
+
+    if (filteredProducts.length === 0) {
+      alert("没有数据可导出");
+      return;
+    }
+
+    const data = filteredProducts.map(p => ({
+      "分类": p.category,
+      "子分类": p.subCategory,
+      "货号": p.productCode,
+      "产品名称": p.productName,
+      "规格": p.specification,
+      "克重": p.weight,
+      "工费": p.laborCost,
+      "银色": p.silverColor,
+      "银价": p.silverPrice,
+      "配件成本": p.accessoryCost,
+      "石头成本": p.stoneCost,
+      "电镀成本": p.platingCost,
+      "供应商代码": p.supplierCode,
+      "零售价(CAD$)": p.retailPrice.toFixed(2),
+      "批发价(CAD$)": p.wholesalePrice.toFixed(2),
+      "备注": p.remarks,
+      "累计数量": p.quantity,
+      "更新时间": formatDate(p.timestamp),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "银制品列表");
+    XLSX.writeFile(wb, `银制品报价_${currentCategory}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  // Excel 导入
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = event.target?.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+      const importedProducts: SilverProduct[] = jsonData.map((row: any, index) => ({
+        id: Date.now().toString() + index,
+        category: row["分类"] || row["分类"] || currentCategory,
+        subCategory: row["子分类"] || row["子分类"] || SILVER_SUB_CATEGORIES[currentCategory][0],
+        productCode: row["货号"] || "",
+        productName: row["产品名称"] || "",
+        specification: row["规格"] || "",
+        weight: Number(row["克重"]) || 0,
+        laborCost: Number(row["工费"]) || 0,
+        silverColor: row["银色"] || "银色",
+        silverPrice: silverPrice,
+        wholesalePrice: 0,
+        retailPrice: 0,
+        accessoryCost: Number(row["配件成本"]) || 0,
+        stoneCost: Number(row["石头成本"]) || 0,
+        platingCost: Number(row["电镀成本"]) || 0,
+        moldCost: 0,
+        commission: 0,
+        supplierCode: row["供应商代码"] || "E1",
+        remarks: row["备注"] || "",
+        quantity: Number(row["累计数量"]) || 0,
+        quantityDate: "",
+        laborCostDate: "",
+        accessoryCostDate: "",
+        stoneCostDate: "",
+        platingCostDate: "",
+        moldCostDate: "",
+        commissionDate: "",
+        timestamp: new Date().toISOString(),
+      }));
+
+      // 计算价格
+      const withPrices = importedProducts.map(p => ({
+        ...p,
+        retailPrice: calculateSilverPrice(p, true),
+        wholesalePrice: calculateSilverPrice(p, false),
+      }));
+
+      setProducts([...products, ...withPrices]);
+      saveToLocalStorage([...products, ...withPrices]);
+      alert(`成功导入 ${importedProducts.length} 个产品`);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  // ========== 页面UI ==========
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <AuthProtection>
         <div className="max-w-7xl mx-auto">
           {/* 页面标题 */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
-            <p className="text-black">925银制品价格计算和管理系统</p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
+              <p className="text-black">925银制品价格计算和管理系统</p>
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowSyncMenu(!showSyncMenu);
+                  checkCloudData();
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+              >
+                <span>☁️</span>
+                <span>云端同步</span>
+              </button>
+
+              {/* 云端同步菜单 */}
+              {showSyncMenu && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-3">
+                    <div className="px-4 pb-2 border-b border-gray-200">
+                      <div className="text-sm font-semibold text-black">云端数据同步</div>
+                      {cloudDataExists && (
+                        <div className="text-xs text-green-600 mt-1">✓ 云端已有数据</div>
+                      )}
+                    </div>
+
+                    {/* 同步状态消息 */}
+                    {syncStatus !== "idle" && (
+                      <div className="px-4 py-2">
+                        <div className={`text-sm ${syncStatus === "error" ? "text-red-600" : syncStatus === "success" ? "text-green-600" : "text-blue-600"}`}>
+                          {syncMessage}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="px-4 py-2 space-y-1">
+                      <button
+                        onClick={uploadToCloud}
+                        disabled={syncStatus === "syncing"}
+                        className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 text-black text-sm disabled:opacity-50"
+                      >
+                        📤 上传到云端
+                      </button>
+                      <button
+                        onClick={() => downloadFromCloud("merge")}
+                        disabled={syncStatus === "syncing"}
+                        className="w-full text-left px-3 py-2 rounded hover:bg-green-50 text-black text-sm disabled:opacity-50"
+                      >
+                        📥 合并下载（保留本地）
+                      </button>
+                      <button
+                        onClick={() => downloadFromCloud("replace")}
+                        disabled={syncStatus === "syncing"}
+                        className="w-full text-left px-3 py-2 rounded hover:bg-orange-50 text-black text-sm disabled:opacity-50"
+                      >
+                        🔄 覆盖下载（替换本地）
+                      </button>
+                    </div>
+
+                    <div className="px-4 pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500">
+                        上传包含：产品数据、历史记录、银价设置、价格系数
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 银价配置 */}
@@ -661,6 +1121,281 @@ function SilverQuotePage() {
             >
               测试计算
             </button>
+          </div>
+
+          {/* 产品操作区 */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-black">产品管理</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={addProduct}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  添加产品
+                </button>
+                <button
+                  onClick={exportToExcel}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  导出Excel
+                </button>
+                <label className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 cursor-pointer">
+                  导入Excel
+                  <input type="file" accept=".xlsx,.xls" onChange={handleExcelImport} className="hidden" />
+                </label>
+              </div>
+            </div>
+
+            {/* 分类选择 */}
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-black font-medium">选择分类:</span>
+              <div className="flex gap-2">
+                {SILVER_PRODUCT_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      setCurrentCategory(cat);
+                      setCurrentSubCategory(null);
+                    }}
+                    className={`px-4 py-2 rounded ${currentCategory === cat ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 子分类选择 */}
+            {currentCategory && SILVER_SUB_CATEGORIES[currentCategory] && (
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-black font-medium">选择子分类:</span>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => setCurrentSubCategory(null)}
+                    className={`px-3 py-1 rounded text-sm ${currentSubCategory === null ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
+                  >
+                    全部
+                  </button>
+                  {SILVER_SUB_CATEGORIES[currentCategory].map(subCat => (
+                    <button
+                      key={subCat}
+                      onClick={() => setCurrentSubCategory(subCat)}
+                      className={`px-3 py-1 rounded text-sm ${currentSubCategory === subCat ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
+                    >
+                      {subCat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 产品列表 */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-bold text-black mb-4">产品列表</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200 text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">规格</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">配件成本</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">石头成本</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">电镀成本</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.filter(p => {
+                    if (p.category !== currentCategory) return false;
+                    if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                    return true;
+                  }).map(product => (
+                    <tr key={product.id}>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <button
+                          onClick={() => deleteProduct(product.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          删除
+                        </button>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="text"
+                          value={product.productCode}
+                          onChange={(e) => updateProduct(product.id, "productCode", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="text"
+                          value={product.productName}
+                          onChange={(e) => updateProduct(product.id, "productName", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="text"
+                          value={product.specification}
+                          onChange={(e) => updateProduct(product.id, "specification", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={product.weight}
+                          onChange={(e) => updateProduct(product.id, "weight", Number(e.target.value))}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={product.laborCost}
+                          onChange={(e) => updateProduct(product.id, "laborCost", Number(e.target.value))}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <select
+                          value={product.silverColor}
+                          onChange={(e) => updateProduct(product.id, "silverColor", e.target.value as any)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        >
+                          <option value="银色">银色</option>
+                          <option value="镀金">镀金</option>
+                          <option value="镀玫瑰金">镀玫瑰金</option>
+                          <option value="银色/镀金/镀玫瑰金">银色/镀金/镀玫瑰金</option>
+                        </select>
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={product.accessoryCost}
+                          onChange={(e) => updateProduct(product.id, "accessoryCost", Number(e.target.value))}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={product.stoneCost}
+                          onChange={(e) => updateProduct(product.id, "stoneCost", Number(e.target.value))}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={product.platingCost}
+                          onChange={(e) => updateProduct(product.id, "platingCost", Number(e.target.value))}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="text"
+                          value={product.supplierCode}
+                          onChange={(e) => updateProduct(product.id, "supplierCode", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-blue-700">
+                        {product.retailPrice.toFixed(2)}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right font-bold text-green-700">
+                        {product.wholesalePrice.toFixed(2)}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-right">
+                        {product.quantity || 0}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2">
+                        <input
+                          type="text"
+                          value={product.remarks}
+                          onChange={(e) => updateProduct(product.id, "remarks", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-black"
+                        />
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-xs text-black">
+                        {formatDate(product.timestamp)}
+                      </td>
+                    </tr>
+                  ))}
+                  {products.filter(p => p.category === currentCategory).length === 0 && (
+                    <tr>
+                      <td colSpan={17} className="border border-gray-200 px-3 py-4 text-center text-black">
+                        暂无{currentCategory}产品数据
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 历史记录 */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-bold text-black mb-4">价格历史记录</h2>
+            <div className="overflow-x-auto" style={{ maxHeight: '400px' }}>
+              <table className="w-full border-collapse border border-gray-200 text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">时间</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">名称</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {priceHistory.filter(h => h.category === currentCategory).slice(0, 100).map(history => (
+                    <tr key={history.id}>
+                      <td className="border border-gray-200 px-3 py-2 whitespace-nowrap text-black text-xs">
+                        {formatDate(history.timestamp)}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{history.productCode}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{history.productName}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.weight}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.laborCost}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-black">{history.silverColor}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.retailPrice.toFixed(2)}</td>
+                      <td className="border border-gray-200 px-3 py-2 text-right text-black">{history.wholesalePrice.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {priceHistory.filter(h => h.category === currentCategory).length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="border border-gray-200 px-3 py-4 text-center text-black">
+                        暂无历史记录
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* 返回金制品页面 */}
