@@ -272,7 +272,7 @@ interface SilverProduct {
   commission: number;  // 佣金（人民币）
   supplierCode: string;  // 供应商代码
   remarks: string;  // 备注
-  batchQuantity: number;  // 当批次数量
+  batchQuantity: number;  // 数量
   quantity: number;  // 累计数量
   quantityDate: string;  // 数量录入时间
   laborCostDate: string;
@@ -306,7 +306,7 @@ interface SilverPriceHistory {
   commission: number;
   supplierCode: string;
   remarks: string;
-  batchQuantity: number;  // 当批次数量
+  batchQuantity: number;  // 数量
   quantity: number;  // 累计数量
   quantityDate: string;
   laborCostDate: string;
@@ -585,7 +585,7 @@ function SilverQuotePage() {
       commission: 0,
       supplierCode: "E1",
       remarks: "",
-      batchQuantity: 0,  // 当批次数量
+      batchQuantity: 0,  // 数量
       quantity: 0,
       quantityDate: "",
       laborCostDate: "",
@@ -907,7 +907,7 @@ function SilverQuotePage() {
       "供应商代码": p.supplierCode,
       "零售价(CAD$)": p.retailPrice.toFixed(2),
       "批发价(CAD$)": p.wholesalePrice.toFixed(2),
-      "当批次数量": p.batchQuantity || 0,
+      "数量": p.batchQuantity || 0,
       "累计数量": p.quantity || 0,
       "备注": p.remarks,
       "更新时间": formatDate(p.timestamp),
@@ -978,7 +978,7 @@ function SilverQuotePage() {
           commission: 0,
           supplierCode: row["供应商代码"] || "E1",
           remarks: row["备注"] || "",
-          batchQuantity: Number(row["当批次数量"]) || 0,
+          batchQuantity: Number(row["数量"]) || 0,
           quantity: Number(row["累计数量"]) || 0,
           quantityDate: "",
           laborCostDate: "",
@@ -1501,7 +1501,7 @@ function SilverQuotePage() {
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">供应商代码</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">零售价(CAD$)</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">批发价(CAD$)</th>
-                    <th className="border border-gray-200 px-3 py-2 text-right text-black">当批次数量</th>
+                    <th className="border border-gray-200 px-3 py-2 text-right text-black">数量</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">累计数量</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">备注</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">更新时间</th>
