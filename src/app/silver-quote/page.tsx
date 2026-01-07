@@ -447,6 +447,75 @@ function SilverQuotePage() {
   const [currentCategory, setCurrentCategory] = useState<SilverProductCategory>("配件");
   const [currentSubCategory, setCurrentSubCategory] = useState<string | null>(null);
 
+  // 批量操作状态
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+
+  // 批量选择操作
+  const toggleSelectAll = (checked: boolean) => {
+    const filtered = products.filter(p => {
+      if (p.category !== currentCategory) return false;
+      if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+      return true;
+    });
+    setSelectedProductIds(checked ? new Set(filtered.map(p => p.id)) : new Set());
+  };
+
+  const toggleSelectProduct = (id: string) => {
+    const newSelected = new Set(selectedProductIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProductIds(newSelected);
+  };
+
+  // 批量删除
+  const batchDelete = () => {
+    if (selectedProductIds.size === 0) {
+      alert("请先选择要删除的产品");
+      return;
+    }
+    if (window.confirm(`确认删除选中的 ${selectedProductIds.size} 个产品？`)) {
+      const newProducts = products.filter(p => !selectedProductIds.has(p.id));
+      const newHistory = priceHistory.filter(h => !selectedProductIds.has(h.productId));
+      setProducts(newProducts);
+      setPriceHistory(newHistory);
+      saveToLocalStorage(newProducts, newHistory);
+      setSelectedProductIds(new Set());
+    }
+  };
+
+  // 批量编辑 - 修改工费
+  const batchEditLaborCost = () => {
+    if (selectedProductIds.size === 0) {
+      alert("请先选择要编辑的产品");
+      return;
+    }
+    const newLaborCost = prompt(`请输入新的工费值（将应用于 ${selectedProductIds.size} 个产品）:`);
+    if (newLaborCost === null || newLaborCost.trim() === "") return;
+
+    const laborCostNum = Number(newLaborCost);
+    if (isNaN(laborCostNum)) {
+      alert("请输入有效的数字");
+      return;
+    }
+
+    const updatedProducts = products.map(p => {
+      if (selectedProductIds.has(p.id)) {
+        const updated = { ...p, laborCost: laborCostNum };
+        updated.retailPrice = calculateSilverPrice(updated, true);
+        updated.wholesalePrice = calculateSilverPrice(updated, false);
+        return updated;
+      }
+      return p;
+    });
+
+    setProducts(updatedProducts);
+    saveToLocalStorage(updatedProducts);
+    alert(`已更新 ${selectedProductIds.size} 个产品的工费`);
+  };
+
   // 添加产品
   const addProduct = () => {
     const newProduct: SilverProduct = {
@@ -836,6 +905,29 @@ function SilverQuotePage() {
     reader.readAsBinaryString(file);
   };
 
+  // 验证数据
+  const validateData = () => {
+    const errors: string[] = [];
+
+    products.forEach(p => {
+      if (!p.productName) {
+        errors.push(`货号 ${p.productCode || "未填写"}：产品名称为空`);
+      }
+      if (p.weight <= 0) {
+        errors.push(`货号 ${p.productCode || "未填写"}：克重必须大于0`);
+      }
+      if (!p.productCode) {
+        errors.push(`产品 ${p.productName || "未填写"}：货号为空`);
+      }
+    });
+
+    if (errors.length === 0) {
+      alert(`✓ 数据验证通过！共 ${products.length} 个产品`);
+    } else {
+      alert(`✗ 发现 ${errors.length} 个问题：\n\n${errors.slice(0, 10).join("\n")}${errors.length > 10 ? `\n...还有 ${errors.length - 10} 个问题` : ""}`);
+    }
+  };
+
   // ========== 页面UI ==========
 
   return (
@@ -854,61 +946,83 @@ function SilverQuotePage() {
                   setShowSyncMenu(!showSyncMenu);
                   checkCloudData();
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-md transition-all"
               >
-                <span>☁️</span>
-                <span>云端同步</span>
+                <span className="text-lg">☁️</span>
+                <span className="font-medium">云端同步</span>
               </button>
 
               {/* 云端同步菜单 */}
               {showSyncMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="py-3">
-                    <div className="px-4 pb-2 border-b border-gray-200">
-                      <div className="text-sm font-semibold text-black">云端数据同步</div>
-                      {cloudDataExists && (
-                        <div className="text-xs text-green-600 mt-1">✓ 云端已有数据</div>
-                      )}
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                  {/* 菜单头部 - 始终显示同步状态 */}
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4">
+                    <div className="text-white font-bold text-lg mb-1">云端数据同步</div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${cloudDataExists ? "text-green-200" : "text-yellow-200"}`}>
+                        {cloudDataExists ? "● 云端已有数据" : "○ 云端暂无数据"}
+                      </span>
                     </div>
-
-                    {/* 同步状态消息 */}
                     {syncStatus !== "idle" && (
-                      <div className="px-4 py-2">
-                        <div className={`text-sm ${syncStatus === "error" ? "text-red-600" : syncStatus === "success" ? "text-green-600" : "text-blue-600"}`}>
-                          {syncMessage}
-                        </div>
+                      <div className="mt-2 text-sm text-white bg-white/20 rounded px-3 py-2">
+                        {syncStatus === "syncing" && "⏳ "}{syncStatus === "error" && "❌ "}{syncStatus === "success" && "✅ "}
+                        {syncMessage}
                       </div>
                     )}
+                  </div>
 
-                    <div className="px-4 py-2 space-y-1">
-                      <button
-                        onClick={uploadToCloud}
-                        disabled={syncStatus === "syncing"}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 text-black text-sm disabled:opacity-50"
-                      >
-                        📤 上传到云端
-                      </button>
-                      <button
-                        onClick={() => downloadFromCloud("merge")}
-                        disabled={syncStatus === "syncing"}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-green-50 text-black text-sm disabled:opacity-50"
-                      >
-                        📥 合并下载（保留本地）
-                      </button>
-                      <button
-                        onClick={() => downloadFromCloud("replace")}
-                        disabled={syncStatus === "syncing"}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-orange-50 text-black text-sm disabled:opacity-50"
-                      >
-                        🔄 覆盖下载（替换本地）
-                      </button>
-                    </div>
-
-                    <div className="px-4 pt-2 border-t border-gray-200">
-                      <div className="text-xs text-gray-500">
-                        上传包含：产品数据、历史记录、银价设置、价格系数
+                  {/* 操作按钮区 */}
+                  <div className="p-4 space-y-2">
+                    <button
+                      onClick={uploadToCloud}
+                      disabled={syncStatus === "syncing"}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📤</span>
+                        <div className="text-left">
+                          <div className="font-semibold">上传到云端</div>
+                          <div className="text-xs text-blue-600">将本地数据上传到服务器</div>
+                        </div>
                       </div>
-                    </div>
+                      <span className="text-blue-400">→</span>
+                    </button>
+
+                    <button
+                      onClick={() => downloadFromCloud("merge")}
+                      disabled={syncStatus === "syncing"}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-green-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📥</span>
+                        <div className="text-left">
+                          <div className="font-semibold">合并下载</div>
+                          <div className="text-xs text-green-600">保留本地数据，添加云端数据</div>
+                        </div>
+                      </div>
+                      <span className="text-green-400">→</span>
+                    </button>
+
+                    <button
+                      onClick={() => downloadFromCloud("replace")}
+                      disabled={syncStatus === "syncing"}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-orange-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">🔄</span>
+                        <div className="text-left">
+                          <div className="font-semibold">覆盖下载</div>
+                          <div className="text-xs text-orange-600">完全替换本地数据</div>
+                        </div>
+                      </div>
+                      <span className="text-orange-400">→</span>
+                    </button>
+                  </div>
+
+                  {/* 底部说明 */}
+                  <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
+                    <div className="text-xs text-gray-600 font-medium mb-1">同步内容包含:</div>
+                    <div className="text-xs text-gray-500">产品数据、历史记录、银价设置、价格系数</div>
                   </div>
                 </div>
               )}
@@ -1126,13 +1240,51 @@ function SilverQuotePage() {
           {/* 产品操作区 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-black">产品管理</h2>
-              <div className="flex gap-2">
+              <div>
+                <h2 className="text-xl font-bold text-black">产品管理</h2>
+                {selectedProductIds.size > 0 && (
+                  <div className="text-sm text-blue-600 mt-1">
+                    已选择 {selectedProductIds.size} 个产品
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={addProduct}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                   添加产品
+                </button>
+                {selectedProductIds.size > 0 && (
+                  <>
+                    <button
+                      onClick={batchEditLaborCost}
+                      className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                    >
+                      批量修改工费
+                    </button>
+                    <button
+                      onClick={batchDelete}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                      批量删除
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={validateData}
+                  className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
+                >
+                  验证数据
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSyncMenu(!showSyncMenu);
+                    checkCloudData();
+                  }}
+                  className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
+                >
+                  同步数据
                 </button>
                 <button
                   onClick={exportToExcel}
@@ -1198,13 +1350,32 @@ function SilverQuotePage() {
               <table className="w-full border-collapse border border-gray-200 text-sm">
                 <thead className="bg-gray-100">
                   <tr>
+                    <th className="border border-gray-200 px-3 py-2 text-center w-12">
+                      <input
+                        type="checkbox"
+                        checked={
+                          products.filter(p => {
+                            if (p.category !== currentCategory) return false;
+                            if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                            return true;
+                          }).length > 0 &&
+                          products.filter(p => {
+                            if (p.category !== currentCategory) return false;
+                            if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                            return true;
+                          }).every(p => selectedProductIds.has(p.id))
+                        }
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                    </th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">操作</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">货号</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">产品名称</th>
                     <th className="border border-gray-200 px-3 py-2 text-left text-black">规格</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">克重</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">工费</th>
-                    <th className="border border-gray-200 px-3 py-2 text-left text-black">银色</th>
+                    <th className="border border-gray-200 px-3 py-2 text-left text-black min-w-[160px]">银色</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">配件成本</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">石头成本</th>
                     <th className="border border-gray-200 px-3 py-2 text-right text-black">电镀成本</th>
@@ -1223,6 +1394,14 @@ function SilverQuotePage() {
                     return true;
                   }).map(product => (
                     <tr key={product.id}>
+                      <td className="border border-gray-200 px-3 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.has(product.id)}
+                          onChange={() => toggleSelectProduct(product.id)}
+                          className="w-4 h-4"
+                        />
+                      </td>
                       <td className="border border-gray-200 px-3 py-2">
                         <button
                           onClick={() => deleteProduct(product.id)}
@@ -1273,7 +1452,7 @@ function SilverQuotePage() {
                           className="w-full border border-gray-200 rounded px-2 py-1 text-black text-right"
                         />
                       </td>
-                      <td className="border border-gray-200 px-3 py-2">
+                      <td className="border border-gray-200 px-3 py-2 min-w-[160px]">
                         <select
                           value={product.silverColor}
                           onChange={(e) => updateProduct(product.id, "silverColor", e.target.value as any)}
@@ -1344,7 +1523,7 @@ function SilverQuotePage() {
                   ))}
                   {products.filter(p => p.category === currentCategory).length === 0 && (
                     <tr>
-                      <td colSpan={17} className="border border-gray-200 px-3 py-4 text-center text-black">
+                      <td colSpan={18} className="border border-gray-200 px-3 py-4 text-center text-black">
                         暂无{currentCategory}产品数据
                       </td>
                     </tr>
