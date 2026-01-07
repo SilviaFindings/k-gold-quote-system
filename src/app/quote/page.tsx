@@ -71,7 +71,7 @@ export const SUB_CATEGORIES: Record<ProductCategory, string[]> = {
 };
 
 // 数据版本号（用于触发数据重新迁移）
-const DATA_VERSION = 3;  // v2: 修复 subCategory 映射逻辑; v3: 自动设置默认子分类
+const DATA_VERSION = 4;  // v2: 修复 subCategory 映射逻辑; v3: 自动设置默认子分类; v4: 更新T字头国际运输和关税系数从1.30到1.35
 
 // 旧分类到新分类的映射
 const CATEGORY_MAPPING: Record<string, ProductCategory> = {
@@ -1319,6 +1319,24 @@ function QuotePage() {
         setCoefficients(completeCoeff);
       } catch (e) {
         console.error("解析系数失败:", e);
+      }
+    }
+
+    // 数据迁移逻辑：v3 -> v4，更新T字头国际运输和关税系数从1.30到1.35
+    if (currentVersion === 3 && DATA_VERSION === 4) {
+      console.log("检测到数据版本从v3升级到v4，准备更新T字头国际运输和关税系数...");
+      if (savedCoefficients) {
+        try {
+          const coeff = JSON.parse(savedCoefficients);
+          // 检查是否需要更新系数（旧值为1.30）
+          if (coeff.tInternationalShippingTaxFactor === 1.3 || coeff.tInternationalShippingTaxFactor === 1.30) {
+            coeff.tInternationalShippingTaxFactor = 1.35;
+            localStorage.setItem("priceCoefficients", JSON.stringify(coeff));
+            console.log("✅ 已将T字头国际运输和关税系数从1.30更新为1.35");
+          }
+        } catch (e) {
+          console.error("更新系数失败:", e);
+        }
       }
     }
 
