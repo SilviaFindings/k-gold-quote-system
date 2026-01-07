@@ -810,10 +810,24 @@ function SilverQuotePage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('📦 云端数据:', data);
-        setCloudDataExists(data && data.products && data.products.length > 0);
+        console.log('📦 云端数据:', {
+          productsCount: data.products?.length || 0,
+          historyCount: data.history?.length || 0,
+          silverPrice: data.silverPrice,
+          hasData: data && data.products && data.products.length > 0
+        });
+
+        const hasData = data && data.products && data.products.length > 0;
+        setCloudDataExists(hasData);
+
+        // 如果云端有数据且本地无数据，自动下载
+        if (hasData && products.length === 0) {
+          console.log('🔄 云端有数据但本地无数据，自动下载...');
+          await downloadFromCloud("replace");
+        }
       } else {
-        console.error('❌ API返回错误:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ API返回错误:', response.status, response.statusText, errorText);
         setCloudDataExists(false);
       }
     } catch (error) {
@@ -872,13 +886,13 @@ function SilverQuotePage() {
         saveToLocalStorage(syncedProducts);
 
         setSyncStatus("success");
-        setSyncMessage("数据上传成功！");
+        setSyncMessage(`上传成功！新建${result.newProducts}个，更新${result.updatedProducts}个`);
         setCloudDataExists(true);
         setTimeout(() => {
           setSyncStatus("idle");
           setSyncMessage("");
           setShowSyncMenu(false);
-        }, 2000);
+        }, 3000);
       } else {
         const errorText = await response.text();
         console.error('❌ 上传失败:', response.status, errorText);
@@ -888,6 +902,11 @@ function SilverQuotePage() {
       console.error('❌ 上传到云端失败:', error);
       setSyncStatus("error");
       setSyncMessage(`上传失败: ${error instanceof Error ? error.message : '请重试'}`);
+      // 5秒后重置状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+        setSyncMessage("");
+      }, 5000);
     }
   };
 
@@ -949,12 +968,12 @@ function SilverQuotePage() {
         }
 
         setSyncStatus("success");
-        setSyncMessage("数据下载成功！");
+        setSyncMessage(`下载成功！云端产品数: ${data.products?.length || 0}`);
         setTimeout(() => {
           setSyncStatus("idle");
           setSyncMessage("");
           setShowSyncMenu(false);
-        }, 2000);
+        }, 3000);
       } else {
         const errorText = await response.text();
         console.error('❌ 下载失败:', response.status, errorText);
@@ -964,6 +983,11 @@ function SilverQuotePage() {
       console.error('❌ 从云端下载失败:', error);
       setSyncStatus("error");
       setSyncMessage(`下载失败: ${error instanceof Error ? error.message : '请重试'}`);
+      // 5秒后重置状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+        setSyncMessage("");
+      }, 5000);
     }
   };
 
@@ -1005,6 +1029,23 @@ function SilverQuotePage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // 处理同步按钮点击
+  const handleSyncButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log('🖱️ 点击云端同步按钮，当前菜单状态:', showSyncMenu);
+    console.log('🖱️ 当前产品数量:', products.length);
+
+    try {
+      setShowSyncMenu(!showSyncMenu);
+      checkCloudData();
+    } catch (error) {
+      console.error('❌ 处理同步按钮点击失败:', error);
+      alert('同步按钮点击失败，请刷新页面重试');
+    }
   };
 
   // Excel 导出
@@ -1209,14 +1250,11 @@ function SilverQuotePage() {
                 <span>返回金制品</span>
               </button>
             </div>
-            <div className="relative">
+            <div className="relative z-10">
               <button
-                onClick={() => {
-                  console.log('🖱️ 点击云端同步按钮，当前菜单状态:', showSyncMenu);
-                  setShowSyncMenu(!showSyncMenu);
-                  checkCloudData();
-                }}
-                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-md transition-all"
+                onClick={handleSyncButtonClick}
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-md transition-all active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                type="button"
               >
                 <span className="text-lg">☁️</span>
                 <span className="font-medium">云端同步</span>
@@ -1224,7 +1262,7 @@ function SilverQuotePage() {
 
               {/* 云端同步菜单 */}
               {showSyncMenu && (
-                <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden" style={{ zIndex: 9999 }}>
                   {/* 菜单头部 - 始终显示同步状态 */}
                   <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4">
                     <div className="text-white font-bold text-lg mb-1">云端数据同步</div>
