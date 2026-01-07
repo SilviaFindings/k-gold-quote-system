@@ -698,7 +698,7 @@ function QuotePage() {
     if (savedCoefficients) {
       const parsed = JSON.parse(savedCoefficients);
       // 兼容旧数据，确保所有字段都存在
-      return {
+      const completeCoeff = {
         goldFactor10K: parsed.goldFactor10K ?? 0.417,
         goldFactor14K: parsed.goldFactor14K ?? 0.586,
         goldFactor18K: parsed.goldFactor18K ?? 0.755,
@@ -717,9 +717,16 @@ function QuotePage() {
         tLaborFactorWholesale: parsed.tLaborFactorWholesale ?? 3,
         tMaterialLossFactor2: parsed.tMaterialLossFactor2 ?? 1.15,
         tMaterialFloatFactor: parsed.tMaterialFloatFactor ?? 1.1,
-        tInternationalShippingTaxFactor: parsed.tInternationalShippingTaxFactor ?? 1.35,
+        // 🔥 强制更新T字头国际运输和关税系数为1.35（不管localStorage中是什么值）
+        tInternationalShippingTaxFactor: 1.35,
         tLossPercentage: parsed.tLossPercentage ?? 0.1,
       };
+      // 如果系数值被更新，保存到localStorage
+      if (parsed.tInternationalShippingTaxFactor !== 1.35) {
+        localStorage.setItem("priceCoefficients", JSON.stringify(completeCoeff));
+        console.log("✅ 已强制更新T字头国际运输和关税系数为1.35");
+      }
+      return completeCoeff;
     }
     return {
       goldFactor10K: 0.417,
@@ -2059,11 +2066,11 @@ function QuotePage() {
       // 6. 零售价/批发价(US$)
       let finalPrice: number;
       if (isRetail) {
-        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.30 + 模具费
+        // 零售价 = (材料价 x 1.15 x 1.1 + 工费 x 5 + 其他成本) x 1.35 + 模具费
         const tLaborFactorRetail = coefficients.tLaborFactorRetail;  // 默认5
         finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorRetail + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
       } else {
-        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.30 + 模具费
+        // 批发价 = (材料价 x 1.15 x 1.1 + 工费 x 3 + 其他成本) x 1.35 + 模具费
         const tLaborFactorWholesale = coefficients.tLaborFactorWholesale;  // 默认3
         finalPrice = (materialPriceUSD * tMaterialLossFactor2 * tMaterialFloatFactor + laborFeeUSD * tLaborFactorWholesale + otherCostsUSD) * tInternationalShippingTaxFactor + (moldCost || 0);
       }
@@ -8967,8 +8974,8 @@ function QuotePage() {
                         • 使用美金（US$）作为货币单位<br />
                         • T字头其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15<br />
                         • 模具费单独列示，不计入其他成本<br />
-                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br />
-                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费
+                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.35 + 模具费<br />
+                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.35 + 模具费
                       </p>
                       <p className="text-sm text-black mb-2">
                         <strong>Excel导入时自动识别：</strong><br />
@@ -9220,8 +9227,8 @@ function QuotePage() {
                         A: 系统根据供应商代码自动选择计算公式和货币：<br/><br/>
                         <strong>💰 T字头供应商（以T开头）：</strong><br/>
                         • 货币：<strong>美金（US$）</strong><br/>
-                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.30 + 模具费<br/>
-                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.30 + 模具费<br/>
+                        • 零售价 = (材料价 × 1.15 × 1.1 + 工费 × 5 + 其他成本) × 1.35 + 模具费<br/>
+                        • 批发价 = (材料价 × 1.15 × 1.1 + 工费 × 3 + 其他成本) × 1.35 + 模具费<br/>
                         • 其他成本 = (配件 + 石头 + 电镀 + 佣金) × 1.15<br/>
                         • 模具费单独列示，不计入其他成本<br/><br/>
                         <strong>💰 其他供应商（非T开头）：</strong><br/>
