@@ -1848,7 +1848,17 @@ function SilverQuotePage() {
                   {/* 底部说明 */}
                   <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
                     <div className="text-xs text-gray-600 font-medium mb-1">同步内容包含:</div>
-                    <div className="text-xs text-gray-500">产品数据、历史记录、银价设置、价格系数</div>
+                    <div className="text-xs text-gray-500 mb-2">产品数据、历史记录、银价设置、价格系数</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSyncMenu(false);
+                        window.location.href = '/set-data-clear-password';
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-500 underline"
+                    >
+                      🔐 设置或修改清空数据密码
+                    </button>
                   </div>
                 </div>
               )}
@@ -2520,6 +2530,20 @@ function SilverQuotePage() {
                 </tbody>
               </table>
             </div>
+
+            {/* 设置密码链接 */}
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowClearCloudPasswordModal(false);
+                  window.location.href = '/set-data-clear-password';
+                }}
+                className="text-sm text-blue-600 hover:text-blue-500 underline"
+              >
+                {clearCloudPasswordError?.includes("未设置") ? "点击这里设置清空数据密码" : "设置或修改清空数据密码"}
+              </button>
+            </div>
           </div>
         </div>
       </AuthProtection>
@@ -2542,6 +2566,11 @@ function SilverQuotePage() {
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl tracking-widest text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
+            {clearCloudPasswordError && (
+              <p className={`text-sm mt-2 ${clearCloudPasswordError.includes("未设置") ? "text-blue-600" : "text-red-600"}`}>
+                {clearCloudPasswordError}
+              </p>
+            )}
             {clearCloudPasswordError && (
               <p className="text-red-600 text-sm mt-2">{clearCloudPasswordError}</p>
             )}
@@ -2579,7 +2608,7 @@ function SilverQuotePage() {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                       },
-                      body: JSON.stringify({ password: clearCloudPassword, type: 'cloud' }),
+                      body: JSON.stringify({ dataClearPassword: clearCloudPassword }),
                     });
 
                     if (!verifyResponse.ok) {
