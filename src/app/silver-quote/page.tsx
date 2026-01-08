@@ -797,11 +797,10 @@ function SilverQuotePage() {
       const token = localStorage.getItem('auth_token');
       if (!token) {
         console.log('❌ 未找到auth_token');
-        setCloudDataExists(false);
-        return;
+        return false;
       }
 
-      console.log('🔍 检查云端数据...');
+      console.log('🔍 检查银制品云端数据...');
       const response = await fetch('/api/silver-sync', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -812,7 +811,7 @@ function SilverQuotePage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('📦 云端数据:', {
+        console.log('📦 银制品云端数据:', {
           productsCount: data.products?.length || 0,
           historyCount: data.history?.length || 0,
           silverPrice: data.silverPrice,
@@ -821,243 +820,285 @@ function SilverQuotePage() {
 
         const hasData = data && data.products && data.products.length > 0;
         setCloudDataExists(hasData);
-
-        // 如果云端有数据且本地还没加载到任何数据，自动下载
-        // 使用 ref 检查本地数据是否已加载，避免状态延迟导致的误判
-        if (hasData && !localDataLoadedRef.current) {
-          console.log('🔄 云端有数据但本地无数据，自动下载...');
-          await downloadFromCloud("replace");
-        }
+        return hasData;
       } else {
         const errorText = await response.text();
         console.error('❌ API返回错误:', response.status, response.statusText, errorText);
         setCloudDataExists(false);
+        return false;
       }
     } catch (error) {
-      console.error('❌ 检查云端数据失败:', error);
+      console.error('❌ 检查银制品云端数据失败:', error);
       setCloudDataExists(false);
+      return false;
     }
   };
 
   // 上传数据到云端
   const uploadToCloud = async () => {
-    console.log('🚀 开始上传数据到云端...');
     setSyncStatus("syncing");
     setSyncMessage("正在上传数据到云端...");
 
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        console.error('❌ 未找到auth_token');
-        alert('请先登录');
-        setSyncStatus("error");
-        setSyncMessage("需要登录");
-        return;
+        throw new Error("未登录，请先登录");
       }
 
-      // 上传银制品数据
-      console.log('📤 发送数据:', {
-        productsCount: products.length,
-        historyCount: priceHistory.length,
-        silverPrice,
-        coefficients: silverCoefficients,
-      });
+      // 🔥 从 localStorage 读取数据，确保数据是最新的
+      const localProducts = localStorage.getItem("silverProducts");
+      const localHistory = localStorage.getItem("silverPriceHistory");
+      const localSilverPrice = localStorage.getItem("silverPrice");
+      const localCoefficients = localStorage.getItem("silverPriceCoefficients");
 
-      const response = await fetch('/api/silver-sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      // 详细日志：检查 localStorage 数据
+      console.log("🔍 检查银制品 localStorage 数据:");
+      console.log("  silverProducts:", localProducts ? `${JSON.parse(localProducts).length} 个产品` : "无数据");
+      console.log("  silverPriceHistory:", localHistory ? `${JSON.parse(localHistory).length} 条历史` : "无数据");
+      console.log("  silverPrice:", localSilverPrice);
+      console.log("  silverPriceCoefficients:", localCoefficients ? "有数据" : "无数据");
+
+      // 准备同步数据（优先使用 localStorage 数据）
+      const syncData = {
+        products: localProducts ? JSON.parse(localProducts) : products,
+        priceHistory: localHistory ? JSON.parse(localHistory) : priceHistory,
+        configs: {
+          silverPrice: localSilverPrice ? Number(localSilverPrice) : silverPrice,
+          coefficients: localCoefficients ? JSON.parse(localCoefficients) : silverCoefficients,
+          dataVersion: SILVER_DATA_VERSION,
         },
-        body: JSON.stringify({
-          products: products,
-          priceHistory: priceHistory,
-          configs: {
-            silverPrice: silverPrice,
-            coefficients: silverCoefficients,
-            dataVersion: SILVER_DATA_VERSION,
-          },
-        }),
+      };
+
+      console.log("📤 开始上传银制品数据到云端...");
+      console.log("📊 上传统计:", {
+        productsCount: syncData.products.length,
+        historyCount: syncData.priceHistory.length,
+        dataVersion: syncData.configs.dataVersion,
       });
 
-      console.log('📡 上传响应状态:', response.status);
+      const response = await fetch("/api/silver-sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(syncData),
+      });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ 上传成功:', result);
-
-        // 上传成功后，标记所有产品为已同步
-        const syncedProducts = products.map(p => ({ ...p, syncStatus: "synced" as const }));
-        setProducts(syncedProducts);
-        saveToLocalStorage(syncedProducts);
-
-        setSyncStatus("success");
-        // 从 result.stats 中读取统计信息
-        const stats = result.stats || {};
-        setSyncMessage(`上传成功！产品: ${stats.syncedProducts || 0} 个（新建 ${stats.newProducts || 0}，更新 ${stats.updatedProducts || 0}），历史记录: ${stats.syncedHistory || 0} 条`);
-        setCloudDataExists(true);
-        setTimeout(() => {
-          setSyncStatus("idle");
-          setSyncMessage("");
-          setShowSyncMenu(false);
-        }, 3000);
-      } else {
-        const errorText = await response.text();
-        console.error('❌ 上传失败:', response.status, errorText);
-        throw new Error(`上传失败: ${response.status} - ${errorText}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "未知错误" }));
+        throw new Error(errorData.error || "上传失败");
       }
-    } catch (error) {
-      console.error('❌ 上传到云端失败:', error);
-      setSyncStatus("error");
-      setSyncMessage(`上传失败: ${error instanceof Error ? error.message : '请重试'}`);
-      // 5秒后重置状态
+
+      const result = await response.json();
+      console.log("✅ 上传成功:", result);
+      console.log("📊 响应数据结构:", {
+        keys: Object.keys(result),
+        stats: result.stats,
+      });
+
+      setSyncStatus("success");
+      const stats = result.stats || {};
+      setSyncMessage(`上传成功！产品: ${stats.syncedProducts || 0} 个（新建 ${stats.newProducts || 0}，更新 ${stats.updatedProducts || 0}），历史记录: ${stats.syncedHistory || 0} 条`);
+
+      setCloudDataExists(true);
+
+      // 3秒后清除成功状态
       setTimeout(() => {
         setSyncStatus("idle");
-        setSyncMessage("");
+      }, 3000);
+
+      return result;
+    } catch (error: any) {
+      console.error("❌ 上传失败:", error);
+      setSyncStatus("error");
+      setSyncMessage(`上传失败: ${error.message || "未知错误"}`);
+
+      // 5秒后清除错误状态
+      setTimeout(() => {
+        setSyncStatus("idle");
       }, 5000);
+
+      throw error;
     }
   };
 
   // 从云端下载数据
-  const downloadFromCloud = async (mode: "replace" | "merge") => {
-    console.log(`🚀 开始${mode === 'replace' ? '覆盖' : '合并'}下载数据...`);
+  const downloadFromCloud = async (mergeMode: "replace" | "merge" = "merge") => {
     setSyncStatus("syncing");
     setSyncMessage("正在从云端下载数据...");
 
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        console.error('❌ 未找到auth_token');
-        alert('请先登录');
-        setSyncStatus("error");
-        setSyncMessage("需要登录");
-        return;
+        throw new Error("未登录，请先登录");
       }
 
-      console.log('📡 请求数据...');
+      console.log("📥 开始从云端下载银制品数据...");
+
       const response = await fetch('/api/silver-sync', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log('📡 下载响应状态:', response.status);
+      if (!response.ok) {
+        throw new Error("获取数据失败");
+      }
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('📦 云端数据:', {
-          productsCount: data.products?.length || 0,
-          historyCount: data.history?.length || 0,
-          silverPrice: data.silverPrice,
-          coefficients: data.coefficients,
-        });
+      const data = await response.json();
+      let cloudProducts: SilverProduct[] = data.products || [];
+      let cloudHistory: SilverPriceHistory[] = data.history || [];
+      let cloudConfigs: any = {
+        silverPrice: data.silverPrice || 20,
+        coefficients: data.coefficients || silverCoefficients,
+      };
 
-        if (mode === "replace") {
-          console.log('🔄 覆盖模式：替换所有本地数据');
-          // 覆盖模式：标记所有产品为已同步，并标准化字段
-          const syncedProducts = (data.products || []).map((p: any): SilverProduct => ({
-            id: p.id || "",
-            category: p.category || "",
-            subCategory: p.subCategory || "",
-            productCode: p.productCode || "",
-            productName: p.productName || "",
-            specification: p.specification || "",
-            weight: p.weight ?? 0,
-            laborCost: p.laborCost ?? 0,
-            silverColor: p.silverColor || "银色",
-            silverPrice: p.silverPrice ?? data.silverPrice ?? silverPrice,
-            wholesalePrice: p.wholesalePrice ?? 0,
-            retailPrice: p.retailPrice ?? 0,
-            accessoryCost: p.accessoryCost ?? 0,
-            stoneCost: p.stoneCost ?? 0,
-            platingCost: p.platingCost ?? 0,
-            moldCost: p.moldCost ?? 0,
-            commission: p.commission ?? 0,
-            supplierCode: p.supplierCode || "E1",
-            remarks: p.remarks || "",
-            batchQuantity: p.batchQuantity ?? 0,
-            quantity: p.quantity ?? 0,
-            quantityDate: p.quantityDate || "",
-            laborCostDate: p.laborCostDate || "",
-            accessoryCostDate: p.accessoryCostDate || "",
-            stoneCostDate: p.stoneCostDate || "",
-            platingCostDate: p.platingCostDate || "",
-            moldCostDate: p.moldCostDate || "",
-            commissionDate: p.commissionDate || "",
-            timestamp: p.timestamp || new Date().toISOString(),
-            syncStatus: "synced" as const,
-          }));
-          setProducts(syncedProducts);
-          setPriceHistory(data.history || []);
-          setSilverPrice(data.silverPrice || 20);
-          setSilverCoefficients(data.coefficients || silverCoefficients);
-          saveToLocalStorage(syncedProducts, data.history || []);
-        } else {
-          console.log('🔀 合并模式：保留本地，添加云端数据');
-          // 合并模式：保留本地数据，添加云端不存在的数据，并标准化字段
-          const existingIds = new Set(products.map(p => p.id));
-          const newProducts = (data.products || [])
-            .filter((p: any) => !existingIds.has(p.id))
-            .map((p: any): SilverProduct => ({
-              id: p.id || "",
-              category: p.category || "",
-              subCategory: p.subCategory || "",
-              productCode: p.productCode || "",
-              productName: p.productName || "",
-              specification: p.specification || "",
-              weight: p.weight ?? 0,
-              laborCost: p.laborCost ?? 0,
-              silverColor: p.silverColor || "银色",
-              silverPrice: p.silverPrice ?? data.silverPrice ?? silverPrice,
-              wholesalePrice: p.wholesalePrice ?? 0,
-              retailPrice: p.retailPrice ?? 0,
-              accessoryCost: p.accessoryCost ?? 0,
-              stoneCost: p.stoneCost ?? 0,
-              platingCost: p.platingCost ?? 0,
-              moldCost: p.moldCost ?? 0,
-              commission: p.commission ?? 0,
-              supplierCode: p.supplierCode || "E1",
-              remarks: p.remarks || "",
-              batchQuantity: p.batchQuantity ?? 0,
-              quantity: p.quantity ?? 0,
-              quantityDate: p.quantityDate || "",
-              laborCostDate: p.laborCostDate || "",
-              accessoryCostDate: p.accessoryCostDate || "",
-              stoneCostDate: p.stoneCostDate || "",
-              platingCostDate: p.platingCostDate || "",
-              moldCostDate: p.moldCostDate || "",
-              commissionDate: p.commissionDate || "",
-              timestamp: p.timestamp || new Date().toISOString(),
-              syncStatus: "synced" as const,
-            }));
-          const mergedProducts = [...products, ...newProducts];
-          setProducts(mergedProducts);
-          setPriceHistory([...priceHistory, ...(data.history || [])]);
-          saveToLocalStorage(mergedProducts, [...priceHistory, ...(data.history || [])]);
-          console.log(`📊 合并结果: 本地 ${products.length} + 云端 ${newProducts.length} = 总计 ${mergedProducts.length}`);
+      console.log("✅ 下载成功:", {
+        productsCount: cloudProducts.length,
+        historyCount: cloudHistory.length,
+        hasConfig: Object.keys(cloudConfigs).length > 0,
+      });
+
+      // 数据标准化：确保所有字段都有默认值
+      const normalizedCloudProducts = cloudProducts.map((p: any): SilverProduct => ({
+        id: p.id || "",
+        category: p.category || "",
+        subCategory: p.subCategory || "",
+        productCode: p.productCode || "",
+        productName: p.productName || "",
+        specification: p.specification || "",
+        weight: p.weight ?? 0,
+        laborCost: p.laborCost ?? 0,
+        silverColor: p.silverColor || "银色",
+        silverPrice: p.silverPrice ?? cloudConfigs.silverPrice ?? silverPrice,
+        wholesalePrice: p.wholesalePrice ?? 0,
+        retailPrice: p.retailPrice ?? 0,
+        accessoryCost: p.accessoryCost ?? 0,
+        stoneCost: p.stoneCost ?? 0,
+        platingCost: p.platingCost ?? 0,
+        moldCost: p.moldCost ?? 0,
+        commission: p.commission ?? 0,
+        supplierCode: p.supplierCode || "E1",
+        remarks: p.remarks || "",
+        batchQuantity: p.batchQuantity ?? 0,
+        quantity: p.quantity ?? 0,
+        quantityDate: p.quantityDate || "",
+        laborCostDate: p.laborCostDate || "",
+        accessoryCostDate: p.accessoryCostDate || "",
+        stoneCostDate: p.stoneCostDate || "",
+        platingCostDate: p.platingCostDate || "",
+        moldCostDate: p.moldCostDate || "",
+        commissionDate: p.commissionDate || "",
+        timestamp: p.timestamp || new Date().toISOString(),
+        syncStatus: "synced" as const,
+      }));
+
+      const normalizedCloudHistory = cloudHistory.map((h: any): SilverPriceHistory => ({
+        id: h.id || "",
+        productId: h.productId || "",
+        category: h.category || "",
+        subCategory: h.subCategory || "",
+        productCode: h.productCode || "",
+        productName: h.productName || "",
+        specification: h.specification || "",
+        weight: h.weight ?? 0,
+        laborCost: h.laborCost ?? 0,
+        silverColor: h.silverColor || "银色",
+        silverPrice: h.silverPrice ?? cloudConfigs.silverPrice ?? silverPrice,
+        wholesalePrice: h.wholesalePrice ?? 0,
+        retailPrice: h.retailPrice ?? 0,
+        accessoryCost: h.accessoryCost ?? 0,
+        stoneCost: h.stoneCost ?? 0,
+        platingCost: h.platingCost ?? 0,
+        moldCost: h.moldCost ?? 0,
+        commission: h.commission ?? 0,
+        supplierCode: h.supplierCode || "E1",
+        remarks: h.remarks || "",
+        batchQuantity: h.batchQuantity ?? 0,
+        quantity: h.quantity ?? 0,
+        quantityDate: h.quantityDate || "",
+        laborCostDate: h.laborCostDate || "",
+        accessoryCostDate: h.accessoryCostDate || "",
+        stoneCostDate: h.stoneCostDate || "",
+        platingCostDate: h.platingCostDate || "",
+        moldCostDate: h.moldCostDate || "",
+        commissionDate: h.commissionDate || "",
+        timestamp: h.timestamp || new Date().toISOString(),
+      }));
+
+      if (mergeMode === "replace") {
+        // 完全替换模式：直接使用云端数据
+        console.log("🔄 使用云端数据完全替换本地银制品数据");
+
+        setProducts(normalizedCloudProducts);
+        setPriceHistory(normalizedCloudHistory);
+
+        // 更新配置
+        if (cloudConfigs.silverPrice) {
+          setSilverPrice(cloudConfigs.silverPrice);
+          localStorage.setItem("silverPrice", cloudConfigs.silverPrice.toString());
         }
 
-        setSyncStatus("success");
-        setSyncMessage(`下载成功！云端产品数: ${data.products?.length || 0}`);
-        setTimeout(() => {
-          setSyncStatus("idle");
-          setSyncMessage("");
-          setShowSyncMenu(false);
-        }, 3000);
+        if (cloudConfigs.coefficients) {
+          setSilverCoefficients(cloudConfigs.coefficients);
+          localStorage.setItem("silverPriceCoefficients", JSON.stringify(cloudConfigs.coefficients));
+        }
+
+        // 保存到 localStorage
+        localStorage.setItem("silverProducts", JSON.stringify(normalizedCloudProducts));
+        localStorage.setItem("silverPriceHistory", JSON.stringify(normalizedCloudHistory));
+
+        setSyncMessage(`下载成功！已加载 ${normalizedCloudProducts.length} 个银制品产品数据（替换模式）`);
       } else {
-        const errorText = await response.text();
-        console.error('❌ 下载失败:', response.status, errorText);
-        throw new Error(`下载失败: ${response.status} - ${errorText}`);
+        // 合并模式：合并云端和本地数据
+        console.log("🔄 合并云端银制品数据和本地数据");
+
+        // 创建产品 ID 映射
+        const localProductMap = new Map(products.map(p => [p.id, p]));
+        const cloudProductMap = new Map(normalizedCloudProducts.map(p => [p.id, p]));
+
+        // 合并策略：云端数据优先
+        const mergedProducts = new Map([...localProductMap, ...cloudProductMap]);
+        const mergedProductsArray = Array.from(mergedProducts.values());
+
+        setProducts(mergedProductsArray);
+
+        // 合并历史记录
+        const localHistoryMap = new Map(priceHistory.map(h => [h.id, h]));
+        const cloudHistoryMap = new Map(normalizedCloudHistory.map(h => [h.id, h]));
+        const mergedHistory = new Map([...localHistoryMap, ...cloudHistoryMap]);
+        const mergedHistoryArray = Array.from(mergedHistory.values());
+
+        setPriceHistory(mergedHistoryArray);
+
+        // 保存到 localStorage
+        localStorage.setItem("silverProducts", JSON.stringify(mergedProductsArray));
+        localStorage.setItem("silverPriceHistory", JSON.stringify(mergedHistoryArray));
+
+        setSyncMessage(`下载成功！合并后共有 ${mergedProductsArray.length} 个银制品产品（合并模式）`);
       }
-    } catch (error) {
-      console.error('❌ 从云端下载失败:', error);
-      setSyncStatus("error");
-      setSyncMessage(`下载失败: ${error instanceof Error ? error.message : '请重试'}`);
-      // 5秒后重置状态
+
+      setCloudDataExists(true);
+      setSyncStatus("success");
+
+      // 3秒后清除成功状态
       setTimeout(() => {
         setSyncStatus("idle");
-        setSyncMessage("");
+      }, 3000);
+
+      return normalizedCloudProducts;
+    } catch (error: any) {
+      console.error("❌ 下载失败:", error);
+      setSyncStatus("error");
+      setSyncMessage(`下载失败: ${error.message || "未知错误"}`);
+
+      // 5秒后清除错误状态
+      setTimeout(() => {
+        setSyncStatus("idle");
       }, 5000);
+
+      throw error;
     }
   };
 
@@ -1065,79 +1106,233 @@ function SilverQuotePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    console.log('🔄 初始化：开始加载本地数据...');
+    console.log('========== 开始从 localStorage 加载银制品数据 ==========');
 
-    // 步骤1：加载本地数据
     const savedProducts = localStorage.getItem("silverProducts");
     const savedHistory = localStorage.getItem("silverPriceHistory");
+    const savedSilverPrice = localStorage.getItem("silverPrice");
+    const savedDataVersion = localStorage.getItem("silverDataVersion");
+
+    // 检查数据版本，如果版本不匹配则需要重新迁移数据
+    const currentVersion = parseInt(savedDataVersion || "0");
+    const needsMigration = currentVersion < SILVER_DATA_VERSION;
+    console.log("数据版本检查: 当前版本 =", currentVersion, "期望版本 =", SILVER_DATA_VERSION, "需要迁移 =", needsMigration);
+    const savedCoefficients = localStorage.getItem("silverPriceCoefficients");
+
+    console.log("LocalStorage中的银制品产品数据:", savedProducts);
+    console.log("LocalStorage中的历史记录:", savedHistory);
+    console.log("LocalStorage中的银价:", savedSilverPrice);
+    console.log("LocalStorage中的系数:", savedCoefficients);
 
     if (savedProducts) {
       try {
-        // 兼容旧数据，为所有可能缺失的字段添加默认值
-        const loadedProducts: any[] = JSON.parse(savedProducts);
-        const normalizedProducts: SilverProduct[] = loadedProducts.map(p => ({
-          id: p.id || "",
-          category: p.category || "",
-          subCategory: p.subCategory || "",
-          productCode: p.productCode || "",
-          productName: p.productName || "",
-          specification: p.specification || "",
-          weight: p.weight ?? 0,
-          laborCost: p.laborCost ?? 0,
-          silverColor: p.silverColor || "银色",
-          silverPrice: p.silverPrice ?? silverPrice,
-          wholesalePrice: p.wholesalePrice ?? 0,
-          retailPrice: p.retailPrice ?? 0,
-          accessoryCost: p.accessoryCost ?? 0,
-          stoneCost: p.stoneCost ?? 0,
-          platingCost: p.platingCost ?? 0,
-          moldCost: p.moldCost ?? 0,
-          commission: p.commission ?? 0,
-          supplierCode: p.supplierCode || "E1",
-          remarks: p.remarks || "",
-          batchQuantity: p.batchQuantity ?? 0,
-          quantity: p.quantity ?? 0,
-          quantityDate: p.quantityDate || "",
-          laborCostDate: p.laborCostDate || "",
-          accessoryCostDate: p.accessoryCostDate || "",
-          stoneCostDate: p.stoneCostDate || "",
-          platingCostDate: p.platingCostDate || "",
-          moldCostDate: p.moldCostDate || "",
-          commissionDate: p.commissionDate || "",
-          timestamp: p.timestamp || new Date().toISOString(),
-          syncStatus: p.syncStatus || "unsynced",
-        }));
-        setProducts(normalizedProducts);
+        const parsedProducts = JSON.parse(savedProducts);
+        console.log("解析后的产品数量:", parsedProducts.length);
+        console.log("产品列表样例:", parsedProducts.slice(0, 2));
+
+        // 数据迁移：确保所有字段都有默认值
+        const migratedProducts = parsedProducts.map((p: SilverProduct) => {
+          // 确保子分类在有效列表中
+          let subCategoryValue = p.subCategory || "";
+          if (subCategoryValue) {
+            const subCategoryList = SILVER_SUB_CATEGORIES[p.category as SilverProductCategory];
+            if (subCategoryList && !subCategoryList.includes(subCategoryValue)) {
+              console.warn(`产品 ${p.productCode} 的子分类 "${subCategoryValue}" 不在有效列表中，将使用默认值`);
+              subCategoryValue = subCategoryList[0] || "";
+            }
+          } else {
+            // 如果产品没有 subCategory，使用第一个可用的子分类
+            const subCategoryList = SILVER_SUB_CATEGORIES[p.category as SilverProductCategory];
+            if (subCategoryList && subCategoryList.length > 0) {
+              subCategoryValue = subCategoryList[0];
+            }
+          }
+
+          return {
+            ...p,
+            category: p.category || "配件",
+            // 使用计算出的 subCategory
+            subCategory: subCategoryValue,
+            accessoryCost: p.accessoryCost ?? 0,
+            stoneCost: p.stoneCost ?? 0,
+            platingCost: p.platingCost ?? 0,
+            moldCost: p.moldCost ?? 0,
+            commission: p.commission ?? 0,
+            supplierCode: p.supplierCode || "E1",
+            silverColor: p.silverColor || "银色",
+            quantity: p.quantity ?? 0,
+            batchQuantity: p.batchQuantity ?? 0,
+            quantityDate: p.quantityDate || "",
+            // 添加成本时间戳
+            laborCostDate: p.laborCostDate || p.timestamp || new Date().toISOString(),
+            accessoryCostDate: p.accessoryCostDate || p.timestamp || new Date().toISOString(),
+            stoneCostDate: p.stoneCostDate || p.timestamp || new Date().toISOString(),
+            platingCostDate: p.platingCostDate || p.timestamp || new Date().toISOString(),
+            moldCostDate: p.moldCostDate || p.timestamp || new Date().toISOString(),
+            commissionDate: p.commissionDate || p.timestamp || new Date().toISOString(),
+          };
+        });
+
+        // 统计各子分类的产品数量
+        const subCategoryCounts: Record<string, number> = {};
+        migratedProducts.forEach((p: SilverProduct) => {
+          if (p.subCategory) {
+            subCategoryCounts[p.subCategory] = (subCategoryCounts[p.subCategory] || 0) + 1;
+          }
+        });
+        console.log("子分类产品数量统计:", subCategoryCounts);
+
+        console.log("设置 products state，数量:", migratedProducts.length);
+        setProducts(migratedProducts);
         localDataLoadedRef.current = true;
-        console.log(`✅ 本地数据已加载，产品数量: ${normalizedProducts.length}`);
-      } catch (error) {
-        console.error('❌ 加载本地产品数据失败:', error);
+      } catch (e) {
+        console.error("解析银制品产品数据失败:", e);
         setProducts([]);
         localDataLoadedRef.current = true;
       }
     } else {
+      console.log("LocalStorage中没有银制品产品数据");
       setProducts([]);
-      // 不设置 localDataLoadedRef.current = true，让云端数据自动下载
-      console.log('📭 本地无数据，等待云端同步...');
+      localDataLoadedRef.current = true;
     }
 
     if (savedHistory) {
       try {
-        setPriceHistory(JSON.parse(savedHistory));
-      } catch (error) {
-        console.error('❌ 加载本地历史数据失败:', error);
+        const parsedHistory = JSON.parse(savedHistory);
+        console.log("解析后的历史记录数量:", parsedHistory.length);
+
+        // 数据迁移：确保所有字段都有默认值
+        const migratedHistory = parsedHistory.map((h: SilverPriceHistory) => {
+          // 确保子分类在有效列表中
+          let subCategoryValue = h.subCategory || "";
+          if (subCategoryValue) {
+            const subCategoryList = SILVER_SUB_CATEGORIES[h.category as SilverProductCategory];
+            if (subCategoryList && !subCategoryList.includes(subCategoryValue)) {
+              subCategoryValue = subCategoryList[0] || "";
+            }
+          } else {
+            const subCategoryList = SILVER_SUB_CATEGORIES[h.category as SilverProductCategory];
+            if (subCategoryList && subCategoryList.length > 0) {
+              subCategoryValue = subCategoryList[0];
+            }
+          }
+
+          return {
+            ...h,
+            category: h.category || "配件",
+            subCategory: subCategoryValue,
+            accessoryCost: h.accessoryCost ?? 0,
+            stoneCost: h.stoneCost ?? 0,
+            platingCost: h.platingCost ?? 0,
+            moldCost: h.moldCost ?? 0,
+            commission: h.commission ?? 0,
+            supplierCode: h.supplierCode || "E1",
+            silverColor: h.silverColor || "银色",
+            quantity: h.quantity ?? 0,
+            batchQuantity: h.batchQuantity ?? 0,
+            // 添加成本时间戳
+            laborCostDate: h.laborCostDate || h.timestamp || new Date().toISOString(),
+            accessoryCostDate: h.accessoryCostDate || h.timestamp || new Date().toISOString(),
+            stoneCostDate: h.stoneCostDate || h.timestamp || new Date().toISOString(),
+            platingCostDate: h.platingCostDate || h.timestamp || new Date().toISOString(),
+            moldCostDate: h.moldCostDate || h.timestamp || new Date().toISOString(),
+            commissionDate: h.commissionDate || h.timestamp || new Date().toISOString(),
+          };
+        });
+
+        console.log("设置 priceHistory state，数量:", migratedHistory.length);
+        setPriceHistory(migratedHistory);
+      } catch (e) {
+        console.error("解析历史记录失败:", e);
         setPriceHistory([]);
       }
     } else {
+      console.log("LocalStorage中没有历史记录");
       setPriceHistory([]);
     }
 
-    // 步骤2：延迟检查云端数据，避免状态竞态
+    // 加载银价
+    if (savedSilverPrice) {
+      try {
+        const silverPriceNum = Number(savedSilverPrice);
+        console.log("设置银价:", silverPriceNum);
+        setSilverPrice(silverPriceNum);
+      } catch (e) {
+        console.error("解析银价失败:", e);
+      }
+    }
+
+    // 加载系数
+    if (savedCoefficients) {
+      try {
+        const coeff = JSON.parse(savedCoefficients);
+        // 兼容旧数据，确保所有字段都存在
+        const completeCoeff = {
+          silverPrice: coeff.silverPrice ?? 20,
+          laborFactorRetail: coeff.laborFactorRetail ?? 5,
+          laborFactorWholesale: coeff.laborFactorWholesale ?? 3.5,
+          silverMaterialLoss: coeff.silverMaterialLoss ?? 1.05,
+          silverMaterialFloat: coeff.silverMaterialFloat ?? 1.1,
+          internationalShippingTaxFactor: coeff.internationalShippingTaxFactor ?? 1.25,
+          exchangeRate: coeff.exchangeRate ?? 5,
+          commissionFactor: coeff.commissionFactor ?? 1.1,
+          stoneMarkupFactor: coeff.stoneMarkupFactor ?? 1.3,
+          // T字头特殊系数
+          tSilverMaterialLoss: coeff.tSilverMaterialLoss ?? 1.05,
+          tMaterialLossFactor2: coeff.tMaterialLossFactor2 ?? 1.15,
+          tMaterialFloatFactor: coeff.tMaterialFloatFactor ?? 1.1,
+          tInternationalShippingTaxFactor: coeff.tInternationalShippingTaxFactor ?? 1.25,
+          usdToCadExchangeRate: coeff.usdToCadExchangeRate ?? 1.4,
+        };
+        console.log("设置银制品系数:", completeCoeff);
+        setSilverCoefficients(completeCoeff);
+      } catch (e) {
+        console.error("解析银制品系数失败:", e);
+      }
+    }
+
+    // 更新数据版本号
+    localStorage.setItem("silverDataVersion", SILVER_DATA_VERSION.toString());
+    console.log("更新数据版本号到:", SILVER_DATA_VERSION);
+
+    console.log("========== 银制品数据加载完成 ==========");
+
+    // 检查云端数据
     setTimeout(() => {
-      console.log('🔄 初始化：检查云端数据...');
       checkCloudData();
     }, 100);
   }, []);
+
+  // 保存数据到 localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // 只有当 products 有数据时才保存，避免覆盖已有的数据
+    if (products.length > 0) {
+      localStorage.setItem("silverProducts", JSON.stringify(products));
+      console.log("已保存银制品产品数据到 localStorage，数量:", products.length);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // 只有当 priceHistory 有数据时才保存
+    if (priceHistory.length > 0) {
+      localStorage.setItem("silverPriceHistory", JSON.stringify(priceHistory));
+      console.log("已保存银制品历史记录到 localStorage，数量:", priceHistory.length);
+    }
+  }, [priceHistory]);
+
+  // 保存银价到 localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem("silverPrice", silverPrice.toString());
+  }, [silverPrice]);
+
+  // 保存系数到 localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem("silverPriceCoefficients", JSON.stringify(silverCoefficients));
+  }, [silverCoefficients]);
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -1367,14 +1562,14 @@ function SilverQuotePage() {
                 <h1 className="text-3xl font-bold text-black mb-2">银制品报价操作平台</h1>
                 <p className="text-black">925银制品价格计算和管理系统</p>
               </div>
-              <button
-                onClick={() => router.push('/quote')}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center gap-2"
-              >
-                <span>←</span>
-                <span>返回金制品</span>
-              </button>
             </div>
+            <button
+              onClick={() => router.push('/quote')}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center gap-2"
+            >
+              <span>←</span>
+              <span>返回金制品</span>
+            </button>
             <div className="relative z-10">
               <button
                 onClick={handleSyncButtonClick}
@@ -1468,6 +1663,7 @@ function SilverQuotePage() {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           </div>
 
