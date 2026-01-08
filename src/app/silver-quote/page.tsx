@@ -1030,9 +1030,39 @@ function SilverQuotePage() {
       const result = await response.json();
       console.log('✅ 银制品云端数据清空成功:', result);
 
+      // 清空本地 localStorage 数据
+      console.log('🗑️ 清空本地 localStorage 数据...');
+      localStorage.removeItem('silverProducts');
+      localStorage.removeItem('silverPriceHistory');
+      localStorage.removeItem('silverPrice');
+      localStorage.removeItem('silverPriceCoefficients');
+      localStorage.removeItem('silverDataVersion');
+
+      // 清空 state 数据
+      console.log('🗑️ 清空本地 state 数据...');
+      setProducts([]);
+      setPriceHistory([]);
+      setSilverPrice(0);
+      setSilverCoefficients({
+        silverPrice: 0,
+        laborFactorRetail: 5,
+        laborFactorWholesale: 3.5,
+        silverMaterialLoss: 1.05,
+        silverMaterialFloat: 1.1,
+        internationalShippingTaxFactor: 1.25,
+        exchangeRate: 5,
+        commissionFactor: 1.1,
+        stoneMarkupFactor: 1.3,
+        tSilverMaterialLoss: 1.05,
+        tMaterialLossFactor2: 1.15,
+        tMaterialFloatFactor: 1.1,
+        tInternationalShippingTaxFactor: 1.25,
+        usdToCadExchangeRate: 1.4,
+      });
+
       setCloudDataExists(false);
       setSyncStatus("success");
-      setSyncMessage("云端数据已清空");
+      setSyncMessage("云端和本地数据已清空");
       setShowClearCloudPasswordModal(false);
       setClearCloudPassword("");
       setClearCloudPasswordError("");
@@ -1837,8 +1867,8 @@ function SilverQuotePage() {
                       <div className="flex items-center gap-3">
                         <span className="text-xl">🗑️</span>
                         <div className="text-left">
-                          <div className="font-semibold">清空云端数据</div>
-                          <div className="text-xs text-red-600">删除所有云端数据（需密码）</div>
+                          <div className="font-semibold">清空云端和本地数据</div>
+                          <div className="text-xs text-red-600">删除所有数据（需密码）</div>
                         </div>
                       </div>
                       <span className="text-red-400">→</span>
@@ -2552,8 +2582,9 @@ function SilverQuotePage() {
       {showClearCloudPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="bg-white rounded-xl shadow-2xl w-96 p-6">
-            <h3 className="text-xl font-bold text-black mb-4">🔐 清空云端数据</h3>
+            <h3 className="text-xl font-bold text-black mb-4">🔐 清空云端和本地数据</h3>
             <p className="text-sm text-black mb-4">请输入6位清空数据密码以确认操作：</p>
+            <p className="text-xs text-red-600 mb-4">⚠️ 此操作将同时清空云端和本地所有银制品数据，不可恢复！</p>
             <input
               type="password"
               maxLength={6}
