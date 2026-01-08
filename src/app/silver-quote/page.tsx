@@ -791,7 +791,35 @@ function SilverQuotePage() {
   // 导入Excel相关状态
   const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的子分类
 
-  // 检查云端数据是否存在
+  // ========== 银制品数据同步逻辑 ==========
+  // 自动同步防抖逻辑
+  const syncTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // 触发自动同步（带防抖）
+  const triggerAutoSync = () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    // 延迟3秒执行同步，避免频繁同步
+    syncTimeoutRef.current = setTimeout(() => {
+      autoSync();
+    }, 3000);
+  };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, []);
+  // ========== 银制品数据同步逻辑结束 ==========
+
+  /**
+   * 检查云端是否有数据
+   */
   const checkCloudData = async () => {
     try {
       const token = localStorage.getItem('auth_token');
@@ -831,6 +859,22 @@ function SilverQuotePage() {
       console.error('❌ 检查银制品云端数据失败:', error);
       setCloudDataExists(false);
       return false;
+    }
+  };
+
+  /**
+   * 自动同步（数据变更时调用）
+   */
+  const autoSync = async () => {
+    if (syncStatus === "syncing") {
+      return;
+    }
+
+    try {
+      await uploadToCloud();
+    } catch (error) {
+      console.error("自动同步失败:", error);
+      // 静默失败，不提示用户
     }
   };
 
@@ -1297,10 +1341,34 @@ function SilverQuotePage() {
 
     console.log("========== 银制品数据加载完成 ==========");
 
-    // 检查云端数据
-    setTimeout(() => {
-      checkCloudData();
-    }, 100);
+    // 延迟2秒后检查云端数据（完全按照金货方式）
+    setTimeout(async () => {
+      try {
+        const hasData = await checkCloudData();
+
+        if (hasData) {
+          console.log("✅ 云端已有数据");
+
+          // 如果云端有数据且本地没有数据，提示用户是否下载
+          if (!savedProducts && !savedHistory) {
+            const shouldDownload = window.confirm(
+              "检测到云端有银制品数据，但本地没有数据。\n\n是否要下载云端数据？"
+            );
+            if (shouldDownload) {
+              await downloadFromCloud("merge");
+            } else {
+              console.log("用户取消下载，继续使用本地数据");
+            }
+          } else {
+            console.log("本地已有数据，暂不自动下载");
+          }
+        } else {
+          console.log("ℹ️ 云端暂无数据");
+        }
+      } catch (error) {
+        console.error("检查云端数据失败:", error);
+      }
+    }, 2000);
   }, []);
 
   // 保存数据到 localStorage
@@ -1310,6 +1378,8 @@ function SilverQuotePage() {
     if (products.length > 0) {
       localStorage.setItem("silverProducts", JSON.stringify(products));
       console.log("已保存银制品产品数据到 localStorage，数量:", products.length);
+      // 触发自动同步
+      triggerAutoSync();
     }
   }, [products]);
 
@@ -1319,6 +1389,8 @@ function SilverQuotePage() {
     if (priceHistory.length > 0) {
       localStorage.setItem("silverPriceHistory", JSON.stringify(priceHistory));
       console.log("已保存银制品历史记录到 localStorage，数量:", priceHistory.length);
+      // 触发自动同步
+      triggerAutoSync();
     }
   }, [priceHistory]);
 
@@ -1326,12 +1398,16 @@ function SilverQuotePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem("silverPrice", silverPrice.toString());
+    // 触发自动同步
+    triggerAutoSync();
   }, [silverPrice]);
 
   // 保存系数到 localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem("silverPriceCoefficients", JSON.stringify(silverCoefficients));
+    // 触发自动同步
+    triggerAutoSync();
   }, [silverCoefficients]);
 
   // 格式化日期
@@ -1357,7 +1433,6 @@ function SilverQuotePage() {
 
     try {
       setShowSyncMenu(!showSyncMenu);
-      checkCloudData();
     } catch (error) {
       console.error('❌ 处理同步按钮点击失败:', error);
       alert('同步按钮点击失败，请刷新页面重试');
@@ -1909,7 +1984,6 @@ function SilverQuotePage() {
                 <button
                   onClick={() => {
                     setShowSyncMenu(!showSyncMenu);
-                    checkCloudData();
                   }}
                   className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
                 >
