@@ -791,6 +791,34 @@ function SilverQuotePage() {
   // 导入Excel相关状态
   const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的子分类
 
+  // 调试信息状态
+  const [debugInfo, setDebugInfo] = useState<{
+    localProducts: number;
+    localHistory: number;
+    uploadProducts: number;
+    uploadHistory: number;
+    lastUpload: string;
+  }>({
+    localProducts: 0,
+    localHistory: 0,
+    uploadProducts: 0,
+    uploadHistory: 0,
+    lastUpload: '',
+  });
+
+  // 更新调试信息
+  const updateDebugInfo = () => {
+    const localProducts = localStorage.getItem('silverProducts');
+    const localHistory = localStorage.getItem('silverPriceHistory');
+    setDebugInfo({
+      localProducts: localProducts ? JSON.parse(localProducts).length : 0,
+      localHistory: localHistory ? JSON.parse(localHistory).length : 0,
+      uploadProducts: 0,
+      uploadHistory: 0,
+      lastUpload: new Date().toLocaleTimeString(),
+    });
+  };
+
   // ========== 银制品数据同步逻辑 ==========
   // 自动同步防抖逻辑
   const syncTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -947,6 +975,9 @@ function SilverQuotePage() {
 
       setCloudDataExists(true);
 
+      // 更新调试信息
+      updateDebugInfo();
+
       // 3秒后清除成功状态
       setTimeout(() => {
         setSyncStatus("idle");
@@ -1094,6 +1125,9 @@ function SilverQuotePage() {
         localStorage.setItem("silverPriceHistory", JSON.stringify(normalizedCloudHistory));
 
         setSyncMessage(`下载成功！已加载 ${normalizedCloudProducts.length} 个银制品产品数据（替换模式）`);
+
+        // 更新调试信息
+        updateDebugInfo();
       } else {
         // 合并模式：合并云端和本地数据
         console.log("🔄 合并云端银制品数据和本地数据");
@@ -1121,6 +1155,9 @@ function SilverQuotePage() {
         localStorage.setItem("silverPriceHistory", JSON.stringify(mergedHistoryArray));
 
         setSyncMessage(`下载成功！合并后共有 ${mergedProductsArray.length} 个银制品产品（合并模式）`);
+
+        // 更新调试信息
+        updateDebugInfo();
       }
 
       setCloudDataExists(true);
@@ -1369,6 +1406,9 @@ function SilverQuotePage() {
         console.error("检查云端数据失败:", error);
       }
     }, 2000);
+
+    // 更新调试信息
+    setTimeout(updateDebugInfo, 500);
   }, []);
 
   // 保存数据到 localStorage
@@ -1739,6 +1779,28 @@ function SilverQuotePage() {
                 </div>
               )}
             </div>
+            </div>
+          </div>
+
+          {/* 系统状态信息 - 表头下方小字显示 */}
+          <div className="mb-6 bg-white rounded-lg shadow px-4 py-2">
+            <div className="flex items-center gap-6 text-xs text-gray-600">
+              <span className="flex items-center gap-1">
+                <span className="text-blue-600">本地产品:</span>
+                <span className="font-medium text-black">{debugInfo.localProducts}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-green-600">历史记录:</span>
+                <span className="font-medium text-black">{debugInfo.localHistory}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-purple-600">云端产品:</span>
+                <span className="font-medium text-black">{debugInfo.uploadProducts}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-orange-600">最后同步:</span>
+                <span className="font-medium text-black">{debugInfo.lastUpload}</span>
+              </span>
             </div>
           </div>
 
