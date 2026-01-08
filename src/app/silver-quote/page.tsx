@@ -887,9 +887,12 @@ function SilverQuotePage() {
         },
         body: JSON.stringify({
           products: products,
-          history: priceHistory,
-          silverPrice: silverPrice,
-          coefficients: silverCoefficients,
+          priceHistory: priceHistory,
+          configs: {
+            silverPrice: silverPrice,
+            coefficients: silverCoefficients,
+            dataVersion: SILVER_DATA_VERSION,
+          },
         }),
       });
 
@@ -905,7 +908,9 @@ function SilverQuotePage() {
         saveToLocalStorage(syncedProducts);
 
         setSyncStatus("success");
-        setSyncMessage(`上传成功！新建${result.newProducts}个，更新${result.updatedProducts}个`);
+        // 从 result.stats 中读取统计信息
+        const stats = result.stats || {};
+        setSyncMessage(`上传成功！产品: ${stats.syncedProducts || 0} 个（新建 ${stats.newProducts || 0}，更新 ${stats.updatedProducts || 0}），历史记录: ${stats.syncedHistory || 0} 条`);
         setCloudDataExists(true);
         setTimeout(() => {
           setSyncStatus("idle");

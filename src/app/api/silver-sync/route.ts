@@ -3,8 +3,6 @@ import { isAuthenticated } from '@/lib/auth';
 import { ProductManager } from '@/storage/database/productManager';
 import { PriceHistoryManager } from '@/storage/database/priceHistoryManager';
 import { appConfigManager } from '@/storage/database/appConfigManager';
-import { getDb } from 'coze-coding-dev-sdk';
-import { sql } from 'drizzle-orm';
 
 // 创建管理器实例
 const productManager = new ProductManager();
@@ -25,53 +23,19 @@ export async function GET(request: NextRequest) {
 
     // 获取银制品分类列表
     const silverCategories = ["配件", "宝石托", "链条", "其它"];
-    console.log('🏷️ 银制品分类列表:', silverCategories);
 
     // 获取所有产品
     const allProducts = await productManager.getProducts(user.id, { limit: 10000 });
     console.log(`📦 总产品数: ${allProducts.length}`);
 
-    // 筛选银制品并标准化字段
+    // 筛选银制品
     const silverProducts = allProducts
-      .filter((p: any) => {
-        const isSilver = p.category && silverCategories.includes(p.category);
-        if (!isSilver && p.category) {
-          console.log(`  ⚠️ 排除产品: ${p.productCode}, 分类: ${p.category} (不在银制品分类中)`);
-        }
-        return isSilver;
-      })
+      .filter((p: any) => p.category && silverCategories.includes(p.category))
       .map((p: any) => ({
         ...p,
-        // 确保数值字段有默认值
-        weight: p.weight ?? 0,
-        laborCost: p.laborCost ?? 0,
-        silverPrice: p.silverPrice ?? 20,
-        wholesalePrice: p.wholesalePrice ?? 0,
-        retailPrice: p.retailPrice ?? 0,
-        accessoryCost: p.accessoryCost ?? 0,
-        stoneCost: p.stoneCost ?? 0,
-        platingCost: p.platingCost ?? 0,
-        moldCost: p.moldCost ?? 0,
-        commission: p.commission ?? 0,
-        batchQuantity: p.batchQuantity ?? 0,
-        quantity: p.quantity ?? 0,
-        // 确保字符串字段有默认值
-        category: p.category || "",
-        subCategory: p.subCategory || "",
-        productCode: p.productCode || "",
-        productName: p.productName || "",
-        specification: p.specification || "",
-        silverColor: p.silverColor || "银色",
-        supplierCode: p.supplierCode || "E1",
-        remarks: p.remarks || "",
-        // 确保日期字段有默认值
-        quantityDate: p.quantityDate || "",
-        laborCostDate: p.laborCostDate || "",
-        accessoryCostDate: p.accessoryCostDate || "",
-        stoneCostDate: p.stoneCostDate || "",
-        platingCostDate: p.platingCostDate || "",
-        moldCostDate: p.moldCostDate || "",
-        commissionDate: p.commissionDate || "",
+        // 映射到银制品字段
+        silverColor: p.goldColor || '银色',
+        silverPrice: p.goldPrice || 20,
       }));
 
     console.log(`✅ 筛选后银制品数: ${silverProducts.length}`);
@@ -81,25 +45,12 @@ export async function GET(request: NextRequest) {
     console.log(`📈 总历史记录数: ${allHistory.length}`);
 
     const silverHistory = allHistory
-      .filter((h: any) => {
-        const isSilver = h.category && silverCategories.includes(h.category);
-        return isSilver;
-      })
+      .filter((h: any) => h.category && silverCategories.includes(h.category))
       .map((h: any) => ({
         ...h,
-        // 确保数值字段有默认值
-        weight: h.weight ?? 0,
-        laborCost: h.laborCost ?? 0,
-        silverPrice: h.silverPrice ?? 20,
-        wholesalePrice: h.wholesalePrice ?? 0,
-        retailPrice: h.retailPrice ?? 0,
-        accessoryCost: h.accessoryCost ?? 0,
-        stoneCost: h.stoneCost ?? 0,
-        platingCost: h.platingCost ?? 0,
-        moldCost: h.moldCost ?? 0,
-        commission: h.commission ?? 0,
-        batchQuantity: h.batchQuantity ?? 0,
-        quantity: h.quantity ?? 0,
+        // 映射到银制品字段
+        silverColor: h.goldColor || '银色',
+        silverPrice: h.goldPrice || 20,
       }));
 
     console.log(`✅ 筛选后历史记录数: ${silverHistory.length}`);
@@ -107,9 +58,6 @@ export async function GET(request: NextRequest) {
     // 获取银制品配置
     const silverPriceConfig = await appConfigManager.getConfig(user.id, 'silver_price_config');
     const silverPriceCoefficients = await appConfigManager.getConfig(user.id, 'silver_price_coefficients');
-
-    console.log('⚙️ 银价配置:', silverPriceConfig?.configValue);
-    console.log('⚙️ 价格系数:', silverPriceCoefficients?.configValue);
 
     return NextResponse.json({
       products: silverProducts,
@@ -127,30 +75,37 @@ export async function GET(request: NextRequest) {
  * POST /api/silver-sync - 同步银制品数据到数据库
  * Body:
  * - products: 产品数组
- * - history: 价格历史数组
- * - silverPrice: 银价
- * - coefficients: 价格系数
+ * - priceHistory: 价格历史数组
+ * - configs: 配置对象 { silverPrice, coefficients, dataVersion }
  */
 export async function POST(request: NextRequest) {
   try {
     const user = await isAuthenticated(request);
     if (!user) {
+      console.error('❌ 同步失败: 未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { products, history, silverPrice, coefficients } = body;
+    const { products, priceHistory, configs } = body;
 
     let syncedProducts = 0;
     let updatedProducts = 0;
     let newProducts = 0;
     let syncedHistory = 0;
+    let skippedHistory = 0;
+    let syncedConfigs = 0;
 
+    console.log('='.repeat(60));
     console.log('📥 收到银制品同步请求:', {
       userId: user.id,
+      userEmail: user.email,
       productsCount: Array.isArray(products) ? products.length : 0,
-      historyCount: Array.isArray(history) ? history.length : 0,
+      historyCount: Array.isArray(priceHistory) ? priceHistory.length : 0,
+      hasConfigs: !!configs,
+      hasDataVersion: !!configs?.dataVersion,
     });
+    console.log('='.repeat(60));
 
     // 1. 同步产品数据
     if (Array.isArray(products) && products.length > 0) {
@@ -160,12 +115,14 @@ export async function POST(request: NextRequest) {
           // 数据预处理：将银制品字段映射到金制品表结构
           const normalizedProduct = {
             ...product,
-            // 银制品不需要karat，设置为空字符串或默认值
-            karat: '925', // 银制品默认925
-            goldColor: product.silverColor || '银色', // 银制品的颜色映射到goldColor
-            goldPrice: product.silverPrice || 20, // 银价映射到goldPrice
-            // 确保必填字段有值
+            // 银制品设置为925银
+            karat: '925',
+            // 银制品的字段映射到金制品字段
+            goldColor: product.silverColor || '银色',
+            goldPrice: product.silverPrice || 20,
+            // 确保 category 不为空
             category: product.category || '配件',
+            // 确保必填字段有值
             subCategory: product.subCategory || '',
             specification: product.specification || '',
             supplierCode: product.supplierCode || '',
@@ -188,14 +145,14 @@ export async function POST(request: NextRequest) {
             specialProfitMargin: null,
             specialLaborFactorRetail: null,
             specialLaborFactorWholesale: null,
-            // 确保时间戳格式正确（只转换有效的日期字符串）
-            laborCostDate: typeof product.laborCostDate === 'string' && product.laborCostDate.trim() !== "" ? new Date(product.laborCostDate) : new Date(),
-            accessoryCostDate: typeof product.accessoryCostDate === 'string' && product.accessoryCostDate.trim() !== "" ? new Date(product.accessoryCostDate) : new Date(),
-            stoneCostDate: typeof product.stoneCostDate === 'string' && product.stoneCostDate.trim() !== "" ? new Date(product.stoneCostDate) : new Date(),
-            platingCostDate: typeof product.platingCostDate === 'string' && product.platingCostDate.trim() !== "" ? new Date(product.platingCostDate) : new Date(),
-            moldCostDate: typeof product.moldCostDate === 'string' && product.moldCostDate.trim() !== "" ? new Date(product.moldCostDate) : new Date(),
-            commissionDate: typeof product.commissionDate === 'string' && product.commissionDate.trim() !== "" ? new Date(product.commissionDate) : new Date(),
-            timestamp: typeof product.timestamp === 'string' && product.timestamp.trim() !== "" ? new Date(product.timestamp) : new Date(),
+            // 确保时间戳格式正确
+            laborCostDate: product.laborCostDate ? new Date(product.laborCostDate) : new Date(),
+            accessoryCostDate: product.accessoryCostDate ? new Date(product.accessoryCostDate) : new Date(),
+            stoneCostDate: product.stoneCostDate ? new Date(product.stoneCostDate) : new Date(),
+            platingCostDate: product.platingCostDate ? new Date(product.platingCostDate) : new Date(),
+            moldCostDate: product.moldCostDate ? new Date(product.moldCostDate) : new Date(),
+            commissionDate: product.commissionDate ? new Date(product.commissionDate) : new Date(),
+            timestamp: product.timestamp ? new Date(product.timestamp) : new Date(),
           };
 
           // 数据完整性检查
@@ -227,61 +184,176 @@ export async function POST(request: NextRequest) {
           syncedProducts++;
         } catch (e) {
           console.error('  ✗ 同步产品失败:', product.productCode || product.id, e);
+          // 继续处理其他产品，不中断整个同步过程
         }
       }
-      console.log(`✅ 银制品产品同步完成: 新建 ${newProducts} 个，更新 ${updatedProducts} 个`);
+      console.log(`✅ 产品同步完成: 新建 ${newProducts} 个，更新 ${updatedProducts} 个`);
+    } else {
+      console.log('⚠️ 没有产品数据需要同步');
     }
 
     // 2. 同步价格历史
-    if (Array.isArray(history) && history.length > 0) {
+    if (Array.isArray(priceHistory) && priceHistory.length > 0) {
       console.log('📈 开始同步银制品价格历史...');
-      for (const hist of history) {
+      for (const history of priceHistory) {
         try {
+          // 数据预处理：将银制品字段映射到金制品表结构
           const normalizedHistory = {
-            ...hist,
+            ...history,
+            // 银制品设置为925银
             karat: '925',
-            goldColor: hist.silverColor || '银色',
-            goldPrice: hist.silverPrice || 20,
+            // 银制品的字段映射到金制品字段
+            goldColor: history.silverColor || '银色',
+            goldPrice: history.silverPrice || 20,
+            // 确保 category 不为空
+            category: history.category || '配件',
+            // 确保必填字段有值
+            subCategory: history.subCategory || '',
+            specification: history.specification || '',
+            supplierCode: history.supplierCode || '',
+            // 确保数值字段有默认值
+            weight: history.weight ?? 0,
+            laborCost: history.laborCost ?? 0,
+            wholesalePrice: history.wholesalePrice ?? 0,
+            retailPrice: history.retailPrice ?? 0,
+            accessoryCost: history.accessoryCost ?? 0,
+            stoneCost: history.stoneCost ?? 0,
+            platingCost: history.platingCost ?? 0,
+            moldCost: history.moldCost ?? 0,
+            commission: history.commission ?? 0,
+            // 确保可选字段有默认值
+            orderChannel: history.orderChannel || null,
+            shape: history.shape || null,
+            // 银制品没有特殊系数，设置为null
+            specialMaterialLoss: null,
+            specialMaterialCost: null,
+            specialProfitMargin: null,
+            specialLaborFactorRetail: null,
+            specialLaborFactorWholesale: null,
+            // 确保时间戳格式正确
+            laborCostDate: history.laborCostDate ? new Date(history.laborCostDate) : new Date(),
+            accessoryCostDate: history.accessoryCostDate ? new Date(history.accessoryCostDate) : new Date(),
+            stoneCostDate: history.stoneCostDate ? new Date(history.stoneCostDate) : new Date(),
+            platingCostDate: history.platingCostDate ? new Date(history.platingCostDate) : new Date(),
+            moldCostDate: history.moldCostDate ? new Date(history.moldCostDate) : new Date(),
+            commissionDate: history.commissionDate ? new Date(history.commissionDate) : new Date(),
+            timestamp: history.timestamp ? new Date(history.timestamp) : new Date(),
           };
 
-          // 检查历史记录是否已存在
-          const existing = await priceHistoryManager.getHistoryById(hist.id, user.id);
-          if (existing) {
-            // 已存在，跳过
+          // 数据完整性检查
+          if (!normalizedHistory.id) {
+            console.error('  ✗ 历史记录缺少 id:', normalizedHistory.productCode);
             continue;
           }
 
-          // 创建历史记录
-          const { userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
-          await priceHistoryManager.createPriceHistoryWithId(user.id, { ...historyToInsert, id: hist.id });
-          syncedHistory++;
+          if (!normalizedHistory.productId) {
+            console.error('  ✗ 历史记录缺少 productId:', normalizedHistory.productCode);
+            continue;
+          }
+
+          if (!normalizedHistory.productCode) {
+            console.error('  ✗ 历史记录缺少 productCode:', normalizedHistory.id);
+            continue;
+          }
+
+          // 检查是否已存在
+          const existingHistory = await priceHistoryManager.getHistoryById(history.id, user.id);
+          if (!existingHistory) {
+            // 只同步不存在的历史记录
+            const { userId: _userId, createdAt: _createdAt, ...historyToInsert } = normalizedHistory as any;
+            const dataToInsert = { ...historyToInsert, id: history.id };
+
+            try {
+              await priceHistoryManager.createPriceHistoryWithId(user.id, dataToInsert);
+              syncedHistory++;
+              console.log(`  + 新建历史记录: ${normalizedHistory.productCode} (id: ${history.id})`);
+            } catch (insertError: any) {
+              console.error(`  ✗ 插入历史记录失败: ${normalizedHistory.productCode}`);
+              console.error(`     错误信息: ${insertError.message}`);
+              // 继续处理其他历史记录
+            }
+          } else {
+            skippedHistory++;
+            console.log(`  - 跳过已存在的历史记录: ${normalizedHistory.productCode}`);
+          }
         } catch (e) {
-          console.error('  ✗ 同步历史记录失败:', hist.productCode || hist.id, e);
+          console.error('  ✗ 同步历史记录失败:', history.productCode || history.id, e);
+          // 继续处理其他历史记录，不中断整个同步过程
         }
       }
-      console.log(`✅ 银制品历史记录同步完成: ${syncedHistory} 条`);
+      console.log(`✅ 历史记录同步完成: 新建 ${syncedHistory} 条，跳过 ${skippedHistory} 条`);
+    } else {
+      console.log('⚠️ 没有价格历史需要同步');
     }
 
-    // 3. 保存配置
-    if (silverPrice !== undefined) {
-      await appConfigManager.setConfig(user.id, 'silver_price_config', silverPrice);
-      console.log('✅ 银价配置已保存');
+    // 3. 同步配置
+    if (configs) {
+      console.log('⚙️  开始同步配置...');
+      try {
+        // 银价配置
+        if (configs.silverPrice) {
+          await appConfigManager.setConfig(user.id, 'silver_price_config', {
+            value: parseFloat(configs.silverPrice),
+            updatedAt: new Date().toISOString()
+          });
+          syncedConfigs++;
+          console.log('  ✓ 同步银价配置');
+        }
+
+        // 价格系数
+        if (configs.coefficients) {
+          await appConfigManager.setConfig(user.id, 'silver_price_coefficients', {
+            value: configs.coefficients,
+            updatedAt: new Date().toISOString()
+          });
+          syncedConfigs++;
+          console.log('  ✓ 同步银制品价格系数配置');
+        }
+
+        // 数据版本号
+        if (configs.dataVersion !== undefined) {
+          await appConfigManager.setConfig(user.id, 'silver_data_version', {
+            value: parseInt(configs.dataVersion),
+            updatedAt: new Date().toISOString()
+          });
+          syncedConfigs++;
+          console.log('  ✓ 同步银制品数据版本号:', configs.dataVersion);
+        }
+      } catch (e) {
+        console.error('  ✗ 同步配置失败:', e);
+      }
+      console.log('✅ 配置同步完成');
     }
 
-    if (coefficients) {
-      await appConfigManager.setConfig(user.id, 'silver_price_coefficients', coefficients);
-      console.log('✅ 银制品价格系数已保存');
-    }
-
-    return NextResponse.json({
-      success: true,
-      syncedProducts,
-      updatedProducts,
-      newProducts,
-      syncedHistory,
+    console.log('🎉 银制品同步全部完成:', {
+      products: { total: syncedProducts, new: newProducts, updated: updatedProducts },
+      history: { total: syncedHistory, skipped: skippedHistory },
+      configs: syncedConfigs,
     });
-  } catch (error) {
-    console.error('银制品同步失败:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    const result = {
+      success: true,
+      message: '银制品数据同步成功',
+      stats: {
+        syncedProducts,
+        newProducts,
+        updatedProducts,
+        syncedHistory,
+        skippedHistory,
+        syncedConfigs,
+      }
+    };
+
+    console.log('✅ 返回同步结果:', result);
+    console.log('='.repeat(60));
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error('❌ 银制品同步失败:', error);
+    console.error('错误堆栈:', error.stack);
+    return NextResponse.json(
+      { error: error.message || '银制品数据同步失败', details: error.toString() },
+      { status: 500 }
+    );
   }
 }
