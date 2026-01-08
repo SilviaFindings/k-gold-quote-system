@@ -1463,22 +1463,6 @@ function SilverQuotePage() {
     });
   };
 
-  // 处理同步按钮点击
-  const handleSyncButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log('🖱️ 点击云端同步按钮，当前菜单状态:', showSyncMenu);
-    console.log('🖱️ 当前产品数量:', products.length);
-
-    try {
-      setShowSyncMenu(!showSyncMenu);
-    } catch (error) {
-      console.error('❌ 处理同步按钮点击失败:', error);
-      alert('同步按钮点击失败，请刷新页面重试');
-    }
-  };
-
   // Excel 导出
   const exportToExcel = () => {
     const filteredProducts = products.filter(p => p.category === currentCategory);
@@ -1687,7 +1671,7 @@ function SilverQuotePage() {
             </button>
             <div className="relative z-10">
               <button
-                onClick={handleSyncButtonClick}
+                onClick={() => setShowSyncMenu(!showSyncMenu)}
                 className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-md transition-all active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 type="button"
               >
@@ -1717,9 +1701,9 @@ function SilverQuotePage() {
                   {/* 操作按钮区 */}
                   <div className="p-4 space-y-2">
                     <button
-                      onClick={() => {
-                        console.log('🖱️ 点击上传到云端按钮');
-                        uploadToCloud();
+                      onClick={async () => {
+                        setShowSyncMenu(false);
+                        await uploadToCloud();
                       }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200"
@@ -1735,9 +1719,9 @@ function SilverQuotePage() {
                     </button>
 
                     <button
-                      onClick={() => {
-                        console.log('🖱️ 点击合并下载按钮');
-                        downloadFromCloud("merge");
+                      onClick={async () => {
+                        setShowSyncMenu(false);
+                        await downloadFromCloud("merge");
                       }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-green-200"
@@ -1753,9 +1737,11 @@ function SilverQuotePage() {
                     </button>
 
                     <button
-                      onClick={() => {
-                        console.log('🖱️ 点击覆盖下载按钮');
-                        downloadFromCloud("replace");
+                      onClick={async () => {
+                        setShowSyncMenu(false);
+                        if (confirm("⚠️ 警告：替换模式会覆盖本地所有数据！\n\n确定要使用云端数据替换本地数据吗？")) {
+                          await downloadFromCloud("replace");
+                        }
                       }}
                       disabled={syncStatus === "syncing"}
                       className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-orange-200"
@@ -1778,7 +1764,7 @@ function SilverQuotePage() {
                   </div>
                 </div>
               )}
-            </div>
+          </div>
             </div>
           </div>
 
