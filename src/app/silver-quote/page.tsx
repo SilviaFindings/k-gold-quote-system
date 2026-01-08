@@ -1768,7 +1768,9 @@ function SilverQuotePage() {
             </div>
           </div>
 
-          {/* 分类选择 */}
+          {/* 分类和子分类选择区 */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            {/* 分类选择 */}
             <div className="flex items-center gap-4 mb-4">
               <span className="text-black font-medium">选择分类:</span>
               <div className="flex gap-2">
@@ -1815,7 +1817,17 @@ function SilverQuotePage() {
           {/* 产品列表 */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-black">产品列表</h2>
+              <div>
+                <h2 className="text-xl font-bold text-black">产品列表</h2>
+                <div className="text-sm text-gray-600 mt-1">
+                  当前分类: {currentCategory} {currentSubCategory ? ` > ${currentSubCategory}` : ''} | 
+                  显示数量: {products.filter(p => {
+                    if (p.category !== currentCategory) return false;
+                    if (currentSubCategory && p.subCategory !== currentSubCategory) return false;
+                    return true;
+                  }).length} / 总计: {products.length}
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
