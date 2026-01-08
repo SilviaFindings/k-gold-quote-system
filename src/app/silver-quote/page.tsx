@@ -788,6 +788,11 @@ function SilverQuotePage() {
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncMessage, setSyncMessage] = useState("");
 
+  // 清空云端数据密码相关状态
+  const [showClearCloudPasswordModal, setShowClearCloudPasswordModal] = useState(false);
+  const [clearCloudPassword, setClearCloudPassword] = useState("");
+  const [clearCloudPasswordError, setClearCloudPasswordError] = useState("");
+
   // 导入Excel相关状态
   const [importSubCategory, setImportSubCategory] = useState<string>(""); // 导入前选择的子分类
 
@@ -998,6 +1003,56 @@ function SilverQuotePage() {
     }
   };
 
+  /**
+   * 清空云端数据
+   */
+  const handleClearCloudData = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error("未登录，请先登录");
+      }
+
+      console.log('🗑️ 开始清空银制品云端数据...');
+
+      const response = await fetch('/api/clear-all-data', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`清空失败: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ 银制品云端数据清空成功:', result);
+
+      setCloudDataExists(false);
+      setSyncStatus("success");
+      setSyncMessage("云端数据已清空");
+      setShowClearCloudPasswordModal(false);
+      setClearCloudPassword("");
+      setClearCloudPasswordError("");
+
+      // 3秒后清除成功状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 3000);
+    } catch (error: any) {
+      console.error('❌ 清空云端数据失败:', error);
+      setSyncStatus("error");
+      setSyncMessage(`清空失败: ${error.message || "未知错误"}`);
+
+      // 5秒后清除错误状态
+      setTimeout(() => {
+        setSyncStatus("idle");
+      }, 5000);
+    }
+  };
+
   // 从云端下载数据
   const downloadFromCloud = async (mergeMode: "replace" | "merge" = "merge") => {
     setSyncStatus("syncing");
@@ -1026,7 +1081,23 @@ function SilverQuotePage() {
       let cloudHistory: SilverPriceHistory[] = data.history || [];
       let cloudConfigs: any = {
         silverPrice: data.silverPrice || 20,
-        coefficients: data.coefficients || silverCoefficients,
+        coefficients: {
+          silverPrice: data.coefficients?.silverPrice ?? 20,
+          laborFactorRetail: data.coefficients?.laborFactorRetail ?? 5,
+          laborFactorWholesale: data.coefficients?.laborFactorWholesale ?? 3.5,
+          silverMaterialLoss: data.coefficients?.silverMaterialLoss ?? 1.05,
+          silverMaterialFloat: data.coefficients?.silverMaterialFloat ?? 1.1,
+          internationalShippingTaxFactor: data.coefficients?.internationalShippingTaxFactor ?? 1.25,
+          exchangeRate: data.coefficients?.exchangeRate ?? 5,
+          commissionFactor: data.coefficients?.commissionFactor ?? 1.1,
+          stoneMarkupFactor: data.coefficients?.stoneMarkupFactor ?? 1.3,
+          // T字头特殊系数
+          tSilverMaterialLoss: data.coefficients?.tSilverMaterialLoss ?? 1.05,
+          tMaterialLossFactor2: data.coefficients?.tMaterialLossFactor2 ?? 1.15,
+          tMaterialFloatFactor: data.coefficients?.tMaterialFloatFactor ?? 1.1,
+          tInternationalShippingTaxFactor: data.coefficients?.tInternationalShippingTaxFactor ?? 1.25,
+          usdToCadExchangeRate: data.coefficients?.usdToCadExchangeRate ?? 1.4,
+        },
       };
 
       console.log("✅ 下载成功:", {
@@ -1755,6 +1826,23 @@ function SilverQuotePage() {
                       </div>
                       <span className="text-orange-400">→</span>
                     </button>
+
+                    <button
+                      onClick={() => {
+                        setShowClearCloudPasswordModal(true);
+                      }}
+                      disabled={syncStatus === "syncing"}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-red-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">🗑️</span>
+                        <div className="text-left">
+                          <div className="font-semibold">清空云端数据</div>
+                          <div className="text-xs text-red-600">删除所有云端数据（需密码）</div>
+                        </div>
+                      </div>
+                      <span className="text-red-400">→</span>
+                    </button>
                   </div>
 
                   {/* 底部说明 */}
@@ -2029,14 +2117,7 @@ function SilverQuotePage() {
                 >
                   验证数据
                 </button>
-                <button
-                  onClick={() => {
-                    setShowSyncMenu(!showSyncMenu);
-                  }}
-                  className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
-                >
-                  同步数据
-                </button>
+
                 <button
                   onClick={exportToExcel}
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -2442,6 +2523,96 @@ function SilverQuotePage() {
           </div>
         </div>
       </AuthProtection>
+
+      {/* 清空云端数据密码验证模态框 */}
+      {showClearCloudPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-xl shadow-2xl w-96 p-6">
+            <h3 className="text-xl font-bold text-black mb-4">🔐 清空云端数据</h3>
+            <p className="text-sm text-black mb-4">请输入6位清空数据密码以确认操作：</p>
+            <input
+              type="password"
+              maxLength={6}
+              value={clearCloudPassword}
+              onChange={(e) => {
+                setClearCloudPassword(e.target.value);
+                setClearCloudPasswordError("");
+              }}
+              placeholder="请输入6位密码"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl tracking-widest text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+            {clearCloudPasswordError && (
+              <p className="text-red-600 text-sm mt-2">{clearCloudPasswordError}</p>
+            )}
+            <div className="mt-4 text-xs text-gray-600 mb-4">
+              <p>提示：清空数据密码在"设置 {'>'} 清空数据密码"中设置</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowClearCloudPasswordModal(false);
+                  setClearCloudPassword("");
+                  setClearCloudPasswordError("");
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  if (clearCloudPassword.length !== 6) {
+                    setClearCloudPasswordError("请输入6位密码");
+                    return;
+                  }
+                  try {
+                    const token = localStorage.getItem('auth_token');
+                    if (!token) {
+                      setClearCloudPasswordError("未登录，请先登录");
+                      return;
+                    }
+
+                    // 验证密码
+                    const verifyResponse = await fetch('/api/auth/verify-data-clear-password', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ password: clearCloudPassword, type: 'cloud' }),
+                    });
+
+                    if (!verifyResponse.ok) {
+                      const errorData = await verifyResponse.json();
+                      setClearCloudPasswordError(errorData.error || "密码验证失败");
+                      return;
+                    }
+
+                    const verifyResult = await verifyResponse.json();
+                    if (!verifyResult.valid) {
+                      setClearCloudPasswordError("密码错误，请重试");
+                      return;
+                    }
+
+                    // 密码验证成功，执行清空操作
+                    await handleClearCloudData();
+                  } catch (error: any) {
+                    setClearCloudPasswordError(error.message || "验证失败，请重试");
+                  }
+                }}
+                disabled={clearCloudPassword.length !== 6}
+                className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  clearCloudPassword.length === 6
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-red-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                确认清空
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
