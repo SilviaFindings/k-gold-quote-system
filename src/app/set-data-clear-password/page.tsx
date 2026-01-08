@@ -166,6 +166,7 @@ export default function SetDataClearPasswordPage() {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   aria-label={showCurrentPassword ? "隐藏密码" : "显示密码"}
+                  suppressHydrationWarning
                 >
                   {showCurrentPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -206,6 +207,7 @@ export default function SetDataClearPasswordPage() {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   aria-label={showNewPassword ? "隐藏密码" : "显示密码"}
+                  suppressHydrationWarning
                 >
                   {showNewPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -245,6 +247,7 @@ export default function SetDataClearPasswordPage() {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   aria-label={showConfirmPassword ? "隐藏密码" : "显示密码"}
+                  suppressHydrationWarning
                 >
                   {showConfirmPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -266,6 +269,7 @@ export default function SetDataClearPasswordPage() {
             <button
               type="submit"
               disabled={loading}
+              suppressHydrationWarning
               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
                 loading
                   ? "bg-gray-400 cursor-not-allowed"
@@ -280,6 +284,7 @@ export default function SetDataClearPasswordPage() {
             <button
               type="button"
               onClick={() => router.push("/quote")}
+              suppressHydrationWarning
               className="text-sm text-blue-600 hover:text-blue-500"
             >
               返回首页
