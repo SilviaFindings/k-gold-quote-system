@@ -1133,7 +1133,8 @@ function SilverQuotePage() {
       }
     } else {
       setProducts([]);
-      localDataLoadedRef.current = true;
+      // 不设置 localDataLoadedRef.current = true，让云端数据自动下载
+      console.log('📭 本地无数据，等待云端同步...');
     }
 
     if (savedHistory) {
